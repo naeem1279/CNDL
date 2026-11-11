@@ -1,655 +1,423 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  CalendarDays, ClipboardList, Cog, Package, Pencil, Plus, Receipt, Search, Trash2, Wallet, X,
-} from 'lucide-react';
+import { History, MoreHorizontal, Package, Pencil, Plus, Receipt, Search, Trash2, Truck, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
-import { ModalShell } from '../_components/ModalShell';
 import { Pager } from '../_components/Pager';
 import { SectionFrame } from '../_components/SectionFrame';
+import { SidePanel } from '../_components/SidePanel';
 import type { Kpi } from '../_components/StatTile';
-import { EMPTY_EXPENSE_FORM, EXPENSES_PER_PAGE, EXPENSE_CATEGORY_META } from '../_lib/constants';
+import { Badge, Button, EmptyState, Input, MenuButton, Panel, Select } from '../_components/ui';
+import { EXPENSES_PER_PAGE, EXPENSE_CATEGORY_META } from '../_lib/constants';
 import { loadResources } from '../_lib/resources';
 import { useAdmin } from '../_lib/session';
 import type { ErpAgent, ErpExpense, ErpUser } from '../_lib/types';
-import { apiError, formatBDT, formatDate, formatDay, todayInput } from '../_lib/utils';
+import { apiError, bdMonthKey, formatBDT, formatDate, formatDay, monthLabel } from '../_lib/utils';
+import { ExpenseDialog } from './ExpenseDialog';
+
+type AuditEntry = { id: string; expenseId: string; action: string; originalData: string; performedBy: string; createdAt: string };
+const catLabel = (k: string) => EXPENSE_CATEGORY_META[k]?.label ?? k;
 
 export default function ExpensesPage() {
-  const { me, adminFetch, askConfirm } = useAdmin();
+  const { me, adminFetch, askConfirm, handleAuthLoss } = useAdmin();
+  const canAdd = me.role === 'SUPERADMIN' || me.role === 'ACCOUNTS';
+  const canChange = me.role === 'SUPERADMIN';
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [erpAgents, setErpAgents] = useState<ErpAgent[]>([]);
-  const [erpUsers, setErpUsers] = useState<ErpUser[]>([]);
-  const [erpExpenses, setErpExpenses] = useState<ErpExpense[]>([]);
-  const [expenseModal, setExpenseModal] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<ErpExpense | null>(null);
-  const [auditModal, setAuditModal] = useState(false);
-  const [auditEntries, setAuditEntries] = useState<{
-    id: string; expenseId: string; action: string; originalData: string; performedBy: string; createdAt: string;
-  }[]>([]);
-  const [auditLoading, setAuditLoading] = useState(false);
-  const [expenseForm, setExpenseForm] = useState(EMPTY_EXPENSE_FORM);
-  const [savingErp, setSavingErp] = useState(false);
-
-  // Header "Synced" timestamp
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
-  const [expPage, setExpPage] = useState(1);
-  // Phase 2: Daily Expenses audit filters
-  const [expSearch, setExpSearch] = useState('');
-  const [expCat, setExpCat] = useState('ALL');
-  const [expMonth, setExpMonth] = useState('ALL');
+  const [expenses, setExpenses] = useState<ErpExpense[]>([]);
+  const [agents, setAgents] = useState<ErpAgent[]>([]);
+  const [users, setUsers] = useState<ErpUser[]>([]);
 
-  /** Loads only this section's feeds: accounts, expenses, users. */
+  const thisMonth = bdMonthKey(new Date().toISOString());
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('ALL');
+  const [month, setMonth] = useState(thisMonth);
+  const [page, setPage] = useState(1);
+  /** undefined = closed, null = adding, a row = editing. */
+  const [dialog, setDialog] = useState<ErpExpense | null | undefined>(undefined);
+  const [history, setHistory] = useState<AuditEntry[] | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   const fetchData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['accounts', 'expenses', 'users'], me.role);
+      const r = await loadResources(adminFetch, ['expenses', 'accounts', 'users'], me.role);
       if (!r) return;
-      if (r.agents) setErpAgents(r.agents);
-      if (r.expenses) setErpExpenses(r.expenses);
-      if (r.users) setErpUsers(r.users);
+      if (r.expenses) setExpenses(r.expenses);
+      if (r.agents) setAgents(r.agents);
+      if (r.users) setUsers(r.users);
       setLastSyncedAt(Date.now());
     } catch {
-      toast.error('Failed to load data');
+      toast.error('Failed to load expenses');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const openNewExpense = () => {
-    setEditingExpense(null);
-    setExpenseForm({ ...EMPTY_EXPENSE_FORM, expenseDate: todayInput() });
-    setExpenseModal(true);
-  };
-
-  const openEditExpense = (x: ErpExpense) => {
-    setEditingExpense(x);
-    setExpenseForm({
-      category: x.category,
-      title: x.title,
-      voucherNo: x.voucherNo || '',
-      amount: String(x.amount),
-      notes: x.notes || '',
-      expenseDate: x.expenseDate ? x.expenseDate.slice(0, 10) : todayInput(),
-    });
-    setExpenseModal(true);
-  };
-
-  const deleteExpense = async (x: ErpExpense) => {
-    if (!(await askConfirm(`Delete expense "${x.title}" (${formatBDT(x.amount)})? The pre-change state is preserved in the audit log.`))) return;
-    setDeletingId(`expense-${x.id}`);
-    try {
-      const res = await adminFetch(`/api/admin/erp/expenses?id=${encodeURIComponent(x.id)}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.success('Expense deleted — old state kept in audit log');
-        await fetchData(true);
-      } else {
-        const b = await res.json().catch(() => ({}));
-        toast.error(apiError(b, 'Failed to delete expense'));
-      }
-    } catch {
-      toast.error('Network error');
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const openAuditHistory = async () => {
-    setAuditModal(true);
-    setAuditLoading(true);
-    try {
-      const res = await adminFetch('/api/admin/erp/expenses/audit');
-      const body = await res.json().catch(() => ({}));
-      if (res.ok) setAuditEntries(Array.isArray(body.entries) ? body.entries : []);
-      else toast.error(apiError(body, 'Failed to load audit log'));
-    } catch {
-      toast.error('Network error');
-    } finally {
-      setAuditLoading(false);
-    }
-  };
-
-  /* ---------- ERP Phase 3: Expenses, CapEx & Dividends ---------- */
-  const submitExpense = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const amount = parseFloat(expenseForm.amount);
-    if (!expenseForm.title.trim()) {
-      toast.error('Title is required');
-      return;
-    }
-    if (!amount || amount <= 0) {
-      toast.error('Enter a valid amount');
-      return;
-    }
-    setSavingErp(true);
-    try {
-      const res = await adminFetch(
-        editingExpense ? `/api/admin/erp/expenses?id=${encodeURIComponent(editingExpense.id)}` : '/api/admin/erp/expenses',
-        {
-          method: editingExpense ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            category: expenseForm.category,
-            title: expenseForm.title,
-            amount,
-            voucherNo: expenseForm.voucherNo.trim() || null,
-            notes: expenseForm.notes.trim() || null,
-            expenseDate: expenseForm.expenseDate
-              ? new Date(expenseForm.expenseDate + 'T12:00:00').toISOString()
-              : undefined,
-          }),
-        }
-      );
-      const body = await res.json().catch(() => ({}));
-      if (res.ok) {
-        toast.success(editingExpense ? 'Expense updated — old state audited' : 'Expense logged');
-        setExpenseModal(false);
-        await fetchData(true);
-      } else {
-        toast.error(apiError(body, 'Failed to save expense'));
-      }
-    } catch {
-      toast.error('Network error');
-    } finally {
-      setSavingErp(false);
-    }
-  };
-
-  const collectedByMap = useMemo(() => {
-    const m: Record<string, string> = {};
-    for (const a of erpAgents) m[a.id] = a.name;
-    for (const u of erpUsers) m[u.id] = u.name;
-    return m;
-  }, [erpAgents, erpUsers]);
-
-  const expenseStats = useMemo(() => {
-    const ms = new Date();
-    ms.setDate(1);
-    ms.setHours(0, 0, 0, 0);
-    const me2 = new Date(ms);
-    me2.setMonth(me2.getMonth() + 1);
-    const inMonth = (iso: string | null | undefined) => {
-      if (!iso) return false;
-      const d = new Date(iso);
-      return !isNaN(d.getTime()) && d >= ms && d < me2;
-    };
-    const rows = erpExpenses.filter((x) => inMonth(x.expenseDate));
-    return {
-      inMonth,
-      monthTotal: rows.reduce((sum, x) => sum + (x.amount || 0), 0),
-      raw: rows.filter((x) => x.category === 'RAW_MATERIAL').reduce((s, x) => s + (x.amount || 0), 0),
-      logistics: rows.filter((x) => x.category === 'LOGISTICS').reduce((s, x) => s + (x.amount || 0), 0),
-      maintenance: rows.filter((x) => x.category === 'MAINTENANCE').reduce((s, x) => s + (x.amount || 0), 0),
-    };
-  }, [erpExpenses]);
-
-  // Phase 2: Daily Expenses audit filters — text + category + month.
-  const expenseMonthOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const x of erpExpenses) {
-      if (x.expenseDate) set.add(x.expenseDate.slice(0, 7));
-    }
-    return Array.from(set).sort().reverse();
-  }, [erpExpenses]);
-
-  const filteredExpenses = useMemo(() => {
-    const sq = expSearch.trim().toLowerCase();
-    return erpExpenses.filter((x) => {
-      if (expCat !== 'ALL' && x.category !== expCat) return false;
-      if (expMonth !== 'ALL' && (x.expenseDate || '').slice(0, 7) !== expMonth) return false;
-      if (sq && ![x.title, x.notes, x.voucherNo].some((v) => (v || '').toLowerCase().includes(sq))) return false;
-      return true;
-    });
-  }, [erpExpenses, expSearch, expCat, expMonth]);
-  useEffect(() => {
-    setExpPage(1);
-  }, [expSearch, expCat, expMonth]);
-  const pagedExpenses = useMemo(() => {
-    const pages = Math.max(1, Math.ceil(filteredExpenses.length / EXPENSES_PER_PAGE));
-    const p = Math.min(expPage, pages);
-    return filteredExpenses.slice((p - 1) * EXPENSES_PER_PAGE, p * EXPENSES_PER_PAGE);
-  }, [filteredExpenses, expPage]);
-
-  // ERP Phase 3 metrics — render-facing aliases.
-  const monthExpenseTotal = expenseStats.monthTotal;
-  const monthRawMaterialSpend = expenseStats.raw;
-  const monthLogisticsSpend = expenseStats.logistics;
-  const monthMaintenanceSpend = expenseStats.maintenance;
-
   useEffect(() => {
     void fetchData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Overview quick actions link here with ?new=1 to open the create form.
+  // Overview's "Log an expense" links here with ?new=1.
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('new') !== '1') return;
     window.history.replaceState(null, '', window.location.pathname);
-    openNewExpense();
-  }, []);
+    if (canAdd) setDialog(null);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const kpiCards: Kpi[] = [
-      { label: "This Month's Expenses", value: formatBDT(monthExpenseTotal), icon: Receipt, bg: 'bg-rose-50', fg: 'text-rose-600', valueCls: 'text-rose-600' },
-      { label: 'Raw Materials Spend', value: formatBDT(monthRawMaterialSpend), icon: Package, bg: 'bg-teal-50', fg: 'text-teal-700' },
-      { label: 'Logistics / Fuel Spend', value: formatBDT(monthLogisticsSpend), icon: Wallet, bg: 'bg-amber-50', fg: 'text-amber-600' },
-      { label: 'Maintenance', value: formatBDT(monthMaintenanceSpend), icon: Cog, bg: 'bg-slate-100', fg: 'text-slate-600' },
+  useEffect(() => setPage(1), [query, category, month]);
+
+  /* --------------------------------------------------------- derived */
+
+  const monthOf = (x: ErpExpense) => bdMonthKey(x.expenseDate);
+  const months = useMemo(() => {
+    const s = new Set(expenses.map(monthOf).filter(Boolean));
+    s.add(thisMonth);
+    return [...s].sort((a, b) => b.localeCompare(a));
+  }, [expenses, thisMonth]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return expenses.filter((x) => {
+      if (month !== 'ALL' && monthOf(x) !== month) return false;
+      if (category !== 'ALL' && x.category !== category) return false;
+      if (q && ![x.title, x.notes, x.voucherNo].some((v) => (v || '').toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }, [expenses, query, category, month]);
+  const filteredTotal = filtered.reduce((s, x) => s + x.amount, 0);
+  const pages = Math.max(1, Math.ceil(filtered.length / EXPENSES_PER_PAGE));
+  const curPage = Math.min(page, pages);
+  const pageRows = filtered.slice((curPage - 1) * EXPENSES_PER_PAGE, curPage * EXPENSES_PER_PAGE);
+
+  const sumWhere = (pred: (x: ErpExpense) => boolean) => expenses.filter(pred).reduce((s, x) => s + x.amount, 0);
+  const lastMonthKey = (() => {
+    const [y, m] = thisMonth.split('-').map(Number);
+    return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+  })();
+  const inMonth = (x: ErpExpense) => monthOf(x) === thisMonth;
+  const monthTotal = sumWhere(inMonth);
+  const lastMonthTotal = sumWhere((x) => monthOf(x) === lastMonthKey);
+
+  /** Category split for the month being viewed (or all time). */
+  const breakdown = useMemo(() => {
+    const scope = expenses.filter((x) => month === 'ALL' || monthOf(x) === month);
+    const total = scope.reduce((s, x) => s + x.amount, 0);
+    return {
+      total,
+      rows: Object.keys(EXPENSE_CATEGORY_META)
+        .map((k) => ({ key: k, amount: scope.filter((x) => x.category === k).reduce((s, x) => s + x.amount, 0) }))
+        .sort((a, b) => b.amount - a.amount),
+    };
+  }, [expenses, month]);
+
+  const kpis: Kpi[] = [
+    { label: 'Spent this month', value: formatBDT(monthTotal), icon: Receipt, sub: `${formatBDT(lastMonthTotal)} last month` },
+    { label: 'Raw material', value: formatBDT(sumWhere((x) => inMonth(x) && x.category === 'RAW_MATERIAL')), icon: Package, sub: 'This month' },
+    { label: 'Logistics', value: formatBDT(sumWhere((x) => inMonth(x) && x.category === 'LOGISTICS')), icon: Truck, sub: 'This month' },
+    {
+      label: 'Utility & upkeep',
+      value: formatBDT(sumWhere((x) => inMonth(x) && (x.category === 'LAB_UTILITY' || x.category === 'MAINTENANCE'))),
+      icon: Wrench,
+      sub: 'This month',
+    },
   ];
 
+  const names = useMemo(() => {
+    const m: Record<string, string> = { master: 'Administrator' };
+    for (const a of agents) m[a.id] = a.name;
+    for (const u of users) m[u.id] = u.name;
+    return m;
+  }, [agents, users]);
+
+  /* ---------------------------------------------------------- writes */
+
+  const remove = async (x: ErpExpense) => {
+    if (!(await askConfirm(`Delete "${x.title}" (${formatBDT(x.amount)})? A copy is kept in change history.`))) return;
+    try {
+      const res = await adminFetch(`/api/admin/erp/expenses?id=${encodeURIComponent(x.id)}`, { method: 'DELETE' });
+      if (res.status === 401) return handleAuthLoss();
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) return void toast.error(apiError(body, 'Could not delete the expense'));
+      setExpenses((prev) => prev.filter((e) => e.id !== x.id));
+      setHistory(null);
+      toast.success('Expense deleted · a copy is in change history');
+    } catch {
+      toast.error('Network error — nothing was deleted');
+    }
+  };
+
+  const openHistory = async () => {
+    setHistoryOpen(true);
+    if (history) return;
+    try {
+      const res = await adminFetch('/api/admin/erp/expenses/audit');
+      if (res.status === 401) return handleAuthLoss();
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) return void toast.error(apiError(body, 'Could not load change history'));
+      setHistory(Array.isArray(body.entries) ? body.entries : []);
+    } catch {
+      toast.error('Network error — change history not loaded');
+    }
+  };
+
+  /* ------------------------------------------------------------ bits */
+
+  const rowMenu = (x: ErpExpense) =>
+    canChange ? (
+      <MenuButton
+        label={`Actions for ${x.title}`}
+        icon={MoreHorizontal}
+        iconOnly
+        variant="ghost"
+        items={[
+          { label: 'Edit', icon: Pencil, onSelect: () => setDialog(x) },
+          { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(x) },
+        ]}
+      />
+    ) : null;
+
+  const filtersOn = query.trim() !== '' || category !== 'ALL' || month !== thisMonth;
+
+  /* ----------------------------------------------------------- render */
+
   return (
-    <>
-      <SectionFrame
-        tab="expenses"
-        kpis={kpiCards}
-        loading={loading}
-        refreshing={refreshing}
-        lastSyncedAt={lastSyncedAt}
-        onRefresh={() => fetchData(true)}
-      >
-        {(
-              /* ---------- DAILY EXPENSES ---------- */
-              <div className="bg-white rounded-xl border border-slate-200/80 shadow-none p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <div>
-                    <h2 className="text-lg sm:text-2xl font-semibold">Daily Expenses</h2>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1">Track raw materials, logistics, utilities &amp; maintenance spending</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    {me?.role === 'SUPERADMIN' && (
-                      <button
-                        onClick={openAuditHistory}
-                        className="min-h-[44px] px-4 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:border-teal-700/30 hover:text-teal-700 transition-colors"
-                      >
-                        <ClipboardList size={15} /> Audit History
-                      </button>
-                    )}
-                    <button
-                      onClick={openNewExpense}
-                      className="min-h-[44px] px-5 inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 text-white text-xs font-bold hover:bg-teal-800 transition-colors"
-                    >
-                      <Plus size={16} /> Log Expense
-                    </button>
-                  </div>
-                </div>
-
-                {/* Phase 2: audit filters — text search + category + month */}
-                <div className="flex flex-wrap items-end gap-2.5 mb-4">
-                  <div className="relative w-full sm:w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      value={expSearch}
-                      onChange={(e) => setExpSearch(e.target.value)}
-                      placeholder="Search title, notes, voucher…"
-                      className="w-full min-h-[36px] pl-9 pr-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Category</label>
-                    <select
-                      value={expCat}
-                      onChange={(e) => setExpCat(e.target.value)}
-                      className="min-h-[36px] px-2.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
-                    >
-                      <option value="ALL">All Categories</option>
-                      {Object.entries(EXPENSE_CATEGORY_META).map(([k, m]) => (
-                        <option key={k} value={k}>{m.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Month</label>
-                    <select
-                      value={expMonth}
-                      onChange={(e) => setExpMonth(e.target.value)}
-                      className="min-h-[36px] px-2.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
-                    >
-                      <option value="ALL">All Months</option>
-                      {expenseMonthOptions.map((ym) => (
-                        <option key={ym} value={ym}>
-                          {new Date(`${ym}-01T00:00:00`).toLocaleString('en-GB', { month: 'short', year: 'numeric' })}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {(expSearch || expCat !== 'ALL' || expMonth !== 'ALL') && (
-                    <button
-                      onClick={() => { setExpSearch(''); setExpCat('ALL'); setExpMonth('ALL'); }}
-                      className="min-h-[36px] px-3 inline-flex items-center gap-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-500 hover:bg-slate-50"
-                    >
-                      <X size={12} /> Clear
-                    </button>
-                  )}
-                </div>
-
-                {/* Desktop: expenses table */}
-                <div className="hidden md:block overflow-x-auto rounded-xl">
-                  <table className="w-full text-left tabular-nums">
-                    <thead>
-                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        <th className="pb-4 pr-4">Date</th>
-                        <th className="pb-4 pr-4">Voucher No</th>
-                        <th className="pb-4 pr-4">Category</th>
-                        <th className="pb-4 pr-4">Title</th>
-                        <th className="pb-4 pr-4">Amount (BDT)</th>
-                        <th className="pb-4 pr-4">Notes</th>
-                        {me?.role === 'SUPERADMIN' && <th className="pb-4 text-right">Actions</th>}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {pagedExpenses.map((x) => {
-                        const catMeta = EXPENSE_CATEGORY_META[x.category] || EXPENSE_CATEGORY_META.OTHER;
-                        return (
-                          <tr key={x.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="py-3.5 pr-4 text-xs font-semibold text-slate-700 whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1.5"><CalendarDays size={12} className="text-teal-700" /> {formatDate(x.expenseDate)}</span>
-                            </td>
-                            <td className="py-3.5 pr-4 text-sm font-mono text-xs">{x.voucherNo || '—'}</td>
-                            <td className="py-3.5 pr-4">
-                              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold whitespace-nowrap ${catMeta.cls}`}>
-                                {catMeta.label}
-                              </span>
-                            </td>
-                            <td className="py-3.5 pr-4 font-bold text-sm">{x.title}</td>
-                            <td className="py-3.5 pr-4 font-semibold text-rose-600 whitespace-nowrap">{formatBDT(x.amount)}</td>
-                            <td className="py-3.5 pr-4 text-xs text-gray-500 max-w-[240px] truncate" title={x.notes || ''}>{x.notes || '—'}</td>
-                            {me?.role === 'SUPERADMIN' && (
-                              <td className="py-3.5 text-right">
-                                <div className="inline-flex items-center gap-1.5">
-                                  <button
-                                    onClick={() => openEditExpense(x)}
-                                    aria-label={`Edit ${x.title}`}
-                                    title="Edit expense"
-                                    className="min-h-[36px] w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-teal-700/30 hover:text-teal-700 transition-colors"
-                                  >
-                                    <Pencil size={13} />
-                                  </button>
-                                  <button
-                                    onClick={() => deleteExpense(x)}
-                                    disabled={deletingId === `expense-${x.id}`}
-                                    aria-label={`Delete ${x.title}`}
-                                    title="Delete expense"
-                                    className="min-h-[36px] w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-600 transition-colors disabled:opacity-50"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
-                                </div>
-                              </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                  {filteredExpenses.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                      <span className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-gray-300 mb-4">
-                        <Receipt size={28} />
-                      </span>
-                      <p className="text-sm font-bold text-gray-500">{erpExpenses.length > 0 ? 'No expenses match these filters' : 'No expenses logged yet'}</p>
-                      <p className="text-xs text-slate-500 mt-1">{erpExpenses.length > 0 ? 'Try another keyword, category or month.' : 'Log daily spending to keep the ledger clean.'}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Mobile: expense rows */}
-                <div className="md:hidden divide-y divide-slate-100">
-                  {pagedExpenses.map((x) => {
-                    const catMeta = EXPENSE_CATEGORY_META[x.category] || EXPENSE_CATEGORY_META.OTHER;
-                    return (
-                      <div key={x.id} className="py-3.5 flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-sm truncate">{x.title}</span>
-                            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${catMeta.cls}`}>{catMeta.label}</span>
-                          </div>
-                          <div className="text-xs font-semibold text-slate-600 mt-0.5">
-                            <span className="inline-flex items-center gap-1"><CalendarDays size={11} /> {formatDate(x.expenseDate)}</span>
-                            {x.voucherNo ? ` · Voucher ${x.voucherNo}` : ''}
-                          </div>
-                          {x.notes && <div className="text-xs text-gray-500 truncate mt-0.5">{x.notes}</div>}
-                        </div>
-                        <div className="flex flex-col items-end gap-2 shrink-0">
-                          <span className="font-semibold text-rose-600 whitespace-nowrap text-sm">{formatBDT(x.amount)}</span>
-                          {me?.role === 'SUPERADMIN' && (
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={() => openEditExpense(x)}
-                                aria-label={`Edit ${x.title}`}
-                                className="min-h-[36px] w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 text-slate-600"
-                              >
-                                <Pencil size={13} />
-                              </button>
-                              <button
-                                onClick={() => deleteExpense(x)}
-                                disabled={deletingId === `expense-${x.id}`}
-                                aria-label={`Delete ${x.title}`}
-                                className="min-h-[36px] w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 disabled:opacity-50"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {filteredExpenses.length === 0 && (
-                    <p className="text-center text-sm text-slate-500 py-10">
-                      {erpExpenses.length > 0 ? 'No expenses match these filters.' : 'No expenses logged yet.'}
-                    </p>
-                  )}
-                </div>
-                <Pager
-                  page={expPage}
-                  total={filteredExpenses.length}
-                  perPage={EXPENSES_PER_PAGE}
-                  onPage={setExpPage}
-                  noun={filteredExpenses.length === 1 ? 'expense' : 'expenses'}
-                />
-              </div>
-        )}
-      </SectionFrame>
-
-      {auditModal && (
-        <ModalShell onClose={() => setAuditModal(false)}
-          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setAuditModal(false)}
-        >
-          <div
-            className="bg-white w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            role="dialog"
-              aria-modal="true"
-              onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-teal-700">Expense Audit History</h3>
-                <p className="text-xs text-slate-500">Latest 50 changes — pre-edit &amp; pre-delete snapshots</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAuditModal(false)}
-                aria-label="Close"
-                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-50"
-              >
-                <X size={18} />
-              </button>
+    <SectionFrame
+      tab="expenses"
+      kpis={kpis}
+      loading={loading}
+      refreshing={refreshing}
+      lastSyncedAt={lastSyncedAt}
+      onRefresh={() => fetchData(true)}
+      actions={
+        <>
+          {canChange && (
+            <Button icon={History} onClick={() => void openHistory()} title="Every edit and delete, with the version before it">
+              <span className="hidden sm:inline">Change history</span>
+              <span className="sr-only sm:hidden">Change history</span>
+            </Button>
+          )}
+          {canAdd && (
+            <Button variant="primary" icon={Plus} onClick={() => setDialog(null)}>
+              <span className="hidden sm:inline">Add expense</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          )}
+        </>
+      }
+    >
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3 xl:gap-6">
+        <div className="min-w-0 rounded-lg border border-zinc-200 bg-white xl:col-span-2">
+          <div className="flex flex-wrap items-center gap-2 border-b border-zinc-100 p-3">
+            <div className="relative w-full sm:w-60">
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+              <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search description or voucher" aria-label="Search expenses" className="pl-9" />
             </div>
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+              <div className="min-w-0 sm:w-44">
+                <Select aria-label="Month" value={month} onChange={(e) => setMonth(e.target.value)}>
+                  {months.map((m) => (
+                    <option key={m} value={m}>
+                      {monthLabel(m)}
+                    </option>
+                  ))}
+                  <option value="ALL">All months</option>
+                </Select>
+              </div>
+              <div className="min-w-0 sm:w-44">
+                <Select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
+                  <option value="ALL">All categories</option>
+                  {Object.entries(EXPENSE_CATEGORY_META).map(([k, m]) => (
+                    <option key={k} value={k}>
+                      {m.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+            {filtered.length > 0 && (
+              <span className="w-full text-meta text-zinc-500 tabular-nums sm:ml-auto sm:w-auto">
+                {filtered.length} · <span className="font-semibold text-zinc-900">{formatBDT(filteredTotal)}</span>
+              </span>
+            )}
+          </div>
 
-            <div className="px-6 py-5 space-y-3">
-              {auditLoading && (
-                <p className="text-center text-sm text-slate-500 py-10">Loading audit trail…</p>
+          {pageRows.length === 0 ? (
+            <EmptyState icon={Receipt} title={expenses.length ? 'No expenses match' : 'No expenses yet'}>
+              {expenses.length && filtersOn ? (
+                <button
+                  type="button"
+                  className="font-medium text-brand-700 hover:underline"
+                  onClick={() => {
+                    setQuery('');
+                    setCategory('ALL');
+                    setMonth('ALL');
+                  }}
+                >
+                  Show all expenses
+                </button>
+              ) : (
+                'Spending on materials, courier, bills and repairs appears here.'
               )}
-              {!auditLoading && auditEntries.length === 0 && (
-                <div className="text-center py-12">
-                  <ClipboardList size={28} className="mx-auto text-gray-300 mb-3" />
-                  <p className="text-sm font-bold text-gray-500">No audit entries yet</p>
-                  <p className="text-xs text-slate-500 mt-1">Every SuperAdmin expense edit or delete is recorded here.</p>
-                </div>
-              )}
-              {!auditLoading && auditEntries.map((entry) => {
-                let snap: { title?: string; amount?: number; category?: string; expenseDate?: string; voucherNo?: string | null } | null = null;
-                try { snap = JSON.parse(entry.originalData); } catch { snap = null; }
-                const isDelete = entry.action === 'DELETE';
+            </EmptyState>
+          ) : (
+            <>
+              <table className="hidden w-full table-fixed text-left md:table">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-meta text-zinc-500">
+                    <th className="w-[110px] px-4 py-2.5 font-medium">Date</th>
+                    <th className="px-3 py-2.5 font-medium">What for</th>
+                    <th className="hidden w-[130px] px-3 py-2.5 font-medium lg:table-cell">Category</th>
+                    <th className="w-[120px] px-3 py-2.5 text-right font-medium">Amount</th>
+                    {canChange && <th className="w-12 px-2 py-2.5" aria-label="Actions" />}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 text-table">
+                  {pageRows.map((x) => (
+                    <tr key={x.id} className="hover:bg-zinc-50">
+                      <td className="px-4 py-2.5 text-zinc-700 tabular-nums">{formatDay(x.expenseDate)}</td>
+                      <td className="px-3 py-2.5">
+                        <p className="truncate font-medium text-zinc-900" title={x.title}>
+                          {x.title}
+                        </p>
+                        <p className="truncate text-meta text-zinc-500">
+                          <span className="lg:hidden">{catLabel(x.category)}</span>
+                          {[x.voucherNo && `Voucher ${x.voucherNo}`, x.notes].filter(Boolean).length > 0 && <span className="lg:hidden"> · </span>}
+                          {[x.voucherNo && `Voucher ${x.voucherNo}`, x.notes].filter(Boolean).join(' · ')}
+                        </p>
+                      </td>
+                      <td className="hidden px-3 py-2.5 lg:table-cell">
+                        <Badge>{catLabel(x.category)}</Badge>
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-medium text-zinc-900 tabular-nums">{formatBDT(x.amount)}</td>
+                      {canChange && <td className="px-2 py-1.5 text-right">{rowMenu(x)}</td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <ul className="divide-y divide-zinc-100 md:hidden">
+                {pageRows.map((x) => (
+                  <li key={x.id} className="flex items-start gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-body font-medium text-zinc-900 [overflow-wrap:anywhere]">{x.title}</p>
+                      <p className="text-meta text-zinc-500">
+                        {formatDay(x.expenseDate)} · {catLabel(x.category)}
+                        {x.voucherNo ? ` · ${x.voucherNo}` : ''}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-body font-medium text-zinc-900 tabular-nums">{formatBDT(x.amount)}</span>
+                    {canChange && <div className="-my-1 shrink-0">{rowMenu(x)}</div>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <div className="px-4 pb-4">
+            <Pager page={curPage} total={filtered.length} perPage={EXPENSES_PER_PAGE} onPage={setPage} noun={filtered.length === 1 ? 'expense' : 'expenses'} />
+          </div>
+        </div>
+
+        <Panel title="By category" description={month === 'ALL' ? 'All months' : monthLabel(month)}>
+          {breakdown.total === 0 ? (
+            <p className="py-2 text-table text-zinc-400">Nothing spent{month === 'ALL' ? '' : ` in ${monthLabel(month)}`}.</p>
+          ) : (
+            <ul className="space-y-3 py-1">
+              {breakdown.rows.map((r) => {
+                const pct = breakdown.total ? Math.round((r.amount / breakdown.total) * 100) : 0;
                 return (
-                  <div key={entry.id} className="rounded-2xl border border-slate-200 p-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider ${
-                        isDelete ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-                      }`}>
-                        {isDelete ? 'Deleted' : 'Edited'}
+                  <li key={r.key}>
+                    <button
+                      type="button"
+                      onClick={() => setCategory(category === r.key ? 'ALL' : r.key)}
+                      aria-pressed={category === r.key}
+                      className="block w-full text-left"
+                    >
+                      <span className="flex items-baseline justify-between gap-2 text-table">
+                        <span className={category === r.key ? 'font-medium text-zinc-900' : 'text-zinc-700'}>{catLabel(r.key)}</span>
+                        <span className="tabular-nums text-zinc-900">
+                          {formatBDT(r.amount)} <span className="text-meta text-zinc-400">{pct}%</span>
+                        </span>
                       </span>
-                      {snap?.title && <span className="font-bold text-sm truncate">{snap.title}</span>}
-                      {typeof snap?.amount === 'number' && (
-                        <span className="font-semibold text-rose-600 text-sm">{formatBDT(snap.amount)}</span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-500">
-                      {snap?.category && <span>Category: <span className="font-semibold">{snap.category.replace(/_/g, ' ')}</span></span>}
-                      {snap?.expenseDate && <span>Date: <span className="font-semibold">{formatDay(snap.expenseDate)}</span></span>}
-                      <span>By: <span className="font-semibold">{collectedByMap[entry.performedBy] || entry.performedBy}</span></span>
-                      <span>At: <span className="font-semibold">{formatDate(entry.createdAt)}</span></span>
-                    </div>
-                    <details className="mt-2">
-                      <summary className="text-xs font-bold text-slate-400 cursor-pointer hover:text-slate-600 select-none">Original snapshot (JSON)</summary>
-                      <pre className="mt-1.5 rounded-xl bg-slate-50 border border-slate-100 p-3 text-[11px] leading-relaxed overflow-x-auto text-slate-600 whitespace-pre-wrap break-all">{entry.originalData}</pre>
-                    </details>
-                  </div>
+                      <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-zinc-100">
+                        <span className={`block h-full rounded-full ${category === r.key ? 'bg-brand-600' : 'bg-brand-300'}`} style={{ width: `${pct}%` }} />
+                      </span>
+                    </button>
+                  </li>
                 );
               })}
-            </div>
-          </div>
-        </ModalShell>
+            </ul>
+          )}
+          <p className="mt-3 border-t border-zinc-100 pt-3 text-meta text-zinc-500">Tap a category to filter the list.</p>
+        </Panel>
+      </div>
+
+      {dialog !== undefined && (
+        <ExpenseDialog
+          editing={dialog}
+          onClose={() => setDialog(undefined)}
+          onSaved={() => {
+            setHistory(null);
+            void fetchData(true);
+          }}
+        />
       )}
 
-      {expenseModal && (
-        <ModalShell onClose={() => setExpenseModal(false)}
-          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-        >
-          <form
-            onSubmit={submitExpense}
-            className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            role="dialog"
-              aria-modal="true"
-              onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
-              <h3 className="text-base sm:text-lg font-semibold text-teal-700">{editingExpense ? 'Edit Expense' : 'Log Daily Expense'}</h3>
-              <button
-                type="button"
-                onClick={() => setExpenseModal(false)}
-                aria-label="Close"
-                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-50"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
-              {editingExpense && (
-                <p className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-xs text-amber-800 font-semibold">
-                  Editing is SuperAdmin-only — the pre-change state is snapshotted to the audit log.
-                </p>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Category *</label>
-                  <select
-                    value={expenseForm.category}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
-                    className="w-full min-h-[44px] px-3 rounded-xl border border-slate-200 text-sm font-bold bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
-                  >
-                    <option value="RAW_MATERIAL">Raw Material</option>
-                    <option value="LOGISTICS">Logistics / Fuel</option>
-                    <option value="LAB_UTILITY">Lab Utility</option>
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Voucher No</label>
-                  <input
-                    value={expenseForm.voucherNo}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, voucherNo: e.target.value })}
-                    placeholder="e.g. V-2026-014"
-                    className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Title / Description *</label>
-                <input
-                  required
-                  value={expenseForm.title}
-                  onChange={(e) => setExpenseForm({ ...expenseForm, title: e.target.value })}
-                  placeholder="e.g. Zirconia pucks restock (Aidite 5 pcs)"
-                  className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">
-                  Expense Date * <span className="normal-case font-medium text-slate-400">(backdating allowed)</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={expenseForm.expenseDate}
-                  onChange={(e) => setExpenseForm({ ...expenseForm, expenseDate: e.target.value })}
-                  className="w-full min-h-[44px] px-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Amount (BDT) *</label>
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={expenseForm.amount}
-                  onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                  placeholder="e.g. 4500"
-                  className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Notes</label>
-                <textarea
-                  rows={2}
-                  value={expenseForm.notes}
-                  onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })}
-                  placeholder="Supplier, payment mode, remarks..."
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white resize-y"
-                />
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-6 py-4 pb-6 sm:pb-4 flex items-center justify-end gap-3 rounded-b-xl">
-              <button
-                type="button"
-                onClick={() => setExpenseModal(false)}
-                className="min-h-[44px] px-5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={savingErp}
-                className="min-h-[44px] px-6 rounded-xl bg-teal-700 text-xs font-bold text-white hover:bg-teal-800 disabled:opacity-50 shadow-md"
-              >
-                {savingErp ? 'Saving...' : editingExpense ? 'Save Changes' : 'Log Expense'}
-              </button>
-            </div>
-          </form>
-        </ModalShell>
+      {historyOpen && (
+        <SidePanel title="Change history" subtitle="Last 50 edits and deletes, with the version before each change" onClose={() => setHistoryOpen(false)}>
+          {history === null ? (
+            <p className="text-table text-zinc-400">Loading…</p>
+          ) : history.length === 0 ? (
+            <p className="text-table text-zinc-400">No expense has been edited or deleted yet.</p>
+          ) : (
+            <ol className="divide-y divide-zinc-100">
+              {history.map((h) => {
+                let before: Partial<ErpExpense> | null = null;
+                try {
+                  before = JSON.parse(h.originalData);
+                } catch {
+                  before = null;
+                }
+                const now = expenses.find((x) => x.id === h.expenseId);
+                return (
+                  <li key={h.id} className="py-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge tone={h.action === 'DELETE' ? 'danger' : 'neutral'}>{h.action === 'DELETE' ? 'Deleted' : 'Edited'}</Badge>
+                      <span className="text-meta text-zinc-400">{formatDate(h.createdAt)}</span>
+                    </div>
+                    <p className="mt-1.5 text-meta text-zinc-500">By {names[h.performedBy] || h.performedBy}</p>
+                    {before ? (
+                      <dl className="mt-2 grid grid-cols-[80px_minmax(0,1fr)] gap-x-3 gap-y-1 rounded-md bg-zinc-50 px-3 py-2 text-table">
+                        <dt className="text-zinc-500">Before</dt>
+                        <dd className="text-zinc-800 [overflow-wrap:anywhere]">{before.title}</dd>
+                        <dt className="text-zinc-500">Amount</dt>
+                        <dd className="text-zinc-800 tabular-nums">
+                          {formatBDT(before.amount ?? 0)}
+                          {now && now.amount !== before.amount && <span className="text-zinc-500"> → now {formatBDT(now.amount)}</span>}
+                        </dd>
+                        <dt className="text-zinc-500">Category</dt>
+                        <dd className="text-zinc-800">{catLabel(before.category || '')}</dd>
+                        <dt className="text-zinc-500">Date</dt>
+                        <dd className="text-zinc-800">{before.expenseDate ? formatDay(before.expenseDate) : '—'}</dd>
+                        {before.voucherNo && (
+                          <>
+                            <dt className="text-zinc-500">Voucher</dt>
+                            <dd className="text-zinc-800">{before.voucherNo}</dd>
+                          </>
+                        )}
+                      </dl>
+                    ) : (
+                      <pre className="mt-2 whitespace-pre-wrap break-all rounded-md bg-zinc-50 p-2 text-meta text-zinc-600">{h.originalData}</pre>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </SidePanel>
       )}
-
-      {/* Add Machine Asset (CapEx) Modal */}
-    </>
+    </SectionFrame>
   );
 }
