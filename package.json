@@ -1,0 +1,35 @@
+{
+  "name": "velura-next-balal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack && shx cp -r .next/static .next/standalone/www/cndl-frontend/.next/ && shx cp -r public .next/standalone/www/cndl-frontend/",
+    "start": "next start -p 3003 -H 127.0.0.1",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@svgr/webpack": "^8.1.0",
+    "lucide-react": "^0.562.0",
+    "next": "16.1.1",
+    "react": "19.2.3",
+    "react-countup": "^6.5.3",
+    "react-dom": "19.2.3",
+    "sonner": "^2.0.7",
+    "swiper": "^12.0.3",
+    "zod": "^4.3.4"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.1",
+    "prisma": "^6.19.3",
+    "shx": "^0.3.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

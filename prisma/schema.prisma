@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Order {
+  id              String    @id @default(cuid())
+  caseId          String    @unique
+  customerName    String
+  phone           String
+  email           String?
+  address         String?
+  productType     String?
+  quantity        Int       @default(1)
+  orderSource     String? // OFFLINE_RIDER, PHONE, WHATSAPP, ONLINE
+  orderDate       DateTime?
+  deliveryDate    DateTime?
+  clinicName      String?
+  patientName     String?
+  toothNo         String?
+  shade           String?
+  billedAmount    Float?
+  agentId         String? // soft ref to AppUser (commission attribution)
+  clientAccountId String? // soft ref to ClientAccount
+  isDirect        Boolean   @default(true)
+  commissionAmount Float    @default(0.0)
+  status          String    @default("Received") // Received, Designing, Milling, Quality Control, Dispatched
+  progress        Int       @default(10)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status, clientAccountId])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String
+  category    String   @default("Zirconia & CAD/CAM")
+  image       String   @default("/images/blog.jpg")
+  author      String   @default("CNDL Clinical Team")
+  publishedAt DateTime @default(now())
+}
+
+model Testimonial {
+  id         Int      @id @default(autoincrement())
+  doctorName String
+  clinicName String
+  location   String   @default("Dhaka, Bangladesh")
+  rating     Int      @default(5)
+  comment    String
+  avatar     String?
+  isApproved Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  category        String
+  name            String
+  nameBn          String?
+  description     String?
+  specs           String?
+  imageUrl        String?
+  turnaroundDays  Int      @default(3)
+  warrantyYears   Int      @default(5)
+  basePrice       String?
+  isActive        Boolean  @default(true)
+  displayOrder    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum Role {
+  SUPERADMIN
+  CHAIRMAN
+  ACCOUNTS
+  AGENT
+  PARTNER_LAB
+  DOCTOR
+}
+
+enum AccountType {
+  CHAMBER
+  PARTNER_LAB
+  CHAIRMAN_PERSONAL
+}
+
+enum TransactionType {
+  INVOICE
+  PAYMENT
+  DISCOUNT_OVERRIDE
+}
+
+enum ExpenseCategory {
+  RAW_MATERIAL
+  LOGISTICS
+  LAB_UTILITY
+  MAINTENANCE
+  OTHER
+}
+
+model AppUser {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  email     String?
+  address   String?
+  role      Role     @default(DOCTOR)
+  status    String   @default("ACTIVE")
+  metadata  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClientAccount {
+  id                 String            @id @default(cuid())
+  accountType        AccountType       @default(CHAMBER)
+  name               String
+  ownerName          String
+  phone              String
+  email              String?
+  address            String?
+  institutionType    String            @default("CHAMBER") // CHAMBER, HOSPITAL, LAB
+  division           String            @default("DHAKA")
+  district           String?
+  assignedAgentId    String?
+  customDiscountNote String?
+  currentBalance     Float             @default(0.0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  ledgers            FinancialLedger[]
+}
+
+model FinancialLedger {
+  id              String          @id @default(cuid())
+  clientAccountId String
+  clientAccount   ClientAccount   @relation(fields: [clientAccountId], references: [id], onDelete: Cascade)
+  orderId         String?
+  transactionType TransactionType
+  grossAmount     Float           @default(0.0)
+  discountAmount  Float           @default(0.0)
+  netAmount       Float
+  collectedById   String?
+  isVerified      Boolean         @default(false)
+  notes           String?
+  paymentMethod   String?
+  paymentDate     DateTime?
+  createdAt       DateTime        @default(now())
+
+  @@index([createdAt, transactionType])
+  @@index([clientAccountId])
+}
+
+model DailyExpense {
+  id          String          @id @default(cuid())
+  category    ExpenseCategory
+  title       String
+  amount      Float
+  voucherNo   String?
+  notes       String?
+  expenseDate DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+
+  @@index([expenseDate])
+}
+
+model CapExAsset {
+  id           String    @id @default(cuid())
+  machineName  String
+  purchaseCost Float
+  purchaseDate DateTime?
+  status       String    @default("OPERATIONAL")
+  notes        String?
+  createdAt    DateTime  @default(now())
+}
+
+model Shareholder {
+  id             String   @id @default(cuid())
+  name           String
+  phone          String?
+  address        String?
+  sharesCount    Int      @default(1)
+  paymentDetails String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ShareholderPayout {
+  id              String   @id @default(cuid())
+  shareholderName String
+  sharesCount     Int      @default(1)
+  amountPaid      Float
+  payoutMonth     String
+  paymentMethod   String?
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
+model ExpenseAuditLog {
+  id           String   @id @default(cuid())
+  expenseId    String // soft ref to DailyExpense.id
+  action       String // CREATE, UPDATE, DELETE
+  originalData String // JSON snapshot of the expense row
+  performedBy  String // AppUser id or 'master'
+  createdAt    DateTime @default(now())
+}
