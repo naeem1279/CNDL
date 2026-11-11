@@ -7,17 +7,22 @@ import { friendlyIssue } from "@/lib/validation";
 const accountTypeEnum = z.enum(["CHAMBER", "PARTNER_LAB", "CHAIRMAN_PERSONAL"]);
 const institutionTypeEnum = z.enum(["CHAMBER", "HOSPITAL", "PARTNER_LAB", "FREELANCE"]);
 
+// Blank optional fields arrive as "" from forms; treat them as "not given"
+// (same as the update schema in ./[id]/route.ts). Before 2026-11-12 a blank
+// email failed validation, so accounts could only be created with an email.
+const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
+
 const accountCreateSchema = z.object({
   accountType: accountTypeEnum.default("CHAMBER"),
   name: z.string().trim().min(2).max(150),
   ownerName: z.string().trim().min(2).max(150),
   phone: z.string().trim().min(6).max(30),
-  email: z.string().trim().email().max(200).nullish(),
-  address: z.string().trim().max(500).nullish(),
+  email: z.preprocess(emptyToNull, z.string().trim().email().max(200).nullish()),
+  address: z.preprocess(emptyToNull, z.string().trim().max(500).nullish()),
   institutionType: institutionTypeEnum.default("CHAMBER"),
   division: z.string().trim().min(2).max(30).default("DHAKA"),
-  district: z.string().trim().max(60).nullish(),
-  assignedAgentId: z.string().trim().max(60).nullish(),
+  district: z.preprocess(emptyToNull, z.string().trim().max(60).nullish()),
+  assignedAgentId: z.preprocess(emptyToNull, z.string().trim().max(60).nullish()),
   openingDue: z.coerce.number().min(0).default(0),
   allowDuplicate: z.boolean().optional(),
 });

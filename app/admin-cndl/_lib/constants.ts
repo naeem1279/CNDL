@@ -58,12 +58,6 @@ export const EMPTY_SERVICE_FORM = {
 export const EMPTY_BLOG_FORM = { title: '', slug: '', category: 'Zirconia & CAD/CAM', excerpt: '', content: '', imageUrl: '/images/blog.jpg' };
 export const EMPTY_REVIEW_FORM = { doctorName: '', clinicName: '', location: 'Dhaka, Bangladesh', rating: 5, comment: '' };
 export const EMPTY_USER_FORM = { name: '', phone: '', email: '', address: '', role: 'AGENT', status: 'ACTIVE', password: '' };
-export const EMPTY_ACCOUNT_FORM = {
-  accountType: 'CHAMBER', name: '', ownerName: '', phone: '', email: '', address: '',
-  institutionType: 'CHAMBER', division: 'DHAKA', district: '', assignedAgentId: '', openingDue: '',
-};
-export const EMPTY_INVOICE_FORM = { grossAmount: '', discountAmount: '0', orderId: '', notes: '' };
-export const EMPTY_PAYMENT_FORM = { netAmount: '', collectedById: '', isVerified: false, notes: '', paymentDate: '', paymentMethod: '' };
 export const EMPTY_EXPENSE_FORM = { category: 'RAW_MATERIAL', title: '', voucherNo: '', amount: '', notes: '', expenseDate: '' };
 export const EMPTY_CAPEX_FORM = { machineName: '', purchaseCost: '', purchaseDate: '', status: 'OPERATIONAL', notes: '' };
 export const EMPTY_OFFLINE_ORDER_FORM = {
