@@ -30,6 +30,8 @@ export type Message = {
   id: string;
   name: string;
   email: string;
+  /** Saved by the contact form since 2026-11-05; older rows have none. */
+  phone?: string | null;
   subject: string | null;
   message: string;
   createdAt: string;
