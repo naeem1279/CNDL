@@ -43,18 +43,26 @@ uploads and case files always land in the project folder and survive rebuilds.
 ```bash
 cd /var/www/cndl-frontend
 git pull
-npm ci
-npm run check
-npm run build
-pm2 reload ecosystem.config.cjs
+npm ci                     # only needed when package-lock.json changed
+bash scripts/deploy.sh     # check, build, publish release, reload, health-check
 ```
 
-First switch from the old `npm start` process (one time only):
+The live server runs `releases/current/server.js`, a symlink to the latest
+finished build. Building only writes to `.next/`, so the site keeps serving the
+previous release until PM2 restarts on the new one. If the new release does not
+answer on `/` and `/api/services`, the script switches back by itself. The 3
+newest releases are kept.
 
 ```bash
-pm2 delete cndl-global-app
-pm2 start ecosystem.config.cjs
-pm2 save
+bash scripts/deploy.sh --rollback   # go back one release
+cat releases/current/REVISION       # commit the site is running
+```
+
+One-time switch from running `.next/standalone` directly:
+
+```bash
+bash scripts/deploy.sh --no-reload
+pm2 delete cndl-global-app && pm2 start ecosystem.config.cjs && pm2 save
 ```
 
 `.env.local` must contain `DATABASE_URL` (absolute) and `ADMIN_SECRET`; see

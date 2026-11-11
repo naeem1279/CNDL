@@ -1,6 +1,10 @@
 // PM2 process definition for production.
-//   First switch-over:  pm2 delete cndl-global-app && pm2 start ecosystem.config.cjs && pm2 save
-//   Deploys after that: npm ci && npm run build && pm2 reload ecosystem.config.cjs
+// Deploy with `bash scripts/deploy.sh` (see README). The server runs from
+// releases/current — a symlink to the latest finished build — so building
+// never touches the files the live server is reading.
+//   One-time switch-over from .next/standalone:
+//     bash scripts/deploy.sh --no-reload
+//     pm2 delete cndl-global-app && pm2 start ecosystem.config.cjs && pm2 save
 const path = require('path');
 
 const APP_ROOT = __dirname;
@@ -10,7 +14,7 @@ module.exports = {
     {
       name: 'cndl-global-app',
       cwd: APP_ROOT,
-      script: path.join(APP_ROOT, '.next', 'standalone', 'server.js'),
+      script: path.join(APP_ROOT, 'releases', 'current', 'server.js'),
       // Secrets stay in .env.local (never committed); Node >= 20.6 loads it.
       node_args: `--env-file=${path.join(APP_ROOT, '.env.local')}`,
       exec_mode: 'fork', // single process: rate limits and the leads lock are in-memory
