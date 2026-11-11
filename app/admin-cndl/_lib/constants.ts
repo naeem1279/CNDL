@@ -23,8 +23,6 @@ export const EMPTY_SERVICE_FORM = {
 export const EMPTY_BLOG_FORM = { title: '', slug: '', category: 'Zirconia & CAD/CAM', excerpt: '', content: '', imageUrl: '/images/blog.jpg' };
 export const EMPTY_REVIEW_FORM = { doctorName: '', clinicName: '', location: 'Dhaka, Bangladesh', rating: 5, comment: '' };
 export const EMPTY_USER_FORM = { name: '', phone: '', email: '', address: '', role: 'AGENT', status: 'ACTIVE', password: '' };
-export const EMPTY_EXPENSE_FORM = { category: 'RAW_MATERIAL', title: '', voucherNo: '', amount: '', notes: '', expenseDate: '' };
-export const EMPTY_CAPEX_FORM = { machineName: '', purchaseCost: '', purchaseDate: '', status: 'OPERATIONAL', notes: '' };
 export const EMPTY_PAYOUT_FORM = { amountPaid: '', paymentMethod: 'Cash', payoutDate: '', notes: '' };
 
 /** Case intake channels. */
@@ -60,11 +58,6 @@ export const EXPENSE_CATEGORY_META: Record<string, { label: string; cls: string 
   OTHER: { label: 'Other', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
-export const ASSET_STATUS_META: Record<string, string> = {
-  OPERATIONAL: 'bg-emerald-50 text-emerald-700',
-  UNDER_MAINTENANCE: 'bg-amber-50 text-amber-700',
-  RETIRED: 'bg-slate-200 text-slate-600',
-};
 
 /** Institution taxonomy (Hospital / Chamber / Lab / freelance clinician). */
 export const INSTITUTION_TYPE_META: Record<string, { label: string; cls: string }> = {
