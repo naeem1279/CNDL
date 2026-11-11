@@ -1,4 +1,4 @@
-# CNDL Frontend
+# CNDL Website
 
 Public website and admin ERP console (`/admin-cndl`) for CN Dental Lab, Dhaka.
 Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · Prisma 6 on SQLite.
