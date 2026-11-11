@@ -253,7 +253,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   if (auth === null) {
     /* Restoring session — quiet splash */
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-400">
+      <div className="flex items-center justify-center min-h-screen bg-zinc-50 text-zinc-400">
         <RefreshCw size={20} className="animate-spin" />
       </div>
     );
@@ -261,43 +261,43 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (!auth || !session) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-slate-50 text-slate-900">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-zinc-50 text-zinc-900">
         <form
           onSubmit={handleLogin}
-          className="w-full max-w-sm bg-white border border-slate-200/60 rounded-xl shadow-sm overflow-hidden"
+          className="w-full max-w-sm bg-white border border-zinc-200/60 rounded-xl shadow-sm overflow-hidden"
         >
           <div className="px-8 pt-10 pb-7 text-center">
-            <span className="w-14 h-14 mx-auto rounded-2xl bg-teal-600/10 text-teal-700 flex items-center justify-center mb-5">
+            <span className="w-14 h-14 mx-auto rounded-2xl bg-brand-600/10 text-brand-600 flex items-center justify-center mb-5">
               <Stethoscope size={26} />
             </span>
             <h2 className="text-xl font-bold tracking-tight">CNDL Admin Console</h2>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
               Sign in with your registered phone or email.
             </p>
           </div>
           <div className="px-8 pb-10 space-y-4">
             <div>
-              <label htmlFor="admin-identifier" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              <label htmlFor="admin-identifier" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
                 Phone or Email
               </label>
               <div className="relative">
-                <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-300 pointer-events-none" />
                 <input
                   id="admin-identifier"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="01XXXXXXXXX or name@lab.com"
                   autoComplete="username"
-                  className="w-full min-h-[46px] pl-10 pr-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600/40 bg-white"
+                  className="w-full min-h-[46px] pl-10 pr-4 rounded-xl border border-zinc-200 text-sm font-medium outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600/40 bg-white"
                 />
               </div>
             </div>
             <div>
-              <label htmlFor="admin-password" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              <label htmlFor="admin-password" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-300 pointer-events-none" />
                 <input
                   id="admin-password"
                   type={showPw ? 'text' : 'password'}
@@ -305,14 +305,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Your password"
                   autoComplete="current-password"
-                  className="w-full min-h-[46px] pl-10 pr-11 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600/40 bg-white"
+                  className="w-full min-h-[46px] pl-10 pr-11 rounded-xl border border-zinc-200 text-sm font-medium outline-none focus:ring-2 focus:ring-brand-600/20 focus:border-brand-600/40 bg-white"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
                   aria-label={showPw ? 'Hide password' : 'Show password'}
                   title={showPw ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 inline-flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors"
                 >
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -321,11 +321,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="submit"
               disabled={loggingIn}
-              className="w-full min-h-[46px] rounded-xl bg-teal-700 text-white text-sm font-bold tracking-tight hover:bg-teal-800 disabled:opacity-50 shadow-sm transition-colors"
+              className="w-full min-h-[46px] rounded-xl bg-brand-600 text-white text-sm font-bold tracking-tight hover:bg-brand-700 disabled:opacity-50 shadow-sm transition-colors"
             >
               {loggingIn ? 'Signing in…' : 'Sign In'}
             </button>
-            <p className="text-xs text-slate-400 text-center leading-relaxed">
+            <p className="text-xs text-zinc-400 text-center leading-relaxed">
               Access is role-based. Accounts are issued by a SUPERADMIN under User Management.
             </p>
           </div>
@@ -338,21 +338,23 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     .map((g) => ({ ...g, items: g.items.filter((i) => permittedTabs.includes(i.key)) }))
     .filter((g) => g.items.length > 0);
 
+  const roleLabel = me && ROLE_META[me.role] ? ROLE_META[me.role].label : 'Administrator';
+
   return (
     <AdminContext.Provider value={session}>
-    <div className="min-h-screen text-slate-900 bg-slate-50/70">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900">
       {/* Mobile top bar */}
-      <div className="lg:hidden sticky top-0 z-40 bg-[#0b1120] text-white px-4 py-3 flex items-center justify-between shadow-md">
+      <div className="lg:hidden sticky top-0 z-40 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/95 px-4 backdrop-blur">
         <div className="flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-lg bg-teal-700 font-semibold flex items-center justify-center text-sm shrink-0">C</span>
-          <span className="font-semibold text-sm tracking-wide">CNDL ADMIN</span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-brand-600 text-meta font-semibold text-white">C</span>
+          <span className="text-body font-semibold">CNDL Admin</span>
         </div>
         <button
           onClick={() => setSidebarOpen(true)}
           aria-label="Open menu"
-          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-600 hover:bg-zinc-100"
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
       </div>
 
@@ -360,135 +362,118 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-zinc-900/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Fixed left sidebar */}
+      {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 min-h-screen bg-[#0b1120] text-white flex flex-col transform transition-all duration-300 lg:translate-x-0 ${
-          railCollapsed ? 'lg:w-[76px]' : ''
-        } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-zinc-200 bg-white transition-[transform,width] duration-200 lg:translate-x-0 ${
+          railCollapsed ? 'lg:w-[68px]' : ''
+        } ${sidebarOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'}`}
       >
-        {/* Brand header */}
-        <div className={`px-5 py-5 border-b border-white/10 flex items-center gap-3 ${railCollapsed ? 'lg:px-0 lg:justify-center' : ''}`}>
-          <span className="w-10 h-10 rounded-xl bg-teal-600/20 border border-teal-500/40 text-teal-300 font-semibold flex items-center justify-center text-lg shrink-0">C</span>
+        {/* Brand */}
+        <div className={`flex h-14 items-center gap-2.5 border-b border-zinc-100 px-4 ${railCollapsed ? 'lg:justify-center lg:px-0' : ''}`}>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-brand-600 text-meta font-semibold text-white">C</span>
           <div className={`min-w-0 ${railCollapsed ? 'lg:hidden' : ''}`}>
-            <div className="font-semibold leading-tight">CNDL Admin</div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 text-teal-300 px-2 py-0.5 text-[11px] font-medium mt-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Admin Console
-            </span>
+            <div className="text-body font-semibold leading-tight">CNDL Admin</div>
+            <div className="text-meta text-zinc-500 leading-tight">CN Dental Lab</div>
           </div>
           <button
             onClick={toggleRail}
             aria-label={railCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={railCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="hidden lg:inline-flex ml-auto mr-3 w-8 h-8 items-center justify-center rounded-lg text-slate-500 hover:text-teal-300 hover:bg-white/10 transition-colors shrink-0"
+            className={`ml-auto hidden h-8 w-8 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 lg:inline-flex ${railCollapsed ? 'lg:hidden' : ''}`}
           >
-            {railCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+            <PanelLeftClose size={16} />
           </button>
           <button
             onClick={() => setSidebarOpen(false)}
             aria-label="Close menu"
-            className="lg:hidden ml-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors"
+            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 lg:hidden"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Nav menu — grouped & role-filtered; each entry is its own route */}
-        <nav className="flex-1 px-3 py-5 space-y-5 overflow-y-auto overflow-x-hidden">
+        {/* Navigation — grouped, role-filtered; each entry is its own route */}
+        <nav aria-label="Sections" className="flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-3 py-4">
+          {railCollapsed && (
+            <button
+              onClick={toggleRail}
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+              className="mx-auto hidden h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 lg:flex"
+            >
+              <PanelLeftOpen size={16} />
+            </button>
+          )}
           {visibleNavGroups.map((group) => (
             <div key={group.title}>
-              {railCollapsed && <div className="hidden lg:block mx-auto w-7 border-t border-white/10 mb-2" />}
-              <p className={`px-4 pb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 select-none ${railCollapsed ? 'lg:hidden' : ''}`}>
+              {railCollapsed && <div className="mx-auto mb-2 hidden w-6 border-t border-zinc-200 lg:block" />}
+              <p className={`px-2.5 pb-1 text-meta font-medium text-zinc-400 select-none ${railCollapsed ? 'lg:hidden' : ''}`}>
                 {group.title}
               </p>
-              <div className="space-y-1">
-                {group.items.map((item) => (
-                  <Link
-                    key={item.key}
-                    href={adminPath(item.key)}
-                    onClick={() => setSidebarOpen(false)}
-                    aria-current={tab === item.key ? 'page' : undefined}
-                    title={railCollapsed ? item.label : undefined}
-                    className={`relative w-full min-h-[44px] px-4 inline-flex items-center gap-3 rounded-lg text-sm font-semibold border-l-2 transition-all duration-200 ${
-                      tab === item.key
-                        ? 'bg-teal-600/15 text-teal-300 border-teal-500'
-                        : 'text-slate-400 border-transparent hover:bg-white/[0.06] hover:text-slate-200'
-                    } ${railCollapsed ? 'lg:justify-center lg:px-0 lg:border-l-transparent' : ''}`}
-                  >
-                    <item.icon size={17} className="shrink-0" />
-                    <span className={`flex-1 text-left truncate ${railCollapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
-                    {item.live &&
-                      (railCollapsed ? (
-                        <span title="Live" className="hidden lg:inline-flex absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-0.5 text-[11px] font-medium whitespace-nowrap">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          Live
-                        </span>
-                      ))}
-                  </Link>
-                ))}
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active = tab === item.key;
+                  return (
+                    <Link
+                      key={item.key}
+                      href={adminPath(item.key)}
+                      onClick={() => setSidebarOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      title={railCollapsed ? item.label : undefined}
+                      className={`flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-body transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 ${
+                        active
+                          ? 'bg-zinc-100 font-medium text-zinc-900'
+                          : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+                      } ${railCollapsed ? 'lg:justify-center lg:px-0' : ''}`}
+                    >
+                      <item.icon size={16} className={`shrink-0 ${active ? 'text-brand-600' : 'text-zinc-400'}`} />
+                      <span className={`flex-1 truncate ${railCollapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))}
         </nav>
 
-        {/* Bottom: signed-in user + sign out */}
-        <div className={`px-3 py-4 border-t border-white/10 space-y-2 ${railCollapsed ? 'lg:px-2' : ''}`}>
-          <div className={`flex items-center gap-3 px-2 py-1.5 ${railCollapsed ? 'lg:justify-center lg:px-0' : ''}`}>
-            <span className="w-9 h-9 rounded-full bg-teal-600/20 border border-teal-500/40 font-semibold text-sm flex items-center justify-center shrink-0 text-teal-300">
+        {/* Signed-in user */}
+        <div className={`border-t border-zinc-100 p-3 ${railCollapsed ? 'lg:px-2' : ''}`}>
+          <div className={`flex items-center gap-2.5 rounded-md px-1.5 py-1 ${railCollapsed ? 'lg:justify-center lg:px-0' : ''}`}>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-table font-semibold text-zinc-700">
               {(me?.name || 'A').charAt(0).toUpperCase()}
             </span>
             <div className={`min-w-0 flex-1 ${railCollapsed ? 'lg:hidden' : ''}`}>
-              <div className="text-xs font-bold truncate">{me?.name || 'Administrator'}</div>
-              <div className="text-[11px] text-slate-500 truncate">{me?.phone || 'cndl-global.com'}</div>
+              <div className="truncate text-table font-medium text-zinc-900">{me?.name || 'Administrator'}</div>
+              <div className="truncate text-meta text-zinc-500">{roleLabel}</div>
             </div>
-            <button
-              onClick={openPwModal}
-              aria-label="Change Password"
-              title="Change Password"
-              className={`shrink-0 w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-teal-300 hover:bg-white/10 transition-colors ${railCollapsed ? 'lg:hidden' : ''}`}
-            >
-              <KeyRound size={15} />
-            </button>
-            {me && ROLE_META[me.role] && (
-              <span
-                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_META[me.role].cls} ${railCollapsed ? 'lg:hidden' : ''}`}
-                title={`Signed in as ${ROLE_META[me.role].label}`}
-              >
-                {ROLE_META[me.role].label}
-              </span>
-            )}
           </div>
-          {railCollapsed && (
+          <div className={`mt-2 flex gap-1 ${railCollapsed ? 'lg:flex-col lg:items-center' : ''}`}>
             <button
               onClick={openPwModal}
-              aria-label="Change Password"
-              title="Change Password"
-              className="hidden lg:inline-flex w-full min-h-[44px] items-center justify-center rounded-lg text-slate-400 hover:text-teal-300 hover:bg-white/10 transition-colors"
+              title="Change password"
+              className={`inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md text-table text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 ${railCollapsed ? 'lg:w-8 lg:flex-none' : ''}`}
             >
-              <KeyRound size={15} />
+              <KeyRound size={14} />
+              <span className={railCollapsed ? 'lg:hidden' : ''}>Password</span>
             </button>
-          )}
-          <button
-            onClick={handleSignOut}
-            title="Sign Out"
-            className={`min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-slate-200 hover:text-rose-400 hover:border-rose-400/40 transition-colors ${
-              railCollapsed ? 'lg:w-10 lg:min-w-0 lg:px-0 mx-auto' : 'w-full'
-            }`}
-          >
-            <LogOut size={15} />
-            <span className={railCollapsed ? 'lg:hidden' : ''}>Sign Out</span>
-          </button>
+            <button
+              onClick={handleSignOut}
+              title="Sign out"
+              className={`inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-md text-table text-zinc-600 hover:bg-rose-50 hover:text-rose-700 ${railCollapsed ? 'lg:w-8 lg:flex-none' : ''}`}
+            >
+              <LogOut size={14} />
+              <span className={railCollapsed ? 'lg:hidden' : ''}>Sign out</span>
+            </button>
+          </div>
         </div>
       </aside>
 
-      {/* Main content viewport */}
-      <div className={railCollapsed ? 'lg:pl-[76px]' : 'lg:pl-64'}>
-        <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">{allowed ? children : null}</main>
+      {/* Main content */}
+      <div className={railCollapsed ? 'lg:pl-[68px]' : 'lg:pl-60'}>
+        <main className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{allowed ? children : null}</main>
       </div>
 
       {pwModal && (
@@ -502,18 +487,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               aria-modal="true"
               onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
+            <div className="sticky top-0 bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div className="min-w-0">
-                <h3 className="text-base sm:text-lg font-semibold text-teal-700 flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-semibold text-brand-600 flex items-center gap-2">
                   <KeyRound size={18} /> Change Your Password
                 </h3>
-                <p className="text-xs text-slate-500 truncate">Signed in as {me?.name || 'Administrator'}</p>
+                <p className="text-xs text-zinc-500 truncate">Signed in as {me?.name || 'Administrator'}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setPwModal(false)}
                 aria-label="Close"
-                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-50"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-zinc-200 hover:bg-zinc-50"
               >
                 <X size={18} />
               </button>
@@ -528,7 +513,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               )}
 
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Current Password *</label>
+                <label className="block text-xs font-medium text-zinc-500 mb-1.5">Current Password *</label>
                 <input
                   required
                   type="password"
@@ -537,12 +522,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   value={pwForm.current}
                   onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })}
                   placeholder="Enter your current password"
-                  className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white disabled:bg-slate-100 disabled:text-slate-500"
+                  className="w-full min-h-[44px] px-4 rounded-xl border border-zinc-200 text-sm font-medium outline-none focus:ring-2 focus:ring-brand-600/20 bg-white disabled:bg-zinc-100 disabled:text-zinc-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">New Password *</label>
+                <label className="block text-xs font-medium text-zinc-500 mb-1.5">New Password *</label>
                 <input
                   required
                   type="password"
@@ -551,8 +536,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   value={pwForm.next}
                   onChange={(e) => setPwForm({ ...pwForm, next: e.target.value })}
                   placeholder="Minimum 6 characters"
-                  className={`w-full min-h-[44px] px-4 rounded-xl border text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white disabled:bg-slate-100 disabled:text-slate-500 ${
-                    pwForm.next.length > 0 && pwForm.next.length < 6 ? 'border-rose-300' : 'border-slate-200'
+                  className={`w-full min-h-[44px] px-4 rounded-xl border text-sm font-medium outline-none focus:ring-2 focus:ring-brand-600/20 bg-white disabled:bg-zinc-100 disabled:text-zinc-500 ${
+                    pwForm.next.length > 0 && pwForm.next.length < 6 ? 'border-rose-300' : 'border-zinc-200'
                   }`}
                 />
                 {pwForm.next.length > 0 && pwForm.next.length < 6 && (
@@ -561,7 +546,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Confirm New Password *</label>
+                <label className="block text-xs font-medium text-zinc-500 mb-1.5">Confirm New Password *</label>
                 <input
                   required
                   type="password"
@@ -570,8 +555,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   value={pwForm.confirm}
                   onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
                   placeholder="Re-enter the new password"
-                  className={`w-full min-h-[44px] px-4 rounded-xl border text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white disabled:bg-slate-100 disabled:text-slate-500 ${
-                    pwForm.confirm.length > 0 && pwForm.confirm !== pwForm.next ? 'border-rose-300' : 'border-slate-200'
+                  className={`w-full min-h-[44px] px-4 rounded-xl border text-sm font-medium outline-none focus:ring-2 focus:ring-brand-600/20 bg-white disabled:bg-zinc-100 disabled:text-zinc-500 ${
+                    pwForm.confirm.length > 0 && pwForm.confirm !== pwForm.next ? 'border-rose-300' : 'border-zinc-200'
                   }`}
                 />
                 {pwForm.confirm.length > 0 && pwForm.confirm !== pwForm.next && (
@@ -585,18 +570,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-6 py-4 pb-6 sm:pb-4 flex items-center justify-end gap-3 rounded-b-xl">
+            <div className="sticky bottom-0 bg-zinc-50 border-t border-zinc-200 px-6 py-4 pb-6 sm:pb-4 flex items-center justify-end gap-3 rounded-b-xl">
               <button
                 type="button"
                 onClick={() => setPwModal(false)}
-                className="min-h-[44px] px-5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                className="min-h-[44px] px-5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-600 hover:bg-zinc-100"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={savingPw || !pwValid || (me !== null && !me.uid)}
-                className="min-h-[44px] px-6 rounded-xl bg-teal-700 text-xs font-bold text-white hover:bg-teal-800 disabled:opacity-50 shadow-md"
+                className="min-h-[44px] px-6 rounded-xl bg-brand-600 text-xs font-bold text-white hover:bg-brand-700 disabled:opacity-50 shadow-md"
               >
                 {savingPw ? 'Updating...' : 'Update Password'}
               </button>

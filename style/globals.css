@@ -12,6 +12,39 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Design tokens (admin console first; the public site migrates later).
+   Neutrals come from Tailwind's zinc scale; brand is CNDL blue (#1977C5).
+   Colour carries meaning only: brand = interactive, emerald/amber/rose = state.
+   Type scale (font-size utilities): text-meta 12 · text-table 13 · text-body 14
+   · text-title 16 · text-page 20 · text-kpi 28. Weights: 400 / 500 / 600.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-brand-50: #eef5fc;
+  --color-brand-100: #d8e8f7;
+  --color-brand-200: #b2d1ef;
+  --color-brand-300: #82b4e3;
+  --color-brand-400: #4c93d5;
+  --color-brand-500: #1977c5;
+  --color-brand-600: #1668ad;
+  --color-brand-700: #13558c;
+  --color-brand-800: #124670;
+  --color-brand-900: #10395a;
+
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1rem;
+  --text-table: 0.8125rem;
+  --text-table--line-height: 1.25rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.375rem;
+  --text-title: 1rem;
+  --text-title--line-height: 1.5rem;
+  --text-page: 1.25rem;
+  --text-page--line-height: 1.75rem;
+  --text-kpi: 1.75rem;
+  --text-kpi--line-height: 2.125rem;
+}
+
 /* Horizontal chip rows that scroll without a visible scrollbar. */
 @utility no-scrollbar {
   scrollbar-width: none;
