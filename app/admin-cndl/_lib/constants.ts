@@ -170,17 +170,16 @@ export const ALL_TAB_KEYS: TabKey[] = [
 ];
 
 /** Panel statuses + badge styling (unknown legacy statuses render as neutral). */
-export const LEAD_STATUS_META: Record<string, { label: string; cls: string }> = {
-  new: { label: 'New', cls: 'bg-sky-50 text-sky-700 border border-sky-200' },
-  visited: { label: 'Visited', cls: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  sample_given: { label: 'Sample Given', cls: 'bg-slate-100 text-slate-700 border border-slate-200' },
-  client: { label: 'Client', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-};
-
-/** Filled-pill styling for the one-click status switcher. */
-export const LEAD_PILL_META: Record<string, string> = {
-  new: 'bg-sky-600 text-white shadow-sm',
-  visited: 'bg-amber-400 text-white shadow-sm',
-  sample_given: 'bg-slate-600 text-white shadow-sm',
-  client: 'bg-emerald-600 text-white shadow-sm',
-};
+/** Lead pipeline stages, in order. Keys match /api/admin/leads ALLOWED_STATUS.
+    `dot` is the only colour a stage gets; the client stage is the one success state. */
+export type LeadStage = 'new' | 'visited' | 'sample_given' | 'client';
+export const LEAD_STAGES: { key: LeadStage; label: string; dot: string }[] = [
+  { key: 'new', label: 'New', dot: 'bg-zinc-400' },
+  { key: 'visited', label: 'Visited', dot: 'bg-brand-500' },
+  { key: 'sample_given', label: 'Sample given', dot: 'bg-amber-500' },
+  { key: 'client', label: 'Client', dot: 'bg-emerald-500' },
+];
+export const LEAD_STAGE_LABEL: Record<string, string> = Object.fromEntries(LEAD_STAGES.map((s) => [s.key, s.label]));
+/** Unknown or missing statuses are treated as "new" everywhere. */
+export const leadStage = (s: string | null | undefined): LeadStage =>
+  (LEAD_STAGES.some((x) => x.key === s) ? s : 'new') as LeadStage;

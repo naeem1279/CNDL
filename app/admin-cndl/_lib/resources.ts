@@ -35,6 +35,7 @@ const READ_ROLES: Partial<Record<ResourceKey, string[]>> = {
   dividends: FINANCE,
   shareholders: FINANCE,
   metrics: FINANCE,
+  leads: ['SUPERADMIN'],
 };
 
 export type Loaded = {
