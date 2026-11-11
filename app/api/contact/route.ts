@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
+import { firstIssueMessage } from "@/lib/validation";
 
 /** P0 hardening (2026-11-05): strict validation + per-IP rate limiting.
  *  P1 (2026-11-05): phone is now persisted (ContactMessage.phone column). */
@@ -13,10 +14,8 @@ const contactSchema = z.object({
   message: z.string().trim().min(5, "Message must be at least 5 characters").max(4000),
 });
 
-/** Extract the first human-readable message from a zod error (v4 `.issues`). */
 function firstZodMessage(err: unknown): string {
-  const e = err as { issues?: { message?: string }[] };
-  return e?.issues?.[0]?.message ?? "Validation failed";
+  return firstIssueMessage(err);
 }
 
 export async function POST(req: Request) {

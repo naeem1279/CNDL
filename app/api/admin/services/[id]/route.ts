@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/admin-auth";
+import { friendlyIssue } from "@/lib/validation";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -29,7 +30,7 @@ export async function PUT(req: Request, { params }: Params) {
     const parsed = serviceUpdateSchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Validation failed", issues: parsed.error.issues.map((i) => i.message) },
+        { error: "Validation failed", issues: parsed.error.issues.map(friendlyIssue) },
         { status: 400 }
       );
     }

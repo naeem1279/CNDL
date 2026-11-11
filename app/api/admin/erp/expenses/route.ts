@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { FINANCE_ROLES, readSession, requireRole } from "@/lib/admin-auth";
+import { friendlyIssue } from "@/lib/validation";
 
 const categoryEnum = z.enum(["RAW_MATERIAL", "LOGISTICS", "LAB_UTILITY", "MAINTENANCE", "OTHER"]);
 
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
     const parsed = expenseCreateSchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Validation failed", issues: parsed.error.issues.map((i) => i.message) },
+        { error: "Validation failed", issues: parsed.error.issues.map(friendlyIssue) },
         { status: 400 }
       );
     }
@@ -97,7 +98,7 @@ export async function PUT(req: Request) {
     const parsed = expenseUpdateSchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Validation failed", issues: parsed.error.issues.map((i) => i.message) },
+        { error: "Validation failed", issues: parsed.error.issues.map(friendlyIssue) },
         { status: 400 }
       );
     }

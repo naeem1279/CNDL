@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/admin-auth";
+import { firstIssueMessage } from "@/lib/validation";
 
 const institutionTypeEnum = z.enum(["CHAMBER", "HOSPITAL", "PARTNER_LAB", "FREELANCE"]);
 
@@ -20,8 +21,7 @@ const accountUpdateSchema = z.object({
 });
 
 function firstZodMessage(err: unknown): string {
-  const e = err as { issues?: { message?: string }[] };
-  return e?.issues?.[0]?.message ?? "Validation failed";
+  return firstIssueMessage(err);
 }
 
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {

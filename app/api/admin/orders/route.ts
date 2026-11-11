@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/admin-auth";
+import { firstIssueMessage } from "@/lib/validation";
 
 const SOURCE_ENUM = ["OFFLINE_RIDER", "PHONE", "WHATSAPP", "ONLINE"] as const;
 
@@ -48,8 +49,7 @@ const STATUS_META: Record<string, { status: string; progress: number }> = {
 };
 
 function firstZodMessage(err: unknown): string {
-  const e = err as { issues?: { message?: string }[]; errors?: { message?: string }[] };
-  return e?.issues?.[0]?.message ?? e?.errors?.[0]?.message ?? "Validation failed";
+  return firstIssueMessage(err);
 }
 
 /** CSPRNG 8-hex Case ID — mirrors the hardened public /api/order generator. */

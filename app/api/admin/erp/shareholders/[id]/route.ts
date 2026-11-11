@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
+import { firstIssueMessage } from "@/lib/validation";
 
 const TOTAL_SHARES = 100;
 
@@ -22,8 +23,7 @@ const shareholderUpdateSchema = z.object({
 });
 
 function firstZodMessage(err: unknown): string {
-  const e = err as { issues?: { message?: string }[]; errors?: { message?: string }[] };
-  return e?.issues?.[0]?.message ?? e?.errors?.[0]?.message ?? "Validation failed";
+  return firstIssueMessage(err);
 }
 
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
