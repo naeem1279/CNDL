@@ -26,7 +26,7 @@ export async function GET(req: Request) {
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
     });
     return NextResponse.json({ services });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch services" }, { status: 500 });
   }
 }
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       data: parsed.data,
     });
     return NextResponse.json(service, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to create service" }, { status: 500 });
   }
 }

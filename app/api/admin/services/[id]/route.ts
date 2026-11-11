@@ -38,7 +38,7 @@ export async function PUT(req: Request, { params }: Params) {
       data: parsed.data,
     });
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Service not found or update failed" }, { status: 404 });
   }
 }
@@ -50,7 +50,7 @@ export async function DELETE(req: Request, { params }: Params) {
     const { id } = await params;
     await prisma.service.delete({ where: { id } });
     return NextResponse.json({ ok: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Service not found or delete failed" }, { status: 404 });
   }
 }

@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   },
   webpack(config) {
     const fileLoaderRule = config.module.rules.find(
-      (rule: any) => rule.test?.test?.('.svg')
+      (rule: { test?: { test?: (s: string) => boolean } }) => rule.test?.test?.('.svg')
     );
 
     if (fileLoaderRule) {

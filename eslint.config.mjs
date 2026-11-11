@@ -5,13 +5,25 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  {
+    rules: {
+      // `_name` marks an intentionally unused binding (e.g. stripping a field
+      // with object rest: `const { metadata: _metadata, ...safe } = user`).
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+      // Admin previews show arbitrary uploaded/remote URLs; keep as a nudge, not a gate.
+      "@next/next/no-img-element": "warn",
+    },
+  },
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "backups/**",
+    "uploads/**",
   ]),
 ]);
 

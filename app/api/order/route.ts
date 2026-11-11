@@ -68,7 +68,7 @@ export async function POST(req: Request) {
   try {
     const contentType = req.headers.get("content-type") ?? "";
     let parsed: ReturnType<typeof orderSchema.safeParse>;
-    let incoming: { original: string; buffer: Buffer }[] = [];
+    const incoming: { original: string; buffer: Buffer }[] = [];
 
     if (contentType.includes("multipart/form-data")) {
       const fd = await req.formData().catch(() => null);

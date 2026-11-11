@@ -56,7 +56,7 @@ export async function GET(req: Request) {
       ? [] // inquiries are never sent to field agents
       : await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } });
     return NextResponse.json({ orders, messages });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }

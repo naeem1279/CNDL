@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
-  ShieldCheck, Printer, ArrowRight, FileText, CheckCircle2,
-  AlertTriangle, Layers, Activity, Scissors, Sparkles, BookOpen,
-  Microscope, Phone, MessageCircle
+  ShieldCheck, ArrowRight, FileText, CheckCircle2, AlertTriangle, Layers, Activity, Scissors, Sparkles, Microscope,
 } from 'lucide-react';
 import PrintPrepButton from '@/components/prep-guide/PrintPrepButton';
 

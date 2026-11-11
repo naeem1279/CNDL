@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import ShareHero from '@/components/share/ShareHero';
 import {
-  Cog, Flame, Sparkles, Printer, ScanLine, CheckCircle2, ShieldCheck,
-  ArrowRight, Activity, Cpu, Gauge, Zap, FileCheck2, Layers, Award
+  Cog, Flame, Sparkles, Printer, ScanLine, CheckCircle2, ShieldCheck, ArrowRight, Cpu, Gauge, FileCheck2,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -236,7 +234,7 @@ export default function TechnologyPage() {
           </div>
 
           <div className="space-y-12">
-            {machines.map((m, idx) => {
+            {machines.map((m) => {
               const Icon = m.icon;
               return (
                 <div
@@ -336,7 +334,7 @@ export default function TechnologyPage() {
               Why Dentists Switch from Analog Casting to CNDL
             </h2>
             <p className="text-xs md:text-sm text-(--text-secondary)">
-              A side-by-side comparison between CNDL\'s automated 5-axis digital workflow and conventional manual dental laboratories.
+              A side-by-side comparison between CNDL&apos;s automated 5-axis digital workflow and conventional manual dental laboratories.
             </p>
           </div>
 

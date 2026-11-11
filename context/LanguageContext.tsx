@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useSyncExternalStore } from 'react';
 import { translations, TranslationDictionary, Language } from '@/data/translations';
 
 interface LanguageContextType {
@@ -12,36 +12,55 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Language>('en');
+const STORAGE_KEY = 'cndl-lang';
+const CHANGE_EVENT = 'cndl-lang-change';
 
+/** In-memory fallback so the toggle still works when localStorage is blocked. */
+let memoryLang: Language | null = null;
+
+function readLang(): Language {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (saved === 'bn' || saved === 'en') return saved;
+  } catch {
+    // localStorage unavailable (private mode / blocked storage)
+  }
+  return memoryLang ?? 'en';
+}
+
+function subscribe(onChange: () => void) {
+  window.addEventListener('storage', onChange); // other tabs
+  window.addEventListener(CHANGE_EVENT, onChange); // this tab
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener(CHANGE_EVENT, onChange);
+  };
+}
+
+/** The server always renders English; the client switches after hydration. */
+const serverLang = (): Language => 'en';
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const lang = useSyncExternalStore(subscribe, readLang, serverLang);
+
+  // Keep <html lang> in sync for screen readers and font selection.
   useEffect(() => {
+    document.documentElement.lang = lang === 'bn' ? 'bn-BD' : 'en';
+  }, [lang]);
+
+  const setLang = useCallback((next: Language) => {
+    memoryLang = next;
     try {
-      const saved = window.localStorage.getItem('cndl-lang') as Language | null;
-      if (saved === 'bn' || saved === 'en') {
-        setLangState(saved);
-        document.documentElement.lang = saved === 'bn' ? 'bn-BD' : 'en';
-      }
+      window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      // localStorage unavailable (SSR/private)
+      // storage blocked — memoryLang keeps the choice for this page view
     }
+    window.dispatchEvent(new Event(CHANGE_EVENT));
   }, []);
 
-  const setLang = (next: Language) => {
-    setLangState(next);
-    try {
-      window.localStorage.setItem('cndl-lang', next);
-    } catch {
-      // localStorage fallback
-    }
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = next === 'bn' ? 'bn-BD' : 'en';
-    }
-  };
-
-  const toggleLang = () => {
-    setLang(lang === 'en' ? 'bn' : 'en');
-  };
+  const toggleLang = useCallback(() => {
+    setLang(readLang() === 'en' ? 'bn' : 'en');
+  }, [setLang]);
 
   return (
     <LanguageContext.Provider

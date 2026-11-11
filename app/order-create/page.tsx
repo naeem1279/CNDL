@@ -1,4 +1,5 @@
 'use client';
+import type { ServiceApiRow } from '@/lib/service-types';
 
 import Input from '@/components/share/Input';
 import Select from '@/components/share/Select';
@@ -75,7 +76,7 @@ export default function OrderCreatePage() {
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.services) && d.services.length > 0) {
-          setServiceOptions(d.services.map((s: any) => s.name));
+          setServiceOptions(d.services.map((s: ServiceApiRow) => s.name));
         }
       })
       .catch(() => {});
@@ -162,7 +163,7 @@ export default function OrderCreatePage() {
       } else {
         toast.error('Failed to submit order.');
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred.');
     } finally {
       setLoading(false);
