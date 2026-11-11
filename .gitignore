@@ -55,3 +55,4 @@ prisma/*.bak*
 audit-*.log
 .next.bak-*
 /.claude/
+/releases/
