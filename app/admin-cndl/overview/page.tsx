@@ -228,7 +228,7 @@ export default function OverviewPage() {
         .map((x) => `${x.account.name} (${x.days}d)`)
         .join(', '),
       value: formatBDT(attention.overdueTotal),
-      href: can('dues') ? adminPath('dues') : undefined,
+      href: can('dues') ? `${adminPath('dues')}?due=overdue` : undefined,
     },
     attention.unverifiedCount > 0 && {
       key: 'unverified',
@@ -236,7 +236,7 @@ export default function OverviewPage() {
       title: `${attention.unverifiedCount} collection${attention.unverifiedCount === 1 ? '' : 's'} not yet verified`,
       sub: 'Recorded by collectors, waiting for accounts sign-off',
       value: formatBDT(attention.unverifiedTotal),
-      href: can('dues') ? adminPath('dues') : undefined,
+      href: can('dues') ? `${adminPath('dues')}?view=collections&status=unverified` : undefined,
     },
     attention.late > 0 && {
       key: 'late',
