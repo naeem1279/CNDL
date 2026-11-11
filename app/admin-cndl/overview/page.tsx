@@ -244,7 +244,7 @@ export default function OverviewPage() {
       title: `${attention.late} case${attention.late === 1 ? '' : 's'} past promised delivery`,
       sub: 'Not yet dispatched',
       value: null,
-      href: can('orders') ? adminPath('orders') : undefined,
+      href: can('orders') ? `${adminPath('orders')}?stage=late` : undefined,
     },
     attention.inQc > 0 && {
       key: 'qc',
@@ -252,7 +252,7 @@ export default function OverviewPage() {
       title: `${attention.inQc} case${attention.inQc === 1 ? '' : 's'} in quality control`,
       sub: 'Ready to dispatch once checked',
       value: null,
-      href: can('orders') ? adminPath('orders') : undefined,
+      href: can('orders') ? `${adminPath('orders')}?stage=Quality%20Control` : undefined,
     },
   ].filter(Boolean) as {
     key: string;
