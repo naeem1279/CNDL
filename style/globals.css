@@ -1,5 +1,25 @@
 @import 'tailwindcss';
 
+/* Tailwind 4 draws borders/dividers in currentColor by default (v3 used gray-200).
+   Restore a light default so a bare `border` or `divide-y` is a hairline, not black. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-slate-200, currentColor);
+  }
+}
+
+/* Horizontal chip rows that scroll without a visible scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 :root {
   --background-primary: #ffffff;
   --background-secondary: #F7F8F8;
