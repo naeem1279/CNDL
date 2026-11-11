@@ -13,7 +13,7 @@ import { NAV_GROUPS, adminPath, tabFromPath } from '../_lib/nav';
 import { AdminContext, type AdminSession } from '../_lib/session';
 import type { SessionUser, TabKey } from '../_lib/types';
 import { apiError } from '../_lib/utils';
-import { ConfirmDialog, type ConfirmRequest } from './ConfirmDialog';
+import { ConfirmDialog, type ConfirmOptions, type ConfirmRequest } from './ConfirmDialog';
 import { ModalShell, useDialog } from './ModalShell';
 
 const isTab = (s: string): s is TabKey => NAV_GROUPS.some((g) => g.items.some((i) => i.key === s));
@@ -70,11 +70,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [confirmState, setConfirmState] = useState<ConfirmRequest | null>(null);
   const confirmResolver = useRef<((ok: boolean) => void) | null>(null);
   const askConfirm = useCallback(
-    (message: string) =>
+    (message: string, opts: ConfirmOptions = {}) =>
       new Promise<boolean>((resolve) => {
         confirmResolver.current = resolve;
         const verb = /^remove/i.test(message) ? 'Remove' : 'Delete';
-        setConfirmState({ title: `${verb}?`, message, confirmLabel: verb });
+        setConfirmState({
+          title: opts.title ?? `${verb}?`,
+          message,
+          confirmLabel: opts.confirmLabel ?? verb,
+          tone: opts.tone ?? 'danger',
+        });
       }),
     []
   );

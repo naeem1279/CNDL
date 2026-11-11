@@ -74,21 +74,24 @@ export function IconButton({
 
 /* ------------------------------------------------------------------- Menu */
 
-export type MenuItem = { label: string; icon?: Icon; onSelect: () => void; hint?: string };
+export type MenuItem = { label: string; icon?: Icon; onSelect: () => void; hint?: string; danger?: boolean };
 
-/** Button that opens a small action menu (Escape / outside click closes). */
+/** Button that opens a small action menu (Escape / outside click closes).
+    With `iconOnly`, the trigger is a square icon button and `label` its accessible name. */
 export function MenuButton({
   label,
   icon,
   items,
   variant = 'primary',
   align = 'end',
+  iconOnly = false,
 }: {
   label: string;
   icon?: Icon;
   items: MenuItem[];
   variant?: Variant;
   align?: 'start' | 'end';
+  iconOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -114,17 +117,30 @@ export function MenuButton({
   if (items.length === 0) return null;
   return (
     <div ref={ref} className="relative">
-      <Button
-        variant={variant}
-        icon={icon}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={menuId}
-        onClick={() => setOpen((v) => !v)}
-      >
-        {label}
-        <ChevronDown size={14} className="-mr-1 opacity-80" />
-      </Button>
+      {iconOnly && icon ? (
+        <IconButton
+          icon={icon}
+          label={label}
+          variant={variant}
+          size="sm"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={menuId}
+          onClick={() => setOpen((v) => !v)}
+        />
+      ) : (
+        <Button
+          variant={variant}
+          icon={icon}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={menuId}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {label}
+          <ChevronDown size={14} className="-mr-1 opacity-80" />
+        </Button>
+      )}
       {open && (
         <div
           id={menuId}
@@ -143,9 +159,14 @@ export function MenuButton({
                 setOpen(false);
                 it.onSelect();
               }}
-              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:bg-zinc-100 focus-visible:outline-none"
+              className={cx(
+                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-body focus-visible:outline-none',
+                it.danger
+                  ? 'text-rose-700 hover:bg-rose-50 focus-visible:bg-rose-50'
+                  : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:bg-zinc-100'
+              )}
             >
-              {it.icon && <it.icon size={16} className="shrink-0 text-zinc-400" />}
+              {it.icon && <it.icon size={16} className={cx('shrink-0', it.danger ? 'text-rose-500' : 'text-zinc-400')} />}
               <span className="flex-1">{it.label}</span>
               {it.hint && <span className="text-meta text-zinc-400">{it.hint}</span>}
             </button>

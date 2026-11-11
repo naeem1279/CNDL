@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext } from 'react';
+import type { ConfirmOptions } from '../_components/ConfirmDialog';
 import type { AdminFetch } from './adminFetch';
 import type { SessionUser } from './types';
 
@@ -10,7 +11,7 @@ export type AdminSession = {
   /** Drops back to the sign-in screen (one toast, however many 401s). */
   handleAuthLoss: () => void;
   /** In-app confirmation prompt; resolves true when the operator confirms. */
-  askConfirm: (message: string) => Promise<boolean>;
+  askConfirm: (message: string, opts?: ConfirmOptions) => Promise<boolean>;
 };
 
 export const AdminContext = createContext<AdminSession | null>(null);
