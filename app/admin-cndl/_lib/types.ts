@@ -35,7 +35,6 @@ export type Message = {
   createdAt: string;
 };
 
-export type EditState = Record<string, { status: string; progress: number }>;
 
 export type BlogRow = {
   id: number;

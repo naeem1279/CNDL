@@ -1,41 +1,6 @@
 /* Console-wide constants: labels, badge styles, page sizes, empty forms and role access. */
 import type { TabKey, UserGroupKey } from './types';
 
-export const BRAND = { blue: '#0f766e', green: '#059669' };
-
-export const STATUS_OPTIONS = ['Received', 'Designing', 'Milling', 'Quality Control', 'Dispatched'];
-export const IN_PRODUCTION = ['Received', 'Designing', 'Milling', 'Quality Control', 'PENDING'];
-
-export const STATUS_META: Record<string, string> = {
-  Received: 'bg-teal-50 text-teal-700 border-teal-200',
-  Designing: 'bg-slate-100 text-slate-700 border-slate-200',
-  Milling: 'bg-sky-50 text-sky-700 border-sky-200',
-  'Quality Control': 'bg-amber-50 text-amber-700 border-amber-200',
-  Dispatched: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  PENDING: 'bg-slate-100 text-slate-600 border-slate-200',
-};
-
-/** Compact display labels for the clinical stage pills (DB values stay unchanged). */
-export const STATUS_LABELS: Record<string, string> = {
-  Received: 'Received',
-  Designing: 'Designing',
-  Milling: 'Milling',
-  'Quality Control': 'QC',
-  Dispatched: 'Dispatched',
-  PENDING: 'Pending',
-};
-
-/** Auto-derived production progress when a stage changes (replaces the manual slider). */
-export const PROGRESS_BY_STATUS: Record<string, number> = {
-  Received: 10,
-  Designing: 35,
-  Milling: 60,
-  'Quality Control': 85,
-  Dispatched: 100,
-  PENDING: 10,
-};
-
-export const ORDERS_PER_PAGE = 8;
 export const MESSAGES_PER_PAGE = 12;
 export const ACCOUNTS_PER_PAGE = 10;
 export const EXPENSES_PER_PAGE = 15;
@@ -60,13 +25,6 @@ export const EMPTY_REVIEW_FORM = { doctorName: '', clinicName: '', location: 'Dh
 export const EMPTY_USER_FORM = { name: '', phone: '', email: '', address: '', role: 'AGENT', status: 'ACTIVE', password: '' };
 export const EMPTY_EXPENSE_FORM = { category: 'RAW_MATERIAL', title: '', voucherNo: '', amount: '', notes: '', expenseDate: '' };
 export const EMPTY_CAPEX_FORM = { machineName: '', purchaseCost: '', purchaseDate: '', status: 'OPERATIONAL', notes: '' };
-export const EMPTY_OFFLINE_ORDER_FORM = {
-  orderDate: '', deliveryDate: '', orderSource: 'OFFLINE_RIDER',
-  clientAccountId: '', doctorName: '', clinicName: '', phone: '',
-  patientName: '', toothNo: '', shade: '', productName: '', units: '1',
-  billedAmount: '', addToLedger: false,
-  attribution: 'DIRECT', agentId: '', commissionAmount: '', historical: false,
-};
 export const EMPTY_PAYOUT_FORM = { amountPaid: '', paymentMethod: 'Cash', payoutDate: '', notes: '' };
 
 /** Case intake channels. */
