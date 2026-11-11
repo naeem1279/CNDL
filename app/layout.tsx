@@ -2,7 +2,6 @@ import { LanguageProvider } from '@/context/LanguageContext';
 import type { Metadata } from 'next';
 import { DM_Sans, Inter } from 'next/font/google';
 import '../style/globals.css';
-import '../style/slider.css';
 import { Toaster } from 'sonner';
 import SiteChrome from '@/components/layout/SiteChrome';
 
