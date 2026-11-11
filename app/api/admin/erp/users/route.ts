@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, parseMetadata, readActiveSession } from "@/lib/admin-auth";
+import { firstIssueMessage } from "@/lib/validation";
 
 /** User management is strictly SUPERADMIN. Phase 1: suspension-aware. */
 async function requireSuperAdmin(req: Request): Promise<NextResponse | null> {
@@ -38,10 +39,8 @@ function publicUser<T extends { metadata?: string | null }>(user: T) {
   return safe;
 }
 
-/** Extract the first human-readable message from a zod error (v3 `.errors` / v4 `.issues`). */
 function firstZodMessage(err: unknown): string {
-  const e = err as { issues?: { message?: string }[]; errors?: { message?: string }[] };
-  return e?.issues?.[0]?.message ?? e?.errors?.[0]?.message ?? "Validation failed";
+  return firstIssueMessage(err);
 }
 
 export async function GET(req: Request) {

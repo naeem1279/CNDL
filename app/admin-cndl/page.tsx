@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import {
   LogOut, Package, MessageSquare, RefreshCw, Copy, Check, Phone, Mail, Reply,
@@ -48,6 +48,59 @@ const PROGRESS_BY_STATUS: Record<string, number> = {
 const ORDERS_PER_PAGE = 8;
 const MESSAGES_PER_PAGE = 12;
 const ACCOUNTS_PER_PAGE = 10;
+const EXPENSES_PER_PAGE = 15;
+const LEADS_PER_PAGE = 20;
+
+/** One pagination footer for every admin table (orders, inquiries, dues,
+    expenses, leads) — same spacing, wording and button size everywhere. */
+function Pager({
+  page,
+  total,
+  perPage,
+  onPage,
+  noun,
+  note,
+}: {
+  page: number;
+  total: number;
+  perPage: number;
+  onPage: (p: number) => void;
+  noun: string;
+  note?: string;
+}) {
+  if (total === 0) return null;
+  const pages = Math.max(1, Math.ceil(total / perPage));
+  const p = Math.min(Math.max(1, page), pages);
+  const from = (p - 1) * perPage + 1;
+  const to = Math.min(p * perPage, total);
+  const btn =
+    'min-h-[40px] px-3.5 inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors';
+  return (
+    <nav
+      aria-label={`${noun} pages`}
+      className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3"
+    >
+      <p className="text-xs text-slate-500">
+        Showing <span className="font-semibold text-slate-700 tabular-nums">{from}–{to}</span> of{' '}
+        <span className="font-semibold text-slate-700 tabular-nums">{total}</span> {noun}
+        {note ? ` ${note}` : ''}
+      </p>
+      {pages > 1 && (
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => onPage(p - 1)} disabled={p <= 1} className={btn}>
+            <ChevronLeft size={14} /> Previous
+          </button>
+          <span className="text-xs font-semibold text-slate-600 tabular-nums px-1">
+            Page {p} of {pages}
+          </span>
+          <button type="button" onClick={() => onPage(p + 1)} disabled={p >= pages} className={btn}>
+            Next <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
+    </nav>
+  );
+}
 
 type Order = {
   id: string;
@@ -347,7 +400,28 @@ const USER_GROUPS: { key: Exclude<UserGroupKey, 'all'>; label: string; roles: st
 ];
 
 function formatBDT(n: number) {
-  return `৳${Math.round(n || 0).toLocaleString('en-IN')}`;
+  const v = Math.round(n || 0);
+  return `${v < 0 ? '-' : ''}৳${Math.abs(v).toLocaleString('en-IN')}`;
+}
+
+/** Best human-readable message from an API error body: the first zod issue
+    (ERP routes answer { error: 'Validation failed', issues: [...] }), then
+    `error`, then the caller's fallback. */
+const UPLOAD_MAX_BYTES = 10 * 1024 * 1024; // mirrors /api/admin/upload
+const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+
+/** Client-side check before uploading: returns an error message, or null if OK. */
+function checkImageFile(file: File): string | null {
+  if (!UPLOAD_TYPES.includes(file.type)) return 'Use a JPEG, PNG, WebP, GIF or AVIF image';
+  if (file.size > UPLOAD_MAX_BYTES) return `Image is ${(file.size / 1048576).toFixed(1)} MB — the limit is 10 MB`;
+  return null;
+}
+
+function apiError(body: unknown, fallback: string): string {
+  const b = (body ?? {}) as { issues?: unknown; error?: unknown };
+  if (Array.isArray(b.issues) && typeof b.issues[0] === 'string' && b.issues[0]) return b.issues[0];
+  if (typeof b.error === 'string' && b.error && b.error !== 'Validation failed') return b.error;
+  return fallback;
 }
 
 function slugify(text: string) {
@@ -437,7 +511,7 @@ function extractWaPhone(msg: Message): string | null {
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] md:text-xs font-bold whitespace-nowrap ${STATUS_META[status] || STATUS_META.PENDING}`}>
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] md:text-xs font-bold whitespace-nowrap ${STATUS_META[status] || STATUS_META.PENDING}`}>
       {STATUS_LABELS[status] || status}
     </span>
   );
@@ -455,7 +529,7 @@ function StagePill({
   return (
     <span
       title="Click to change the clinical stage"
-      className={`relative inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold whitespace-nowrap transition-opacity ${
+      className={`relative inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-opacity ${
         STATUS_META[status] || STATUS_META.PENDING
       } ${saving ? 'opacity-50' : 'hover:shadow-sm'}`}
     >
@@ -486,7 +560,7 @@ function Chip({ label, value, tone = 'blue' }: { label: string; value: string; t
     gray: 'bg-slate-100 text-slate-600',
   } as const;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] md:text-xs font-bold max-w-full ${tones[tone]}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] md:text-xs font-bold max-w-full ${tones[tone]}`}>
       <span className="opacity-70">{label}:</span>
       <span className="truncate" title={value}>{value}</span>
     </span>
@@ -538,7 +612,7 @@ function CaseControls({
           onChange={(e) => onEdit({ ...edit, progress: parseInt(e.target.value) })}
           className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-700"
         />
-        <span className="text-[10px] font-semibold w-10 text-right">{edit.progress}%</span>
+        <span className="text-[11px] font-semibold w-10 text-right">{edit.progress}%</span>
       </div>
 
       <button
@@ -607,13 +681,33 @@ const LEAD_PILL_META: Record<string, string> = {
 
 type SessionUser = { uid: string; name: string; phone: string; role: string };
 
+/** Reads a saved preference; safe on the server and in private mode. */
+function readPref(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/** Starting section: a #tab link wins, then the last-used tab, then Overview.
+    The role guard below re-clamps it once the signed-in user is known. The
+    first paint is always the session-check screen, so this cannot cause a
+    hydration mismatch. */
+function initialTab(): TabKey {
+  const fromHash = typeof window !== 'undefined' ? window.location.hash.slice(1) : '';
+  const candidate = fromHash || readPref('cndl-admin-tab') || '';
+  return (ALL_TAB_KEYS as string[]).includes(candidate) ? (candidate as TabKey) : 'overview';
+}
+
 export default function AdminDashboard() {
   const [auth, setAuth] = useState<boolean | null>(null); // null = restoring session
   const [me, setMe] = useState<SessionUser | null>(null);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
-  const [tab, setTab] = useState<TabKey>('overview');
+  const [tab, setTab] = useState<TabKey>(initialTab);
   const [data, setData] = useState<{ orders: Order[]; messages: Message[]; blogs: BlogRow[]; reviews: ReviewRow[]; services: ServiceRow[] }>({ orders: [], messages: [], blogs: [], reviews: [], services: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -664,6 +758,7 @@ export default function AdminDashboard() {
       return next;
     });
   const [uploading, setUploading] = useState(false);
+  const [dragZone, setDragZone] = useState<'blog' | 'product' | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Services management state & handlers (declared at top to respect React rules of hooks)
@@ -725,7 +820,9 @@ export default function AdminDashboard() {
   const [savingLeadNote, setSavingLeadNote] = useState(false);
   const [savingLeadKey, setSavingLeadKey] = useState<string | null>(null);
   // Phase 3: CRM view mode + native drag-and-drop + lead→account conversion
-  const [leadView, setLeadView] = useState<'table' | 'board'>('table');
+  const [leadView, setLeadView] = useState<'table' | 'board'>(() =>
+    readPref('cndl-admin-lead-view') === 'board' ? 'board' : 'table'
+  );
   const [dragLeadKey, setDragLeadKey] = useState<string | null>(null);
   const [boardDropCol, setBoardDropCol] = useState<string | null>(null);
   const [convertingLeadKey, setConvertingLeadKey] = useState<string | null>(null);
@@ -739,13 +836,37 @@ export default function AdminDashboard() {
   const handleAuthLoss = () => {
     setAuth(false);
     setMe(null);
-    toast.error('Session expired — please sign in again');
+    // Fixed id: a burst of 401s (e.g. the 13-request refresh) shows ONE toast.
+    toast.error('Session expired — please sign in again', { id: 'session-expired' });
+  };
+
+  /** fetch() for admin APIs: any 401 (outside the login endpoint itself) drops
+      the operator back to the sign-in screen instead of failing silently. */
+  const adminFetch = async (input: string, init?: RequestInit) => {
+    const res = await fetch(input, init);
+    if (res.status === 401 && !input.startsWith('/api/admin/verify')) handleAuthLoss();
+    return res;
+  };
+
+  /* ---------- In-app confirmation dialog (replaces window.confirm) ---------- */
+  const [confirmState, setConfirmState] = useState<{ title: string; message: string; confirmLabel: string } | null>(null);
+  const confirmResolver = useRef<((ok: boolean) => void) | null>(null);
+  const askConfirm = (message: string) =>
+    new Promise<boolean>((resolve) => {
+      confirmResolver.current = resolve;
+      const verb = /^remove/i.test(message) ? 'Remove' : 'Delete';
+      setConfirmState({ title: `${verb}?`, message, confirmLabel: verb });
+    });
+  const resolveConfirm = (ok: boolean) => {
+    confirmResolver.current?.(ok);
+    confirmResolver.current = null;
+    setConfirmState(null);
   };
 
   const updateLead = async (key: string, patch: { status?: string; notes?: string }) => {
     setSavingLeadKey(key);
     try {
-      const res = await fetch('/api/admin/leads', {
+      const res = await adminFetch('/api/admin/leads', {
         method: 'PATCH',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -760,10 +881,10 @@ export default function AdminDashboard() {
         setLeads((prev) => prev.map((l) => (l.key === key ? { ...l, ...d.lead } : l)));
         return true;
       }
-      alert(d?.error || 'Update failed');
+      toast.error(apiError(d, 'Update failed'));
       return false;
     } catch {
-      alert('Network error updating lead');
+      toast.error('Network error updating lead');
       return false;
     } finally {
       setSavingLeadKey(null);
@@ -805,7 +926,7 @@ export default function AdminDashboard() {
         if ((LEAD_STATUS_META[l.status] ? l.status : 'new') !== 'client') await updateLead(l.key, { status: 'client' });
         return;
       }
-      const res = await fetch('/api/admin/erp/accounts', {
+      const res = await adminFetch('/api/admin/erp/accounts', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -837,7 +958,7 @@ export default function AdminDashboard() {
         await updateLead(l.key, { status: 'client' });
         return;
       }
-      toast.error(body?.error || 'Failed to create client account');
+      toast.error(apiError(body, 'Failed to create client account'));
     } catch {
       toast.error('Network error converting lead');
     } finally {
@@ -868,7 +989,9 @@ export default function AdminDashboard() {
     totalMarketDues: 0,
   });
 
-  const [duesView, setDuesView] = useState<'accounts' | 'collections'>('accounts');
+  const [duesView, setDuesView] = useState<'accounts' | 'collections'>(() =>
+    readPref('cndl-admin-dues-view') === 'collections' ? 'collections' : 'accounts'
+  );
   const [divisionFilter, setDivisionFilter] = useState('DHAKA');
   const [agentFilter, setAgentFilter] = useState('ALL');
   const [editingAccount, setEditingAccount] = useState<ErpAccount | null>(null);
@@ -891,6 +1014,8 @@ export default function AdminDashboard() {
   // Phase 2: Client Dues search/pagination + Collection Log filters
   const [accSearch, setAccSearch] = useState('');
   const [accPage, setAccPage] = useState(1);
+  const [expPage, setExpPage] = useState(1);
+  const [leadPage, setLeadPage] = useState(1);
   const [collFrom, setCollFrom] = useState('');
   const [collTo, setCollTo] = useState('');
   const [collMethod, setCollMethod] = useState('ALL');
@@ -911,11 +1036,16 @@ export default function AdminDashboard() {
   const [uploadingProduct, setUploadingProduct] = useState(false);
 
   const uploadProductImage = async (file: File) => {
+    const problem = checkImageFile(file);
+    if (problem) {
+      toast.error(problem);
+      return;
+    }
     setUploadingProduct(true);
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/admin/upload', { method: 'POST', credentials: 'same-origin', body: fd });
+      const res = await adminFetch('/api/admin/upload', { method: 'POST', credentials: 'same-origin', body: fd });
       if (res.status === 401) {
         handleAuthLoss();
         return;
@@ -925,7 +1055,7 @@ export default function AdminDashboard() {
         setServiceForm((f) => ({ ...f, imageUrl: body.url }));
         toast.success('Product photo uploaded & optimized');
       } else {
-        toast.error(body.error || 'Upload failed');
+        toast.error(apiError(body, 'Upload failed'));
       }
     } catch {
       toast.error('Upload failed');
@@ -962,7 +1092,7 @@ export default function AdminDashboard() {
     try {
       const url = editingService ? `/api/admin/services/${editingService.id}` : '/api/admin/services';
       const method = editingService ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -989,10 +1119,10 @@ export default function AdminDashboard() {
   };
 
   const deleteService = async (service: ServiceRow) => {
-    if (!confirm(`Delete "${service.name}"? This cannot be undone.`)) return;
+    if (!(await askConfirm(`Delete "${service.name}"? This cannot be undone.`))) return;
     setDeletingId(`service-${service.id}`);
     try {
-      const res = await fetch(`/api/admin/services/${service.id}`, { method: 'DELETE', credentials: 'same-origin' });
+      const res = await adminFetch(`/api/admin/services/${service.id}`, { method: 'DELETE', credentials: 'same-origin' });
       if (res.status === 401) {
         handleAuthLoss();
         return;
@@ -1012,7 +1142,7 @@ export default function AdminDashboard() {
 
   const toggleServiceActive = async (service: ServiceRow) => {
     try {
-      const res = await fetch(`/api/admin/services/${service.id}`, {
+      const res = await adminFetch(`/api/admin/services/${service.id}`, {
         method: 'PUT',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -1040,7 +1170,7 @@ export default function AdminDashboard() {
     }
     setLoggingIn(true);
     try {
-      const res = await fetch('/api/admin/verify', {
+      const res = await adminFetch('/api/admin/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: identifier.trim(), password }),
@@ -1052,7 +1182,7 @@ export default function AdminDashboard() {
         setPassword('');
         toast.success(`Signed in as ${body.user.name}`);
       } else {
-        toast.error(body.error || 'Invalid credentials');
+        toast.error(apiError(body, 'Invalid credentials'));
       }
     } catch {
       toast.error('Login failed. Please try again.');
@@ -1063,7 +1193,7 @@ export default function AdminDashboard() {
 
   const handleSignOut = async () => {
     try {
-      await fetch('/api/admin/verify', { method: 'DELETE' });
+      await adminFetch('/api/admin/verify', { method: 'DELETE' });
     } catch {
       // ignore network errors on sign out
     }
@@ -1109,19 +1239,19 @@ export default function AdminDashboard() {
     else setLoading(true);
     try {
       const [res, blogsRes, reviewsRes, servicesRes, erpAccRes, erpUsersRes, erpExpRes, erpCapexRes, erpDivRes, erpLedgerRes, erpShRes, metricsRes, leadsRes] = await Promise.all([
-        fetch('/api/admin/data'),
-        fetch('/api/admin/blogs'),
-        fetch('/api/admin/testimonials'),
-        fetch('/api/admin/services'),
-        fetch('/api/admin/erp/accounts'),
-        fetch('/api/admin/erp/users'),
-        fetch('/api/admin/erp/expenses'),
-        fetch('/api/admin/erp/capex'),
-        fetch('/api/admin/erp/dividends'),
-        fetch('/api/admin/erp/ledger'),
-        fetch('/api/admin/erp/shareholders'),
-        fetch('/api/admin/erp/overview-metrics'),
-        fetch('/api/admin/leads'),
+        adminFetch('/api/admin/data'),
+        adminFetch('/api/admin/blogs'),
+        adminFetch('/api/admin/testimonials'),
+        adminFetch('/api/admin/services'),
+        adminFetch('/api/admin/erp/accounts'),
+        adminFetch('/api/admin/erp/users'),
+        adminFetch('/api/admin/erp/expenses'),
+        adminFetch('/api/admin/erp/capex'),
+        adminFetch('/api/admin/erp/dividends'),
+        adminFetch('/api/admin/erp/ledger'),
+        adminFetch('/api/admin/erp/shareholders'),
+        adminFetch('/api/admin/erp/overview-metrics'),
+        adminFetch('/api/admin/leads'),
       ]);
       // Any 401 in the fan-out means the session is dead — self-heal to login.
       const allRes = [res, blogsRes, reviewsRes, servicesRes, erpAccRes, erpUsersRes, erpExpRes, erpCapexRes, erpDivRes, erpLedgerRes, erpShRes, metricsRes, leadsRes];
@@ -1201,7 +1331,7 @@ export default function AdminDashboard() {
     const edit = edits[order.id] ?? { status: order.status, progress: order.progress };
     setSavingId(order.id);
     try {
-      const res = await fetch('/api/admin/data', {
+      const res = await adminFetch('/api/admin/data', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: order.id, status: edit.status, progress: edit.progress }),
@@ -1226,7 +1356,7 @@ export default function AdminDashboard() {
     // Optimistic update for a snappy pill transition.
     setEdits((prev) => ({ ...prev, [order.id]: { status: newStatus, progress } }));
     try {
-      const res = await fetch('/api/admin/data', {
+      const res = await adminFetch('/api/admin/data', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: order.id, status: newStatus, progress }),
@@ -1247,16 +1377,16 @@ export default function AdminDashboard() {
   };
 
   const deleteOrder = async (order: Order) => {
-    if (!confirm(`Delete / archive case ${order.caseId}? This cannot be undone.`)) return;
+    if (!(await askConfirm(`Delete / archive case ${order.caseId}? This cannot be undone.`))) return;
     setDeletingId(`order-${order.id}`);
     try {
-      const res = await fetch(`/api/admin/data?id=${encodeURIComponent(order.id)}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/data?id=${encodeURIComponent(order.id)}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success(`Case ${order.caseId} deleted`);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to delete case');
+        toast.error(apiError(body, 'Failed to delete case'));
       }
     } catch {
       toast.error('Network error');
@@ -1270,7 +1400,7 @@ export default function AdminDashboard() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/admin/upload', { method: 'POST', credentials: 'same-origin', body: fd });
+      const res = await adminFetch('/api/admin/upload', { method: 'POST', credentials: 'same-origin', body: fd });
       if (res.status === 401) {
         handleAuthLoss();
         return;
@@ -1281,7 +1411,7 @@ export default function AdminDashboard() {
         setPreviewUrl(body.url);
         toast.success('Image uploaded & optimized');
       } else {
-        toast.error(body.error || 'Upload failed');
+        toast.error(apiError(body, 'Upload failed'));
       }
     } catch {
       toast.error('Upload failed');
@@ -1292,8 +1422,9 @@ export default function AdminDashboard() {
 
   const onBlogFilePicked = (file: File | null | undefined) => {
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
+    const problem = checkImageFile(file);
+    if (problem) {
+      toast.error(problem);
       return;
     }
     setPreviewUrl(URL.createObjectURL(file)); // instant local preview while uploading
@@ -1342,7 +1473,7 @@ export default function AdminDashboard() {
     setSavingBlog(true);
     try {
       const payload = { ...blogForm, slug: blogForm.slug || slugify(blogForm.title) };
-      const res = await fetch(
+      const res = await adminFetch(
         editingBlog ? `/api/admin/blogs/${editingBlog.id}` : '/api/admin/blogs',
         {
           method: editingBlog ? 'PUT' : 'POST',
@@ -1357,7 +1488,7 @@ export default function AdminDashboard() {
         setBlogForm(EMPTY_BLOG_FORM);
         await fetchData(true);
       } else {
-        toast.error(body.issues?.[0] || body.error || 'Failed to save article');
+        toast.error(apiError(body, 'Failed to save article'));
       }
     } catch {
       toast.error('Failed to save article');
@@ -1370,7 +1501,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setSavingReview(true);
     try {
-      const res = await fetch(
+      const res = await adminFetch(
         editingReview ? `/api/admin/testimonials/${editingReview.id}` : '/api/admin/testimonials',
         {
           method: editingReview ? 'PUT' : 'POST',
@@ -1385,7 +1516,7 @@ export default function AdminDashboard() {
         setReviewForm(EMPTY_REVIEW_FORM);
         await fetchData(true);
       } else {
-        toast.error(body.issues?.[0] || body.error || 'Failed to save review');
+        toast.error(apiError(body, 'Failed to save review'));
       }
     } catch {
       toast.error('Failed to save review');
@@ -1395,10 +1526,10 @@ export default function AdminDashboard() {
   };
 
   const deleteBlog = async (blog: BlogRow) => {
-    if (!confirm(`Delete article "${blog.title}"? This cannot be undone.`)) return;
+    if (!(await askConfirm(`Delete article "${blog.title}"? This cannot be undone.`))) return;
     setDeletingId(`blog-${blog.id}`);
     try {
-      const res = await fetch(`/api/admin/blogs/${blog.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/blogs/${blog.id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Article deleted');
         await fetchData(true);
@@ -1413,10 +1544,10 @@ export default function AdminDashboard() {
   };
 
   const deleteReview = async (review: ReviewRow) => {
-    if (!confirm(`Delete review by ${review.doctorName}? This cannot be undone.`)) return;
+    if (!(await askConfirm(`Delete review by ${review.doctorName}? This cannot be undone.`))) return;
     setDeletingId(`review-${review.id}`);
     try {
-      const res = await fetch(`/api/admin/testimonials/${review.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/testimonials/${review.id}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Review deleted');
         await fetchData(true);
@@ -1461,16 +1592,16 @@ export default function AdminDashboard() {
   };
 
   const deleteExpense = async (x: ErpExpense) => {
-    if (!confirm(`Delete expense "${x.title}" (${formatBDT(x.amount)})? The pre-change state is preserved in the audit log.`)) return;
+    if (!(await askConfirm(`Delete expense "${x.title}" (${formatBDT(x.amount)})? The pre-change state is preserved in the audit log.`))) return;
     setDeletingId(`expense-${x.id}`);
     try {
-      const res = await fetch(`/api/admin/erp/expenses?id=${encodeURIComponent(x.id)}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/erp/expenses?id=${encodeURIComponent(x.id)}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Expense deleted — old state kept in audit log');
         await fetchData(true);
       } else {
         const b = await res.json().catch(() => ({}));
-        toast.error(b.error || 'Failed to delete expense');
+        toast.error(apiError(b, 'Failed to delete expense'));
       }
     } catch {
       toast.error('Network error');
@@ -1483,10 +1614,10 @@ export default function AdminDashboard() {
     setAuditModal(true);
     setAuditLoading(true);
     try {
-      const res = await fetch('/api/admin/erp/expenses/audit');
+      const res = await adminFetch('/api/admin/erp/expenses/audit');
       const body = await res.json().catch(() => ({}));
       if (res.ok) setAuditEntries(Array.isArray(body.entries) ? body.entries : []);
-      else toast.error(body.error || 'Failed to load audit log');
+      else toast.error(apiError(body, 'Failed to load audit log'));
     } catch {
       toast.error('Network error');
     } finally {
@@ -1507,16 +1638,16 @@ export default function AdminDashboard() {
   };
 
   const deleteCapex = async (a: ErpAsset) => {
-    if (!confirm(`Delete machine "${a.machineName}" (${formatBDT(a.purchaseCost)})? This cannot be undone.`)) return;
+    if (!(await askConfirm(`Delete machine "${a.machineName}" (${formatBDT(a.purchaseCost)})? This cannot be undone.`))) return;
     setDeletingId(`capex-${a.id}`);
     try {
-      const res = await fetch(`/api/admin/erp/capex?id=${encodeURIComponent(a.id)}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/erp/capex?id=${encodeURIComponent(a.id)}`, { method: 'DELETE' });
       if (res.ok) {
         toast.success('Machine asset deleted');
         await fetchData(true);
       } else {
         const b = await res.json().catch(() => ({}));
-        toast.error(b.error || 'Failed to delete machine asset');
+        toast.error(apiError(b, 'Failed to delete machine asset'));
       }
     } catch {
       toast.error('Network error');
@@ -1545,7 +1676,7 @@ export default function AdminDashboard() {
     }
     setSavingPayout(true);
     try {
-      const res = await fetch('/api/admin/erp/agents/payout', {
+      const res = await adminFetch('/api/admin/erp/agents/payout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1562,7 +1693,7 @@ export default function AdminDashboard() {
         setPayoutModalAgent(null);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to record payout');
+        toast.error(apiError(body, 'Failed to record payout'));
       }
     } catch {
       toast.error('Network error');
@@ -1587,7 +1718,7 @@ export default function AdminDashboard() {
     }
     setSavingQuickAccount(true);
     try {
-      const res = await fetch('/api/admin/erp/accounts', {
+      const res = await adminFetch('/api/admin/erp/accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1606,7 +1737,7 @@ export default function AdminDashboard() {
         return;
       }
       if (!res.ok) {
-        toast.error(data.error || 'Failed to create account');
+        toast.error(apiError(data, 'Failed to create account'));
         return;
       }
       toast.success(`Client account "${data.name}" created!`);
@@ -1664,7 +1795,7 @@ export default function AdminDashboard() {
     }
     setSavingOrder(true);
     try {
-      const res = await fetch('/api/admin/orders', {
+      const res = await adminFetch('/api/admin/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1701,7 +1832,7 @@ export default function AdminDashboard() {
         setQuickAccountOpen(false);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to create order');
+        toast.error(apiError(body, 'Failed to create order'));
       }
     } catch {
       toast.error('Network error');
@@ -1729,7 +1860,7 @@ export default function AdminDashboard() {
     }
     setSavingErp(true);
     try {
-      const res = await fetch('/api/admin/erp/ledger', {
+      const res = await adminFetch('/api/admin/erp/ledger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1747,7 +1878,7 @@ export default function AdminDashboard() {
         setInvoiceModalAcc(null);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to record invoice');
+        toast.error(apiError(body, 'Failed to record invoice'));
       }
     } catch {
       toast.error('Network error');
@@ -1766,7 +1897,7 @@ export default function AdminDashboard() {
     }
     setSavingErp(true);
     try {
-      const res = await fetch('/api/admin/erp/ledger', {
+      const res = await adminFetch('/api/admin/erp/ledger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1788,7 +1919,7 @@ export default function AdminDashboard() {
         setPaymentModalAcc(null);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to record collection');
+        toast.error(apiError(body, 'Failed to record collection'));
       }
     } catch {
       toast.error('Network error');
@@ -1834,7 +1965,7 @@ export default function AdminDashboard() {
       const payload = editing
         ? { ...accountForm, openingDue: undefined, allowDuplicate: undefined }
         : { ...accountForm, allowDuplicate: allowDuplicate || undefined };
-      const res = await fetch(
+      const res = await adminFetch(
         editing ? `/api/admin/erp/accounts/${editing.id}` : '/api/admin/erp/accounts',
         {
           method: editing ? 'PUT' : 'POST',
@@ -1852,7 +1983,7 @@ export default function AdminDashboard() {
         setAccountModal(false);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to save account');
+        toast.error(apiError(body, 'Failed to save account'));
       }
     } catch {
       toast.error('Network error');
@@ -1904,7 +2035,7 @@ export default function AdminDashboard() {
         ...(editingUser ? { status: userForm.status } : {}),
         ...(userForm.password ? { password: userForm.password } : {}),
       };
-      const res = await fetch(
+      const res = await adminFetch(
         editingUser ? `/api/admin/erp/users/${editingUser.id}` : '/api/admin/erp/users',
         {
           method: editingUser ? 'PUT' : 'POST',
@@ -1919,7 +2050,7 @@ export default function AdminDashboard() {
         setEditingUser(null);
         await fetchData(true);
       } else {
-        toast.error(body.error || (editingUser ? 'Failed to update user' : 'Failed to register user'));
+        toast.error(apiError(body, editingUser ? 'Failed to update user' : 'Failed to register user'));
       }
     } catch {
       toast.error('Network error');
@@ -1929,16 +2060,16 @@ export default function AdminDashboard() {
   };
 
   const deleteUser = async (u: ErpUser) => {
-    if (!confirm(`Delete user "${u.name}"? This cannot be undone.`)) return;
+    if (!(await askConfirm(`Delete user "${u.name}"? This cannot be undone.`))) return;
     setDeletingId(`user-${u.id}`);
     try {
-      const res = await fetch(`/api/admin/erp/users/${u.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/erp/users/${u.id}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success('User deleted');
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to delete user');
+        toast.error(apiError(body, 'Failed to delete user'));
       }
     } catch {
       toast.error('Network error');
@@ -1970,7 +2101,7 @@ export default function AdminDashboard() {
     }
     setSavingPw(true);
     try {
-      const res = await fetch('/api/admin/erp/users/change-password', {
+      const res = await adminFetch('/api/admin/erp/users/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next }),
@@ -1981,7 +2112,7 @@ export default function AdminDashboard() {
         setPwModal(false);
         setPwForm({ current: '', next: '', confirm: '' });
       } else {
-        toast.error(body.error || 'Failed to update password');
+        toast.error(apiError(body, 'Failed to update password'));
       }
     } catch {
       toast.error('Network error');
@@ -2031,7 +2162,7 @@ export default function AdminDashboard() {
         paymentDetails: shareholderForm.paymentDetails.trim() || null,
         notes: shareholderForm.notes.trim() || null,
       };
-      const res = await fetch(
+      const res = await adminFetch(
         editingShareholder ? `/api/admin/erp/shareholders/${editingShareholder.id}` : '/api/admin/erp/shareholders',
         {
           method: editingShareholder ? 'PUT' : 'POST',
@@ -2046,7 +2177,7 @@ export default function AdminDashboard() {
         setEditingShareholder(null);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to save shareholder');
+        toast.error(apiError(body, 'Failed to save shareholder'));
       }
     } catch {
       toast.error('Network error');
@@ -2056,16 +2187,16 @@ export default function AdminDashboard() {
   };
 
   const deleteShareholder = async (s: ErpShareholder) => {
-    if (!confirm(`Remove "${s.name}" from the equity registry? This cannot be undone.`)) return;
+    if (!(await askConfirm(`Remove "${s.name}" from the equity registry? This cannot be undone.`))) return;
     setDeletingId(`shareholder-${s.id}`);
     try {
-      const res = await fetch(`/api/admin/erp/shareholders/${s.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/erp/shareholders/${s.id}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success('Shareholder removed');
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to remove shareholder');
+        toast.error(apiError(body, 'Failed to remove shareholder'));
       }
     } catch {
       toast.error('Network error');
@@ -2088,7 +2219,7 @@ export default function AdminDashboard() {
     }
     setSavingErp(true);
     try {
-      const res = await fetch(
+      const res = await adminFetch(
         editingExpense ? `/api/admin/erp/expenses?id=${encodeURIComponent(editingExpense.id)}` : '/api/admin/erp/expenses',
         {
           method: editingExpense ? 'PUT' : 'POST',
@@ -2111,7 +2242,7 @@ export default function AdminDashboard() {
         setExpenseModal(false);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to save expense');
+        toast.error(apiError(body, 'Failed to save expense'));
       }
     } catch {
       toast.error('Network error');
@@ -2133,7 +2264,7 @@ export default function AdminDashboard() {
     }
     setSavingErp(true);
     try {
-      const res = await fetch(
+      const res = await adminFetch(
         editingCapex ? `/api/admin/erp/capex?id=${encodeURIComponent(editingCapex.id)}` : '/api/admin/erp/capex',
         {
           method: editingCapex ? 'PUT' : 'POST',
@@ -2153,7 +2284,7 @@ export default function AdminDashboard() {
         setCapexModal(false);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to save machine asset');
+        toast.error(apiError(body, 'Failed to save machine asset'));
       }
     } catch {
       toast.error('Network error');
@@ -2184,7 +2315,7 @@ export default function AdminDashboard() {
     }
     setSavingErp(true);
     try {
-      const res = await fetch('/api/admin/erp/dividends', {
+      const res = await adminFetch('/api/admin/erp/dividends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2202,7 +2333,7 @@ export default function AdminDashboard() {
         setDividendModal(false);
         await fetchData(true);
       } else {
-        toast.error(body.error || 'Failed to record dividend');
+        toast.error(apiError(body, 'Failed to record dividend'));
       }
     } catch {
       toast.error('Network error');
@@ -2270,6 +2401,49 @@ export default function AdminDashboard() {
     return () => clearInterval(id);
   }, [auth]);  
 
+  // Dialogs: lock the page behind any open dialog, and let Escape close the
+  // top-most one (confirm prompt first, then nested pickers, then the rest).
+  const anyDialogOpen = Boolean(
+    confirmState || modalId || serviceModal || blogModal || reviewModal || msgModal || invoiceModalAcc ||
+    paymentModalAcc || accountModal || userModal || pwModal || auditModal || expenseModal || capexModal ||
+    dividendModal || shareholderModal || payoutModalAgent || offlineOrderModal
+  );
+  useEffect(() => {
+    if (!anyDialogOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [anyDialogOpen]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (confirmState) return resolveConfirm(false);
+      if (quickAccountOpen) return setQuickAccountOpen(false);
+      if (offlineOrderModal) return setOfflineOrderModal(false);
+      if (payoutModalAgent) return setPayoutModalAgent(null);
+      if (shareholderModal) return setShareholderModal(false);
+      if (dividendModal) return setDividendModal(false);
+      if (capexModal) return setCapexModal(false);
+      if (expenseModal) return setExpenseModal(false);
+      if (auditModal) return setAuditModal(false);
+      if (pwModal) return void (!savingPw && setPwModal(false));
+      if (userModal) return setUserModal(false);
+      if (accountModal) return setAccountModal(false);
+      if (paymentModalAcc) return setPaymentModalAcc(null);
+      if (invoiceModalAcc) return setInvoiceModalAcc(null);
+      if (msgModal) return setMsgModal(null);
+      if (reviewModal) return closeReviewModal();
+      if (blogModal) return closeBlogModal();
+      if (serviceModal) return setServiceModal(false);
+      if (modalId) return setModalId(null);
+      if (sidebarOpen) return setSidebarOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   const permittedTabs = ROLE_TABS[me?.role ?? 'SUPERADMIN'] ?? ROLE_TABS.SUPERADMIN;
 
   // Keep the active tab inside the signed-in role's permissions.
@@ -2286,22 +2460,6 @@ export default function AdminDashboard() {
     setMsgPage(1);
   }, [msgSearch]);
 
-  // Phase 2: restore the persisted active tab (localStorage + URL hash) once on
-  // mount. The role-guard effect below re-clamps it to the signed-in role.
-  useEffect(() => {
-    let stored: string | null = null;
-    try {
-      stored = window.localStorage.getItem('cndl-admin-tab');
-    } catch {
-      /* private mode */
-    }
-    const fromHash =
-      typeof window !== 'undefined' && window.location.hash.startsWith('#')
-        ? window.location.hash.slice(1)
-        : '';
-    const candidate = stored || fromHash;
-    if (candidate && (ALL_TAB_KEYS as string[]).includes(candidate)) setTab(candidate as TabKey);
-  }, []);
 
   useEffect(() => {
     try {
@@ -2312,7 +2470,29 @@ export default function AdminDashboard() {
     if (typeof window !== 'undefined' && window.location.hash !== `#${tab}`) {
       window.history.replaceState(null, '', `#${tab}`);
     }
+    // Each section opens at its top instead of the previous tab's scroll depth.
+    window.scrollTo({ top: 0 });
   }, [tab]);
+
+  // Browser back/forward or a pasted #link switches the section.
+  useEffect(() => {
+    const onHash = () => {
+      const h = window.location.hash.slice(1);
+      if ((ALL_TAB_KEYS as string[]).includes(h)) setTab(h as TabKey);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Remember sub-views (Leads table/board, Dues accounts/collections).
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('cndl-admin-lead-view', leadView);
+      window.localStorage.setItem('cndl-admin-dues-view', duesView);
+    } catch {
+      /* ignore */
+    }
+  }, [leadView, duesView]);
 
   /* ---------- Derived data (memoized — Phase 2 render performance).
      All hooks live ABOVE the early auth returns. ---------- */
@@ -2576,7 +2756,7 @@ export default function AdminDashboard() {
     });
   }, [erpUsers, userRoleFilter, userSearch]);
 
-  const { orderTotalPages, safePage, pagedOrders, orderFilteredCount } = useMemo(() => {
+  const { safePage, pagedOrders, orderFilteredCount } = useMemo(() => {
     const sq = search.trim().toLowerCase();
     const filtered = data.orders.filter((o) => {
       if (!o) return false;
@@ -2599,7 +2779,7 @@ export default function AdminDashboard() {
     };
   }, [data.orders, search, statusFilter, page]);
 
-  const { msgTotalPages, safeMsgPage, pagedMessages, msgFilteredCount } = useMemo(() => {
+  const { safeMsgPage, pagedMessages, msgFilteredCount } = useMemo(() => {
     const sq = msgSearch.trim().toLowerCase();
     const filtered = data.messages.filter((m) => {
       if (!m) return false;
@@ -2631,6 +2811,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     setAccPage(1);
   }, [accSearch, divisionFilter, agentFilter]);
+  useEffect(() => {
+    setLeadPage(1);
+  }, [leadSearch, leadStatusFilter]);
 
   const pagedAccounts = useMemo(() => {
     const start = (accPage - 1) * ACCOUNTS_PER_PAGE;
@@ -2670,6 +2853,19 @@ export default function AdminDashboard() {
       return true;
     });
   }, [erpExpenses, expSearch, expCat, expMonth]);
+  useEffect(() => {
+    setExpPage(1);
+  }, [expSearch, expCat, expMonth]);
+  const pagedExpenses = useMemo(() => {
+    const pages = Math.max(1, Math.ceil(filteredExpenses.length / EXPENSES_PER_PAGE));
+    const p = Math.min(expPage, pages);
+    return filteredExpenses.slice((p - 1) * EXPENSES_PER_PAGE, p * EXPENSES_PER_PAGE);
+  }, [filteredExpenses, expPage]);
+  const pagedLeads = useMemo(() => {
+    const pages = Math.max(1, Math.ceil(filteredLeads.length / LEADS_PER_PAGE));
+    const p = Math.min(leadPage, pages);
+    return filteredLeads.slice((p - 1) * LEADS_PER_PAGE, p * LEADS_PER_PAGE);
+  }, [filteredLeads, leadPage]);
 
   if (auth === null) {
     /* Restoring session — quiet splash */
@@ -2698,7 +2894,7 @@ export default function AdminDashboard() {
           </div>
           <div className="px-8 pb-10 space-y-4">
             <div>
-              <label htmlFor="admin-identifier" className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              <label htmlFor="admin-identifier" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
                 Phone or Email
               </label>
               <div className="relative">
@@ -2714,7 +2910,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div>
-              <label htmlFor="admin-password" className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+              <label htmlFor="admin-password" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -2746,7 +2942,7 @@ export default function AdminDashboard() {
             >
               {loggingIn ? 'Signing in…' : 'Sign In'}
             </button>
-            <p className="text-[11px] text-slate-400 text-center leading-relaxed">
+            <p className="text-xs text-slate-400 text-center leading-relaxed">
               Access is role-based. Accounts are issued by a SUPERADMIN under User Management.
             </p>
           </div>
@@ -2865,20 +3061,20 @@ type NavItem = {
     {
       title: 'Command Center',
       items: [
-        { key: 'overview', label: 'Executive Overview', icon: LayoutDashboard, badge: 'Live' },
+        { key: 'overview', label: 'Overview', icon: LayoutDashboard, badge: 'Live' },
       ],
     },
     {
       title: 'Lab Operations',
       items: [
-        { key: 'orders', label: 'Lab Cases & Orders', icon: Layers, count: totalOrders },
+        { key: 'orders', label: 'Lab Cases', icon: Layers, count: totalOrders },
         { key: 'products', label: 'Dental Products', icon: Package, count: serviceCount },
       ],
     },
     {
       title: 'Finance & ERP',
       items: [
-        { key: 'dues', label: 'Client Dues & Ledger', icon: Wallet, badge: me?.role !== 'AGENT' && totalMarketDue > 0 ? `৳${compactDue}` : undefined },
+        { key: 'dues', label: 'Client Dues', icon: Wallet, badge: me?.role !== 'AGENT' && totalMarketDue > 0 ? `৳${compactDue}` : undefined },
         { key: 'expenses', label: 'Daily Expenses', icon: TrendingDown },
         { key: 'capex', label: 'Machinery & CapEx', icon: Cpu },
         { key: 'shareholders', label: 'Shareholders & P&L', icon: Landmark },
@@ -2887,10 +3083,10 @@ type NavItem = {
     {
       title: 'Growth & CMS',
       items: [
-        { key: 'leads', label: 'Dhaka Dental Leads', icon: MapPin, count: leads.length },
+        { key: 'leads', label: 'Dental Leads', icon: MapPin, count: leads.length },
         { key: 'messages', label: 'Client Inquiries', icon: MessageSquare, count: messageCount },
         { key: 'blogs', label: 'Blog Articles', icon: FileText, count: blogCount },
-        { key: 'reviews', label: 'Doctor Testimonials', icon: Star, count: reviewCount },
+        { key: 'reviews', label: 'Testimonials', icon: Star, count: reviewCount },
       ],
     },
     {
@@ -2990,6 +3186,42 @@ type NavItem = {
       </div>
 
       {/* Mobile sidebar overlay */}
+      {confirmState && (
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="cndl-confirm-title"
+            aria-describedby="cndl-confirm-body"
+            className="bg-white w-full sm:max-w-md rounded-t-xl sm:rounded-xl shadow-xl p-6"
+          >
+            <h3 id="cndl-confirm-title" className="text-base font-semibold text-slate-900">
+              {confirmState.title}
+            </h3>
+            <p id="cndl-confirm-body" className="mt-2 text-sm leading-relaxed text-slate-600">
+              {confirmState.message}
+            </p>
+            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <button
+                type="button"
+                autoFocus
+                onClick={() => resolveConfirm(false)}
+                className="min-h-[40px] px-4 rounded-lg border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => resolveConfirm(true)}
+                className="min-h-[40px] px-4 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-700 transition-colors"
+              >
+                {confirmState.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -3005,7 +3237,7 @@ type NavItem = {
           <span className="w-10 h-10 rounded-xl bg-teal-600/20 border border-teal-500/40 text-teal-300 font-semibold flex items-center justify-center text-lg shrink-0">C</span>
           <div className={`min-w-0 ${railCollapsed ? 'lg:hidden' : ''}`}>
             <div className="font-semibold leading-tight">CNDL Admin</div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 text-teal-300 px-2 py-0.5 text-[10px] font-medium mt-1">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/10 text-teal-300 px-2 py-0.5 text-[11px] font-medium mt-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Admin Console
             </span>
@@ -3032,7 +3264,7 @@ type NavItem = {
           {visibleNavGroups.map((group) => (
             <div key={group.title}>
               {railCollapsed && <div className="hidden lg:block mx-auto w-7 border-t border-white/10 mb-2" />}
-              <p className={`px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 select-none ${railCollapsed ? 'lg:hidden' : ''}`}>
+              <p className={`px-4 pb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 select-none ${railCollapsed ? 'lg:hidden' : ''}`}>
                 {group.title}
               </p>
               <div className="space-y-1">
@@ -3063,14 +3295,14 @@ type NavItem = {
                       )
                     ) : item.badge ? (
                       item.badge === 'Live' ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-0.5 text-[10px] font-medium whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-0.5 text-[11px] font-medium whitespace-nowrap">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                           Live
                         </span>
                       ) : (
                         <span
                           title={`Total market due: ${formatBDT(totalMarketDue)}`}
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${
                             tab === item.key ? 'bg-rose-400/20 text-rose-200' : 'bg-rose-400/15 text-rose-300'
                           }`}
                         >
@@ -3079,7 +3311,7 @@ type NavItem = {
                       )
                     ) : item.count !== undefined && item.count > 0 ? (
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
                           tab === item.key ? 'bg-teal-500/20 text-teal-300' : 'bg-white/10 text-slate-400'
                         }`}
                       >
@@ -3101,7 +3333,7 @@ type NavItem = {
             </span>
             <div className={`min-w-0 flex-1 ${railCollapsed ? 'lg:hidden' : ''}`}>
               <div className="text-xs font-bold truncate">{me?.name || 'Administrator'}</div>
-              <div className="text-[10px] text-slate-500 truncate">{me?.phone || 'cndl-global.com'}</div>
+              <div className="text-[11px] text-slate-500 truncate">{me?.phone || 'cndl-global.com'}</div>
             </div>
             <button
               onClick={openPwModal}
@@ -3151,20 +3383,20 @@ type NavItem = {
             <div className="flex items-center gap-3">
               <div>
                 {currentGroupTitle && (
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-0.5 select-none">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-0.5 select-none">
                     {currentGroupTitle}
                   </p>
                 )}
                 <h1 className="text-lg sm:text-2xl font-semibold tracking-tight tabular-nums leading-tight">{currentNav?.label ?? 'Dashboard'}</h1>
               </div>
-              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-600/15 text-emerald-700 px-3 py-1 text-[10px] font-bold self-center mt-2">
+              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-600/15 text-emerald-700 px-3 py-1 text-[11px] font-bold self-center mt-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
                 Live
               </span>
             </div>
             <div className="flex items-center gap-3">
               {lastSyncedAt && (
-                <span className="hidden md:inline text-[11px] font-medium text-slate-400 tabular-nums" title="Last successful sync">
+                <span className="hidden md:inline text-xs font-medium text-slate-400 tabular-nums" title="Last successful sync">
                   Synced {refreshing ? '…' : new Date(lastSyncedAt).toLocaleTimeString('en-GB')}
                 </span>
               )}
@@ -3187,7 +3419,7 @@ type NavItem = {
                 <card.icon size={20} />
               </span>
               <span className="min-w-0">
-                <span className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 line-clamp-2 leading-tight">
+                <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 line-clamp-2 leading-tight">
                   {card.label}
                 </span>
                 <span className={`block text-lg sm:text-2xl font-semibold tracking-tight tabular-nums tabular-nums truncate ${card.valueCls || ''}`}>{card.value}</span>
@@ -3217,18 +3449,18 @@ type NavItem = {
                   {shareholderHoldings.length > 0 ? (
                     <div className="space-y-0.5 max-h-28 overflow-y-auto">
                       {shareholderHoldings.map((s) => (
-                        <p key={s.name} className="text-[11px] text-gray-600 flex justify-between gap-2">
+                        <p key={s.name} className="text-xs text-gray-600 flex justify-between gap-2">
                           <span className="truncate">{s.name} <span className="text-slate-500">({s.shares} shares)</span></span>
                           <span className="font-bold whitespace-nowrap">{formatBDT(perShareValue * s.shares)}</span>
                         </p>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-slate-500">No shareholders registered yet.</p>
+                    <p className="text-xs text-slate-500">No shareholders registered yet.</p>
                   )}
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-500 mt-1">Enter this month&apos;s net profit to preview per-share dividends.</p>
+                <p className="text-xs text-slate-500 mt-1">Enter this month&apos;s net profit to preview per-share dividends.</p>
               )}
             </div>
           )}
@@ -3244,7 +3476,7 @@ type NavItem = {
           <div className="space-y-5">
             {/* Quick Action Bar */}
             <div className="bg-white rounded-xl border border-slate-200/80 shadow-none p-4 sm:p-5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Quick Actions</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Quick Actions</p>
               <div className="flex flex-wrap gap-2.5">
                 <button
                   onClick={() => window.open('/order-create', '_blank')}
@@ -3327,7 +3559,7 @@ type NavItem = {
                     Today&apos;s Register • আজকের খাতা
                   </h3>
                 </div>
-                <span className="text-[11px] font-bold text-slate-400 bg-slate-50 border border-slate-200/60 px-2.5 py-1 rounded-full">
+                <span className="text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200/60 px-2.5 py-1 rounded-full">
                   Live Asia/Dhaka (UTC+6)
                 </span>
               </div>
@@ -3335,35 +3567,35 @@ type NavItem = {
                 {/* 1. Today's Invoiced Sales */}
                 <div className="rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 line-clamp-2 leading-tight mb-1">
                       Today&apos;s Invoiced Sales (বিক্রি)
                     </span>
                     <span className="block text-lg sm:text-2xl font-semibold text-slate-900 tracking-tight">
                       {formatBDT(overviewMetrics.todayInvoicedSales)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-teal-700 font-bold mt-2">
+                  <span className="block text-[11px] text-teal-700 font-bold mt-2">
                     Invoices dated today
                   </span>
                 </div>
                 {/* 2. Today's Cash Collected */}
                 <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-emerald-800 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-800 line-clamp-2 leading-tight mb-1">
                       Today&apos;s Cash Collected (নগদ আদায়)
                     </span>
                     <span className="block text-lg sm:text-2xl font-semibold text-emerald-700 tracking-tight">
                       {formatBDT(overviewMetrics.todayCashCollected)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-emerald-700 font-bold mt-2">
+                  <span className="block text-[11px] text-emerald-700 font-bold mt-2">
                     Collections received today
                   </span>
                 </div>
                 {/* 3. Today's New Dues Added */}
                 <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-amber-800 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-amber-800 line-clamp-2 leading-tight mb-1">
                       Today&apos;s New Dues (বকেয়া বৃদ্ধি)
                     </span>
                     <span className={`block text-lg sm:text-2xl font-semibold tracking-tight tabular-nums ${
@@ -3372,21 +3604,21 @@ type NavItem = {
                       {overviewMetrics.todayNewDuesAdded > 0 ? `+${formatBDT(overviewMetrics.todayNewDuesAdded)}` : formatBDT(overviewMetrics.todayNewDuesAdded)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-amber-700 font-bold mt-2">
+                  <span className="block text-[11px] text-amber-700 font-bold mt-2">
                     Invoiced Sales − Cash In
                   </span>
                 </div>
                 {/* 4. Today's Expenses */}
                 <div className="rounded-2xl border border-rose-200/80 bg-rose-50/40 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-rose-800 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-rose-800 line-clamp-2 leading-tight mb-1">
                       Today&apos;s OpEx (আজকের খরচ)
                     </span>
                     <span className="block text-lg sm:text-2xl font-semibold text-rose-600 tracking-tight">
                       {formatBDT(overviewMetrics.todayExpenses)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-rose-700 font-bold mt-2">
+                  <span className="block text-[11px] text-rose-700 font-bold mt-2">
                     Logged daily expenses
                   </span>
                 </div>
@@ -3402,7 +3634,7 @@ type NavItem = {
                     This Month&apos;s Summary • চলতি মাসের হিসাব
                   </h3>
                 </div>
-                <span className="text-[11px] font-bold text-slate-400 bg-slate-50 border border-slate-200/60 px-2.5 py-1 rounded-full">
+                <span className="text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200/60 px-2.5 py-1 rounded-full">
                   Calendar Month MTD
                 </span>
               </div>
@@ -3410,35 +3642,35 @@ type NavItem = {
                 {/* 1. Month's Sales */}
                 <div className="rounded-2xl border border-teal-200/80 bg-teal-50/40 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-teal-800 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-teal-800 line-clamp-2 leading-tight mb-1">
                       This Month&apos;s Sales (মোট বিক্রি)
                     </span>
                     <span className="block text-lg sm:text-2xl font-semibold text-teal-900 tracking-tight">
                       {formatBDT(overviewMetrics.monthInvoicedSales)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-teal-700 font-bold mt-2">
+                  <span className="block text-[11px] text-teal-700 font-bold mt-2">
                     Gross invoiced volume
                   </span>
                 </div>
                 {/* 2. Total Cash In */}
                 <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-emerald-800 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-emerald-800 line-clamp-2 leading-tight mb-1">
                       Total Cash In (মোট নগদ আদায়)
                     </span>
                     <span className="block text-lg sm:text-2xl font-semibold text-emerald-700 tracking-tight">
                       {formatBDT(overviewMetrics.monthCashCollected)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-emerald-700 font-bold mt-2">
+                  <span className="block text-[11px] text-emerald-700 font-bold mt-2">
                     Realized payments this month
                   </span>
                 </div>
                 {/* 3. Net Dues Added */}
                 <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-amber-800 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-amber-800 line-clamp-2 leading-tight mb-1">
                       Net Dues Added (নেট বকেয়া বৃদ্ধি)
                     </span>
                     <span className={`block text-lg sm:text-2xl font-semibold tracking-tight tabular-nums ${
@@ -3447,21 +3679,21 @@ type NavItem = {
                       {overviewMetrics.monthNewDuesAdded > 0 ? `+${formatBDT(overviewMetrics.monthNewDuesAdded)}` : formatBDT(overviewMetrics.monthNewDuesAdded)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-amber-700 font-bold mt-2">
+                  <span className="block text-[11px] text-amber-700 font-bold mt-2">
                     Month Sales − Cash In
                   </span>
                 </div>
                 {/* 4. Month's Total OpEx */}
                 <div className="rounded-2xl border border-rose-200/80 bg-rose-50/40 p-4 flex flex-col justify-between">
                   <div>
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-rose-800 line-clamp-2 leading-tight mb-1">
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-rose-800 line-clamp-2 leading-tight mb-1">
                       Month&apos;s Total OpEx (মোট খরচ)
                     </span>
                     <span className="block text-lg sm:text-2xl font-semibold text-rose-600 tracking-tight">
                       {formatBDT(overviewMetrics.monthExpenses)}
                     </span>
                   </div>
-                  <span className="block text-[10px] text-rose-700 font-bold mt-2">
+                  <span className="block text-[11px] text-rose-700 font-bold mt-2">
                     Cumulative monthly spend
                   </span>
                 </div>
@@ -3534,11 +3766,11 @@ type NavItem = {
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold truncate">{item.title}</p>
-                            <p className="text-[11px] text-slate-500 truncate">{item.sub}</p>
+                            <p className="text-xs text-slate-500 truncate">{item.sub}</p>
                           </div>
                           <div className="text-right shrink-0">
                             {item.amount && <p className={`text-sm font-semibold whitespace-nowrap ${item.amountCls}`}>{item.amount}</p>}
-                            <p className="text-[10px] text-slate-500 whitespace-nowrap">{formatDate(new Date(item.at).toISOString())}</p>
+                            <p className="text-[11px] text-slate-500 whitespace-nowrap">{formatDate(new Date(item.at).toISOString())}</p>
                           </div>
                         </div>
                       ))}
@@ -3551,7 +3783,7 @@ type NavItem = {
               <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200/80 shadow-none p-4 sm:p-6">
                 <div className="flex items-center justify-between gap-2 mb-4">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Ledger Preview</h3>
-                  <button onClick={() => setTab('dues')} className="text-[11px] font-bold text-teal-700 hover:underline">
+                  <button onClick={() => setTab('dues')} className="text-xs font-bold text-teal-700 hover:underline">
                     Open ledger →
                   </button>
                 </div>
@@ -3565,7 +3797,7 @@ type NavItem = {
                       return (
                         <div key={e.id} className="py-3">
                           <div className="flex items-center justify-between gap-2">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider whitespace-nowrap ${payment ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider whitespace-nowrap ${payment ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`}>
                               {payment ? 'Payment' : 'Invoice'}
                             </span>
                             <span className={`text-sm font-semibold whitespace-nowrap ${payment ? 'text-emerald-600' : 'text-rose-500'}`}>
@@ -3573,7 +3805,7 @@ type NavItem = {
                             </span>
                           </div>
                           <p className="text-xs font-semibold text-slate-600 truncate mt-1">{acc?.name || 'Client account'}</p>
-                          <p className="text-[10px] text-slate-500">{formatDate(e.createdAt)}{e.orderId ? ` · Case ${e.orderId}` : ''}</p>
+                          <p className="text-[11px] text-slate-500">{formatDate(e.createdAt)}{e.orderId ? ` · Case ${e.orderId}` : ''}</p>
                         </div>
                       );
                     })}
@@ -3626,7 +3858,7 @@ type NavItem = {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`min-h-[36px] px-4 rounded-full text-[11px] font-bold border transition-all duration-300 ${
+                  className={`min-h-[36px] px-4 rounded-full text-xs font-bold border transition-all duration-300 ${
                     statusFilter === s
                       ? 'bg-teal-700 border-teal-700 text-white shadow'
                       : 'bg-white border-slate-200 text-gray-500 hover:border-teal-700/20 hover:text-teal-700'
@@ -3649,7 +3881,7 @@ type NavItem = {
                           {order.caseId}
                         </span>
                         {order.orderSource && ORDER_SOURCE_META[order.orderSource] && (
-                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap shrink-0 ${ORDER_SOURCE_META[order.orderSource].cls}`}>
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap shrink-0 ${ORDER_SOURCE_META[order.orderSource].cls}`}>
                             {ORDER_SOURCE_META[order.orderSource].label}
                           </span>
                         )}
@@ -3671,7 +3903,7 @@ type NavItem = {
                     <div className="text-sm space-y-1 min-w-0">
                       <div className="font-bold truncate">{order.customerName}</div>
                       {c.patient && <div className="text-xs text-gray-500 truncate">Patient: {c.patient}</div>}
-                      <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                      <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
                         <span className="inline-flex items-center gap-1"><CalendarDays size={11} /> Ordered {formatDay(order.orderDate || order.createdAt)}</span>
                         {order.deliveryDate && <span className="inline-flex items-center gap-1 font-bold text-teal-700/80"><Clock size={11} /> Promised {formatDay(order.deliveryDate)}</span>}
                       </div>
@@ -3685,7 +3917,7 @@ type NavItem = {
 
                     <div className="flex flex-wrap gap-2">
                       {c.work && c.work.split(' | ').filter(Boolean).map((w, i) => (
-                        <span key={`${order.id}-mw-${i}`} className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 border border-slate-100 px-2.5 py-1 text-[10px] font-bold max-w-full truncate">
+                        <span key={`${order.id}-mw-${i}`} className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 border border-slate-100 px-2.5 py-1 text-[11px] font-bold max-w-full truncate">
                           {w}
                         </span>
                       ))}
@@ -3722,7 +3954,7 @@ type NavItem = {
             <div className="hidden md:block overflow-x-auto rounded-xl">
               <table className="w-full text-left tabular-nums">
                 <thead>
-                  <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th className="pb-4 pr-4">Case</th>
                     <th className="pb-4 pr-4">Doctor / Clinic</th>
                     <th className="pb-4 pr-4">Restoration</th>
@@ -3730,7 +3962,7 @@ type NavItem = {
                     <th className="pb-4">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-slate-100">
                   {pagedOrders.map((order) => {
                     const c = parseClinical(order.productType);
                     return (
@@ -3741,7 +3973,7 @@ type NavItem = {
                               {order.caseId}
                             </span>
                             {order.orderSource && ORDER_SOURCE_META[order.orderSource] && (
-                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${ORDER_SOURCE_META[order.orderSource].cls}`}>
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${ORDER_SOURCE_META[order.orderSource].cls}`}>
                                 {ORDER_SOURCE_META[order.orderSource].label}
                               </span>
                             )}
@@ -3754,11 +3986,11 @@ type NavItem = {
                           >
                             {copiedId === order.id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
                           </button>
-                          <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-500 whitespace-nowrap">
+                          <div className="mt-1 flex items-center gap-1 text-xs text-slate-500 whitespace-nowrap">
                             <CalendarDays size={11} /> Ordered {formatDay(order.orderDate || order.createdAt)}
                           </div>
                           {order.deliveryDate && (
-                            <div className="mt-0.5 flex items-center gap-1 text-[11px] text-gray-500 whitespace-nowrap">
+                            <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
                               <Clock size={11} /> <span className="font-bold text-teal-700/80">Promised {formatDay(order.deliveryDate)}</span>
                             </div>
                           )}
@@ -3777,7 +4009,7 @@ type NavItem = {
                               {c.work.split(' | ').filter(Boolean).map((w, i) => (
                                 <span
                                   key={`${order.id}-w-${i}`}
-                                  className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 border border-slate-100 px-2.5 py-1 text-[10px] font-bold max-w-[200px] truncate"
+                                  className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 border border-slate-100 px-2.5 py-1 text-[11px] font-bold max-w-[200px] truncate"
                                   title={w}
                                 >
                                   {w}
@@ -3823,35 +4055,14 @@ type NavItem = {
               )}
             </div>
 
-            {/* Pagination */}
-            {orderFilteredCount > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-100">
-                <p className="text-xs text-gray-500 font-medium">
-                  Showing <span className="font-bold">{(safePage - 1) * ORDERS_PER_PAGE + 1}–{Math.min(safePage * ORDERS_PER_PAGE, orderFilteredCount)}</span> of{' '}
-                  <span className="font-bold">{orderFilteredCount}</span> cases
-                  {filtersActive && ` (filtered from ${totalOrders})`}
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={safePage <= 1}
-                    className="min-h-[44px] px-4 inline-flex items-center gap-1 rounded-xl border border-slate-200 text-xs font-bold bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft size={14} /> Previous
-                  </button>
-                  <span className="text-xs font-bold text-gray-600 px-2">
-                    {safePage} / {orderTotalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => Math.min(orderTotalPages, p + 1))}
-                    disabled={safePage >= orderTotalPages}
-                    className="min-h-[44px] px-4 inline-flex items-center gap-1 rounded-xl border border-slate-200 text-xs font-bold bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pager
+              page={safePage}
+              total={orderFilteredCount}
+              perPage={ORDERS_PER_PAGE}
+              onPage={setPage}
+              noun={orderFilteredCount === 1 ? 'case' : 'cases'}
+              note={filtersActive ? `(filtered from ${totalOrders})` : undefined}
+            />
           </div>
         ) : tab === 'messages' ? (
           /* ================= TAB 2: MESSAGES ================= */
@@ -3883,7 +4094,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto rounded-xl">
                   <table className="w-full text-left tabular-nums">
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         <th className="pb-3 pr-4">Date / Time</th>
                         <th className="pb-3 pr-4">Sender</th>
                         <th className="pb-3 pr-4">Contact</th>
@@ -3892,12 +4103,12 @@ type NavItem = {
                         <th className="pb-3 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-100">
                       {pagedMessages.map((msg) => {
                         const wa = extractWaPhone(msg);
                         return (
                           <tr key={msg.id} className="align-top hover:bg-slate-50/80 transition-colors">
-                            <td className="py-3.5 pr-4 text-[11px] text-gray-500 whitespace-nowrap">{formatDate(msg.createdAt)}</td>
+                            <td className="py-3.5 pr-4 text-xs text-gray-500 whitespace-nowrap">{formatDate(msg.createdAt)}</td>
                             <td className="py-3.5 pr-4">
                               <div className="flex items-center gap-2.5">
                                 <span className="w-8 h-8 rounded-full bg-teal-700/10 text-teal-700 font-semibold text-xs flex items-center justify-center shrink-0">
@@ -3914,7 +4125,7 @@ type NavItem = {
                             </td>
                             <td className="py-3.5 pr-4">
                               {msg.subject ? (
-                                <span className="inline-flex items-center rounded-full bg-emerald-600/15 text-emerald-700 px-3 py-1 text-[10px] font-bold max-w-[180px] truncate" title={msg.subject}>
+                                <span className="inline-flex items-center rounded-full bg-emerald-600/15 text-emerald-700 px-3 py-1 text-[11px] font-bold max-w-[180px] truncate" title={msg.subject}>
                                   {msg.subject}
                                 </span>
                               ) : (
@@ -3949,9 +4160,9 @@ type NavItem = {
                       <span className="flex-1 min-w-0">
                         <span className="flex items-center justify-between gap-2">
                           <span className="font-bold text-sm truncate">{msg.name}</span>
-                          <span className="text-[10px] text-slate-500 whitespace-nowrap">{formatDate(msg.createdAt)}</span>
+                          <span className="text-[11px] text-slate-500 whitespace-nowrap">{formatDate(msg.createdAt)}</span>
                         </span>
-                        {msg.subject && <span className="block text-[11px] font-bold text-emerald-700 truncate mt-0.5">{msg.subject}</span>}
+                        {msg.subject && <span className="block text-xs font-bold text-emerald-700 truncate mt-0.5">{msg.subject}</span>}
                         <span className="block text-xs text-gray-500 line-clamp-1 mt-0.5">{msg.message}</span>
                       </span>
                       <ChevronRight size={16} className="text-gray-300 mt-1 shrink-0" />
@@ -3961,34 +4172,13 @@ type NavItem = {
               </>
             )}
 
-            {/* Messages pagination */}
-            {msgFilteredCount > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-100">
-                <p className="text-xs text-gray-500 font-medium">
-                  Showing <span className="font-bold">{(safeMsgPage - 1) * MESSAGES_PER_PAGE + 1}–{Math.min(safeMsgPage * MESSAGES_PER_PAGE, msgFilteredCount)}</span> of{' '}
-                  <span className="font-bold">{msgFilteredCount}</span> messages
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setMsgPage((p) => Math.max(1, p - 1))}
-                    disabled={safeMsgPage <= 1}
-                    className="min-h-[44px] px-4 inline-flex items-center gap-1 rounded-xl border border-slate-200 text-xs font-bold bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronLeft size={14} /> Previous
-                  </button>
-                  <span className="text-xs font-bold text-gray-600 px-2">
-                    {safeMsgPage} / {msgTotalPages}
-                  </span>
-                  <button
-                    onClick={() => setMsgPage((p) => Math.min(msgTotalPages, p + 1))}
-                    disabled={safeMsgPage >= msgTotalPages}
-                    className="min-h-[44px] px-4 inline-flex items-center gap-1 rounded-xl border border-slate-200 text-xs font-bold bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pager
+              page={safeMsgPage}
+              total={msgFilteredCount}
+              perPage={MESSAGES_PER_PAGE}
+              onPage={setMsgPage}
+              noun={msgFilteredCount === 1 ? 'message' : 'messages'}
+            />
           </div>
                 ) : tab === 'products' ? (
           /* ================= DENTAL PRODUCTS CRUD ================= */
@@ -4032,10 +4222,10 @@ type NavItem = {
                         )}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[10px] text-slate-400 font-bold">#{srv.displayOrder}</span>
+                            <span className="font-mono text-[11px] text-slate-400 font-bold">#{srv.displayOrder}</span>
                             <button
                               onClick={() => toggleServiceActive(srv)}
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${
+                              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-colors ${
                                 srv.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-slate-600'
                               }`}
                             >
@@ -4045,7 +4235,7 @@ type NavItem = {
                           <h4 className="font-bold text-slate-900 text-sm mt-0.5 leading-snug">{srv.name}</h4>
                           {srv.nameBn && <p className="text-xs text-slate-500">{srv.nameBn}</p>}
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700">
+                            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">
                               {srv.category}
                             </span>
                             <span className="text-xs font-bold text-teal-700">
@@ -4057,11 +4247,11 @@ type NavItem = {
 
                       <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
                         <div>
-                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Turnaround</span>
+                          <span className="text-[11px] uppercase font-bold text-slate-500 block">Turnaround</span>
                           <span className="font-semibold text-slate-800">{srv.turnaroundDays} Days</span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Warranty</span>
+                          <span className="text-[11px] uppercase font-bold text-slate-500 block">Warranty</span>
                           <span className="font-semibold text-slate-800">{srv.warrantyYears} Yrs</span>
                         </div>
                       </div>
@@ -4089,7 +4279,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
                       <th className="py-3 px-3">Order</th>
                       <th className="py-3 px-3">Photo</th>
                       <th className="py-3 px-3">Product Name</th>
@@ -4125,7 +4315,7 @@ type NavItem = {
                           {srv.nameBn && <span className="block text-xs font-normal text-slate-500">{srv.nameBn}</span>}
                         </td>
                         <td className="py-3.5 px-3">
-                          <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                             {srv.category}
                           </span>
                         </td>
@@ -4203,14 +4393,14 @@ type NavItem = {
                   <button
                     onClick={() => setLeadView('table')}
                     aria-pressed={leadView === 'table'}
-                    className={`min-h-[40px] px-3.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1.5 transition-colors ${leadView === 'table' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`min-h-[40px] px-3.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-colors ${leadView === 'table' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700'}`}
                   >
                     <Table2 size={14} /> Table
                   </button>
                   <button
                     onClick={() => { setLeadView('board'); setLeadStatusFilter('All'); }}
                     aria-pressed={leadView === 'board'}
-                    className={`min-h-[40px] px-3.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1.5 transition-colors ${leadView === 'board' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`min-h-[40px] px-3.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-colors ${leadView === 'board' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700'}`}
                   >
                     <LayoutGrid size={14} /> Stage Board
                   </button>
@@ -4237,9 +4427,9 @@ type NavItem = {
               const leadTimeline = (l: LeadRow) =>
                 (l.activityLog?.length ?? 0) > 0 ? (
                   <div className="mt-3 space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity Timeline</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Activity Timeline</p>
                     {[...l.activityLog].reverse().map((a, i) => (
-                      <div key={`${a.at}-${i}`} className="flex items-start gap-2 text-[11px] text-slate-600">
+                      <div key={`${a.at}-${i}`} className="flex items-start gap-2 text-xs text-slate-600">
                         <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-teal-600 shrink-0" />
                         <span className="flex-1 leading-snug">{a.text}</span>
                         <span className="text-slate-400 whitespace-nowrap shrink-0">{fmtAct(a.at)}</span>
@@ -4283,7 +4473,7 @@ type NavItem = {
                 if (linked) {
                   return (
                     <span
-                      className={`inline-flex items-center gap-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 ${compact ? 'px-2 py-1' : 'px-2.5 py-1.5'}`}
+                      className={`inline-flex items-center gap-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 ${compact ? 'px-2 py-1' : 'px-2.5 py-1.5'}`}
                       title={`Already in ledger: ${linked.name}`}
                     >
                       <Handshake size={12} /> In Ledger
@@ -4296,7 +4486,7 @@ type NavItem = {
                     onClick={() => convertLeadToAccount(l)}
                     disabled={busy}
                     title="Create a client account in the Dues ledger"
-                    className={`inline-flex items-center gap-1 rounded-lg text-[11px] font-bold bg-teal-700 text-white hover:bg-teal-800 disabled:opacity-50 transition-colors ${compact ? 'px-2 py-1' : 'px-2.5 py-1.5'}`}
+                    className={`inline-flex items-center gap-1 rounded-lg text-xs font-bold bg-teal-700 text-white hover:bg-teal-800 disabled:opacity-50 transition-colors ${compact ? 'px-2 py-1' : 'px-2.5 py-1.5'}`}
                   >
                     <UserPlus size={12} /> {busy ? 'Converting…' : 'Convert'}
                   </button>
@@ -4332,25 +4522,25 @@ type NavItem = {
                         <div className="min-w-0">
                           <span className="font-bold text-sm truncate block">{l.name || 'Unnamed Chamber'}</span>
                           {l.contactName && (
-                            <span className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1 truncate">
+                            <span className="text-xs text-slate-500 mt-0.5 flex items-center gap-1 truncate">
                               <Stethoscope size={11} className="text-teal-700 shrink-0" /> {l.contactName}
                             </span>
                           )}
                           {(l.area || l.address) && (
-                            <span className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1 truncate">
+                            <span className="text-xs text-slate-500 mt-0.5 flex items-center gap-1 truncate">
                               <MapPin size={11} className="text-teal-700 shrink-0" /> {l.area || l.address}
                             </span>
                           )}
                         </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide shrink-0 ${statusMeta.cls}`}>{statusMeta.label}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide shrink-0 ${statusMeta.cls}`}>{statusMeta.label}</span>
                     </div>
                     {l.phone && (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[11px] font-mono text-slate-600">{l.phone}</span>
+                        <span className="text-xs font-mono text-slate-600">{l.phone}</span>
                         <a
                           href={`tel:${l.phone.replace(/[^\d+]/g, '')}`}
-                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors inline-flex items-center gap-1"
+                          className="px-2 py-1 rounded-lg text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors inline-flex items-center gap-1"
                         >
                           <PhoneCall size={11} /> Call
                         </a>
@@ -4358,14 +4548,14 @@ type NavItem = {
                           href={waLeadLink(l.phone)}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1"
+                          className="px-2 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1"
                         >
                           <MessageSquare size={11} /> WhatsApp
                         </a>
                       </div>
                     )}
                     {l.lastActivityText && (
-                      <p className="mt-1.5 text-[10px] text-slate-400 truncate" title={l.lastActivityText}>
+                      <p className="mt-1.5 text-[11px] text-slate-400 truncate" title={l.lastActivityText}>
                         Last: {l.lastActivityText}{l.lastActivityAt ? ` · ${fmtAct(l.lastActivityAt)}` : ''}
                       </p>
                     )}
@@ -4386,7 +4576,7 @@ type NavItem = {
                             disabled={isSaving}
                             aria-pressed={active}
                             title={`Mark as ${m.label}`}
-                            className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${
+                            className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
                               active
                                 ? LEAD_PILL_META[k] || 'bg-slate-700 text-white shadow-sm'
                                 : 'text-slate-500 hover:text-slate-800 hover:bg-white cursor-pointer'
@@ -4404,11 +4594,11 @@ type NavItem = {
                           setLeadNoteKey(isNoteOpen ? null : l.key);
                           setLeadNoteText(isNoteOpen ? '' : l.visitNotes || '');
                         }}
-                        className={`px-2 py-1 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${isNoteOpen ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        className={`px-2 py-1 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors ${isNoteOpen ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                       >
                         <Pencil size={11} /> {isNoteOpen ? 'Close' : 'Note'}
                       </button>
-                      {isSaving && <span className="text-[10px] font-semibold text-slate-400 animate-pulse">Saving…</span>}
+                      {isSaving && <span className="text-[11px] font-semibold text-slate-400 animate-pulse">Saving…</span>}
                     </div>
                     {leadDrawer(l)}
                   </div>
@@ -4421,7 +4611,7 @@ type NavItem = {
                   <div className="hidden md:block overflow-x-auto rounded-xl">
                     <table className="w-full text-left tabular-nums">
                       <thead>
-                        <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                           <th className="pb-4 pr-4">Chamber</th>
                           <th className="pb-4 pr-4">Phone</th>
                           <th className="pb-4 pr-4">Stage</th>
@@ -4429,8 +4619,8 @@ type NavItem = {
                           <th className="pb-4 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y">
-                        {filtered.map((l) => {
+                      <tbody className="divide-y divide-slate-100">
+                        {pagedLeads.map((l) => {
                           const activeStatus = LEAD_STATUS_META[l.status] ? l.status : 'new';
                           const isNoteOpen = leadNoteKey === l.key;
                           const isSaving = savingLeadKey === l.key;
@@ -4439,7 +4629,7 @@ type NavItem = {
                               <tr key={l.key} className={`align-top hover:bg-slate-50/80 transition-colors ${isNoteOpen ? 'bg-teal-50/40' : ''}`}>
                                 <td className="py-3.5 pr-4">
                                   <div className="font-bold text-sm">{l.name || 'Unnamed Chamber'}</div>
-                                  <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                                  <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
                                     {l.contactName && <span className="inline-flex items-center gap-1"><Stethoscope size={11} className="text-teal-700" /> {l.contactName}</span>}
                                     {(l.area || l.address) && <span className="inline-flex items-center gap-1"><MapPin size={11} className="text-teal-700" /> {l.area || l.address}</span>}
                                     {l.facebook && (
@@ -4456,7 +4646,7 @@ type NavItem = {
                                       <div className="flex items-center gap-1.5">
                                         <a
                                           href={`tel:${l.phone.replace(/[^\d+]/g, '')}`}
-                                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors inline-flex items-center gap-1"
+                                          className="px-2 py-1 rounded-lg text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors inline-flex items-center gap-1"
                                         >
                                           <PhoneCall size={11} /> Call
                                         </a>
@@ -4464,7 +4654,7 @@ type NavItem = {
                                           href={waLeadLink(l.phone)}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1"
+                                          className="px-2 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1"
                                         >
                                           <MessageSquare size={11} /> WhatsApp
                                         </a>
@@ -4491,7 +4681,7 @@ type NavItem = {
                                           disabled={isSaving}
                                           aria-pressed={active}
                                           title={`Mark as ${m.label}`}
-                                          className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${
+                                          className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${
                                             active
                                               ? LEAD_PILL_META[k] || 'bg-slate-700 text-white shadow-sm'
                                               : 'text-slate-500 hover:text-slate-800 hover:bg-white cursor-pointer'
@@ -4505,7 +4695,7 @@ type NavItem = {
                                 </td>
                                 <td className="py-3.5 pr-4">
                                   {l.lastActivityText ? (
-                                    <div className="text-[11px] text-slate-600 max-w-[220px]">
+                                    <div className="text-xs text-slate-600 max-w-[220px]">
                                       <p className="leading-snug line-clamp-2" title={l.lastActivityText}>{l.lastActivityText}</p>
                                       <p className="text-slate-400 mt-0.5">
                                         {fmtAct(l.lastActivityAt)} · {l.activityLog?.length ?? 0} event{(l.activityLog?.length ?? 0) === 1 ? '' : 's'}
@@ -4523,11 +4713,11 @@ type NavItem = {
                                         setLeadNoteKey(isNoteOpen ? null : l.key);
                                         setLeadNoteText(isNoteOpen ? '' : l.visitNotes || '');
                                       }}
-                                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${isNoteOpen ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-colors ${isNoteOpen ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                                     >
                                       <Pencil size={12} /> {isNoteOpen ? 'Close' : 'Note'}
                                     </button>
-                                    {isSaving && <span className="text-[10px] font-semibold text-slate-400 animate-pulse">Saving…</span>}
+                                    {isSaving && <span className="text-[11px] font-semibold text-slate-400 animate-pulse">Saving…</span>}
                                   </div>
                                 </td>
                               </tr>,
@@ -4546,8 +4736,15 @@ type NavItem = {
                   </div>
                   {/* Mobile: compact lead cards */}
                   <div className="md:hidden space-y-3">
-                    {filtered.map((l) => leadCard(l, false))}
+                    {pagedLeads.map((l) => leadCard(l, false))}
                   </div>
+                <Pager
+                  page={leadPage}
+                  total={filteredLeads.length}
+                  perPage={LEADS_PER_PAGE}
+                  onPage={setLeadPage}
+                  noun={filteredLeads.length === 1 ? 'lead' : 'leads'}
+                />
                 </div>
               );
 
@@ -4575,11 +4772,11 @@ type NavItem = {
                         className={`rounded-2xl border p-3 min-h-[240px] transition-colors ${isOver ? 'border-teal-500 bg-teal-50/70 ring-2 ring-teal-600/20' : 'border-slate-200 bg-slate-50/70'}`}
                       >
                         <div className="flex items-center justify-between gap-2 mb-3">
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-600">
                             <span className={`w-2 h-2 rounded-full ${dotCls}`} />
                             {meta.label}
                           </span>
-                          <span className="px-2 py-0.5 rounded-full bg-white border border-slate-200 text-[10px] font-bold text-slate-500">{colLeads.length}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-white border border-slate-200 text-[11px] font-bold text-slate-500">{colLeads.length}</span>
                         </div>
                         <div className="space-y-2.5">
                           {colLeads.map((l) => leadCard(l, true))}
@@ -4587,7 +4784,7 @@ type NavItem = {
                         {colLeads.length === 0 && (
                           <div className="flex flex-col items-center justify-center py-8 text-slate-300">
                             <Inbox size={22} />
-                            <p className="text-[10px] font-bold mt-1.5 text-slate-400">Drop cards here</p>
+                            <p className="text-[11px] font-bold mt-1.5 text-slate-400">Drop cards here</p>
                           </div>
                         )}
                       </div>
@@ -4635,14 +4832,14 @@ type NavItem = {
                           className="w-16 h-16 rounded-xl object-cover border border-slate-200 bg-slate-100 shrink-0"
                         />
                         <div className="min-w-0 flex-1">
-                          <span className="inline-flex items-center rounded-full bg-teal-700/10 text-teal-700 px-2.5 py-0.5 text-[10px] font-bold">
+                          <span className="inline-flex items-center rounded-full bg-teal-700/10 text-teal-700 px-2.5 py-0.5 text-[11px] font-bold">
                             {blog.category}
                           </span>
                           <h4 className="font-bold text-slate-900 text-sm mt-1 leading-snug line-clamp-2" title={blog.title}>
                             {blog.title}
                           </h4>
-                          <p className="text-[11px] text-slate-500 mt-0.5 truncate">/blog/{blog.slug}</p>
-                          <p className="text-[11px] text-slate-500 mt-1">{formatDate(blog.publishedAt)}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">/blog/{blog.slug}</p>
+                          <p className="text-xs text-slate-500 mt-1">{formatDate(blog.publishedAt)}</p>
                         </div>
                       </div>
 
@@ -4669,7 +4866,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left tabular-nums">
                   <thead>
-                    <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                       <th className="pb-4 pr-4">Thumbnail</th>
                       <th className="pb-4 pr-4">Title</th>
                       <th className="pb-4 pr-4">Category</th>
@@ -4677,7 +4874,7 @@ type NavItem = {
                       <th className="pb-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-slate-100">
                     {(data?.blogs ?? []).map((blog) => (
                       <tr key={blog.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-4 pr-4">
@@ -4694,7 +4891,7 @@ type NavItem = {
                           <div className="text-xs text-slate-500 truncate max-w-[320px]" title={blog.slug}>/blog/{blog.slug}</div>
                         </td>
                         <td className="py-4 pr-4">
-                          <span className="inline-flex items-center rounded-full bg-teal-700/10 text-teal-700 px-3 py-1 text-[10px] font-bold whitespace-nowrap">
+                          <span className="inline-flex items-center rounded-full bg-teal-700/10 text-teal-700 px-3 py-1 text-[11px] font-bold whitespace-nowrap">
                             {blog.category}
                           </span>
                         </td>
@@ -4741,13 +4938,13 @@ type NavItem = {
                     <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
                       <button
                         onClick={() => setDuesView('accounts')}
-                        className={`min-h-[36px] px-3.5 rounded-lg text-[11px] font-bold transition-colors ${duesView === 'accounts' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`min-h-[36px] px-3.5 rounded-lg text-xs font-bold transition-colors ${duesView === 'accounts' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         Client Accounts
                       </button>
                       <button
                         onClick={() => setDuesView('collections')}
-                        className={`min-h-[36px] px-3.5 rounded-lg text-[11px] font-bold transition-colors ${duesView === 'collections' ? 'bg-white text-emerald-700 shadow-sm border border-emerald-200' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`min-h-[36px] px-3.5 rounded-lg text-xs font-bold transition-colors ${duesView === 'collections' ? 'bg-white text-emerald-700 shadow-sm border border-emerald-200' : 'text-slate-500 hover:text-slate-700'}`}
                       >
                         Collection Log
                       </button>
@@ -4768,7 +4965,7 @@ type NavItem = {
                     {/* Phase 2: date-range + method filters */}
                     <div className="flex flex-wrap items-end gap-2.5 mb-4">
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">From</label>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">From</label>
                         <input
                           type="date"
                           value={collFrom}
@@ -4777,7 +4974,7 @@ type NavItem = {
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">To</label>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">To</label>
                         <input
                           type="date"
                           value={collTo}
@@ -4786,7 +4983,7 @@ type NavItem = {
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Method</label>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Method</label>
                         <select
                           value={collMethod}
                           onChange={(e) => setCollMethod(e.target.value)}
@@ -4801,7 +4998,7 @@ type NavItem = {
                       {(collFrom || collTo || collMethod !== 'ALL') && (
                         <button
                           onClick={() => { setCollFrom(''); setCollTo(''); setCollMethod('ALL'); }}
-                          className="min-h-[36px] px-3 inline-flex items-center gap-1 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-500 hover:bg-slate-50"
+                          className="min-h-[36px] px-3 inline-flex items-center gap-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-500 hover:bg-slate-50"
                         >
                           <X size={12} /> Clear
                         </button>
@@ -4822,7 +5019,7 @@ type NavItem = {
                     <div className="hidden md:block overflow-x-auto rounded-xl">
                       <table className="w-full text-left tabular-nums">
                         <thead>
-                          <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                          <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                             <th className="pb-4 pr-4">Date &amp; Time</th>
                             <th className="pb-4 pr-4">Clinic</th>
                             <th className="pb-4 pr-4">Amount Collected</th>
@@ -4831,7 +5028,7 @@ type NavItem = {
                             <th className="pb-4">Verified</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y">
+                        <tbody className="divide-y divide-slate-100">
                           {filteredCollections.map((e) => {
                             const acc = erpAccounts.find((a) => a.id === e.clientAccountId);
                             return (
@@ -4839,17 +5036,17 @@ type NavItem = {
                                 <td className="py-3.5 pr-4 text-xs font-semibold text-slate-700 whitespace-nowrap">
                                   {formatDate(e.paymentDate || e.createdAt)}
                                   {e.paymentDate && new Date(e.paymentDate).getTime() !== new Date(e.createdAt).getTime() && (
-                                    <span className="ml-1.5 rounded-full bg-amber-50 text-amber-700 px-1.5 py-0.5 text-[10px] font-medium" title="Backdated entry">backdated</span>
+                                    <span className="ml-1.5 rounded-full bg-amber-50 text-amber-700 px-1.5 py-0.5 text-[11px] font-medium" title="Backdated entry">backdated</span>
                                   )}
                                 </td>
                                 <td className="py-3.5 pr-4">
                                   <div className="font-bold text-sm">{acc?.name || 'Client account'}</div>
-                                  {e.orderId && <div className="text-[10px] text-slate-500">Case {e.orderId}</div>}
+                                  {e.orderId && <div className="text-[11px] text-slate-500">Case {e.orderId}</div>}
                                 </td>
                                 <td className="py-3.5 pr-4 font-semibold text-emerald-600 whitespace-nowrap">+{formatBDT(e.netAmount)}</td>
                                 <td className="py-3.5 pr-4">
                                   {e.paymentMethod ? (
-                                    <span className="inline-flex items-center rounded-full border border-teal-200 bg-teal-50 text-teal-700 px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">{e.paymentMethod}</span>
+                                    <span className="inline-flex items-center rounded-full border border-teal-200 bg-teal-50 text-teal-700 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap">{e.paymentMethod}</span>
                                   ) : (
                                     <span className="text-xs text-slate-500">—</span>
                                   )}
@@ -4857,9 +5054,9 @@ type NavItem = {
                                 <td className="py-3.5 pr-4 text-sm text-slate-600 whitespace-nowrap">{(e.collectedById && collectedByMap[e.collectedById]) || '—'}</td>
                                 <td className="py-3.5">
                                   {e.isVerified ? (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-1 text-[10px] font-bold whitespace-nowrap"><BadgeCheck size={12} /> Verified</span>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap"><BadgeCheck size={12} /> Verified</span>
                                   ) : (
-                                    <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-500 px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">Pending</span>
+                                    <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-500 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap">Pending</span>
                                   )}
                                 </td>
                               </tr>
@@ -4886,8 +5083,8 @@ type NavItem = {
                           <div key={e.id} className="py-3.5 flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="font-bold text-sm truncate">{acc?.name || 'Client account'}</div>
-                              <div className="text-[11px] text-slate-500 mt-0.5">{formatDate(e.paymentDate || e.createdAt)}{e.paymentMethod ? ` · ${e.paymentMethod}` : ''}</div>
-                              <div className="text-[11px] text-gray-500 mt-0.5">
+                              <div className="text-xs text-slate-500 mt-0.5">{formatDate(e.paymentDate || e.createdAt)}{e.paymentMethod ? ` · ${e.paymentMethod}` : ''}</div>
+                              <div className="text-xs text-gray-500 mt-0.5">
                                 {(e.collectedById && collectedByMap[e.collectedById]) || 'Unattributed'}
                                 {e.isVerified ? ' · Verified' : ' · Pending verification'}
                               </div>
@@ -4910,7 +5107,7 @@ type NavItem = {
                   <div className="flex items-center overflow-x-auto no-scrollbar py-1 gap-1.5 flex-nowrap -mx-2 px-2 sm:mx-0 sm:px-0">
                     <button
                       onClick={() => setDivisionFilter('ALL')}
-                      className={`min-h-[36px] px-3 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap ${divisionFilter === 'ALL' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700 border border-transparent'}`}
+                      className={`min-h-[36px] px-3 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${divisionFilter === 'ALL' ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700 border border-transparent'}`}
                     >
                       All
                     </button>
@@ -4918,7 +5115,7 @@ type NavItem = {
                       <button
                         key={d.key}
                         onClick={() => setDivisionFilter(d.key)}
-                        className={`min-h-[36px] px-3 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap ${divisionFilter === d.key ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700 border border-transparent'}`}
+                        className={`min-h-[36px] px-3 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${divisionFilter === d.key ? 'bg-white text-teal-700 shadow-sm border border-teal-700/20' : 'text-slate-500 hover:text-slate-700 border border-transparent'}`}
                       >
                         {d.bn ? `${d.label} (${d.bn})` : d.label}
                       </button>
@@ -4930,13 +5127,13 @@ type NavItem = {
                       value={accSearch}
                       onChange={(e) => setAccSearch(e.target.value)}
                       placeholder="Search account, owner, phone, district…"
-                      className="w-full min-h-[36px] pl-9 pr-3 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
+                      className="w-full min-h-[36px] pl-9 pr-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
                     />
                   </div>
                   <select
                     value={agentFilter}
                     onChange={(e) => setAgentFilter(e.target.value)}
-                    className="lg:ml-auto min-h-[36px] px-3 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20 max-w-[220px]"
+                    className="lg:ml-auto min-h-[36px] px-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20 max-w-[220px]"
                   >
                     <option value="ALL">All Agents</option>
                     <option value="UNASSIGNED">Unassigned</option>
@@ -4950,45 +5147,47 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto rounded-xl">
                   <table className="w-full text-left tabular-nums">
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         <th className="pb-4 pr-4">Account</th>
-                        <th className="pb-4 pr-4">Institution</th>
-                        <th className="pb-4 pr-4">Owner</th>
-                        <th className="pb-4 pr-4">Phone</th>
+                        <th className="pb-4 pr-4 hidden 2xl:table-cell">Institution</th>
+                        <th className="pb-4 pr-4">Owner / Phone</th>
                         <th className="pb-4 pr-4">Division / Area</th>
                         <th className="pb-4 pr-4">Assigned Agent</th>
                         <th className="pb-4 pr-4">Current Due (BDT)</th>
                         <th className="pb-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-100">
                       {pagedAccounts.map((acc) => {
                         const instMeta = INSTITUTION_TYPE_META[acc.institutionType] || INSTITUTION_TYPE_META.CHAMBER;
                         const aging = agingBadge(acc);
                         return (
                           <tr key={acc.id} className="align-top hover:bg-slate-50/80 transition-colors">
                             <td className="py-4 pr-4">
-                              <div className="font-bold text-sm">{acc.name}</div>
+                              <div className="font-bold text-sm min-w-[160px]">{acc.name}</div>
                               {acc.customDiscountNote && (
-                                <div className="text-[10px] text-slate-500 max-w-[180px] truncate" title={acc.customDiscountNote}>
+                                <div className="text-[11px] text-slate-500 max-w-[180px] truncate" title={acc.customDiscountNote}>
                                   {acc.customDiscountNote}
                                 </div>
                               )}
                             </td>
-                            <td className="py-4 pr-4">
-                              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold whitespace-nowrap ${instMeta.cls}`}>
+                            <td className="py-4 pr-4 hidden 2xl:table-cell">
+                              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold whitespace-nowrap ${instMeta.cls}`}>
                                 {instMeta.label}
                               </span>
                             </td>
-                            <td className="py-4 pr-4 text-sm">{acc.phone}</td>
                             <td className="py-4 pr-4">
-                              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-600 whitespace-nowrap">
+                              <div className="text-sm font-medium text-slate-800 whitespace-nowrap">{acc.ownerName}</div>
+                              <div className="text-xs text-slate-500 whitespace-nowrap">{acc.phone}</div>
+                            </td>
+                            <td className="py-4 pr-4">
+                              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600 whitespace-nowrap">
                                 {DIVISION_LABEL[acc.division || 'DHAKA'] || acc.division}{acc.district ? ` — ${acc.district}` : ''}
                               </span>
                             </td>
                             <td className="py-4 pr-4">
                               {acc.assignedAgentName ? (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-[10px] font-bold text-teal-700 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-[11px] font-bold text-teal-700 whitespace-nowrap">
                                   <User size={11} /> {acc.assignedAgentName}
                                 </span>
                               ) : (
@@ -5000,7 +5199,7 @@ type NavItem = {
                                 {formatBDT(acc.currentBalance)}
                               </div>
                               {aging && (
-                                <span className={`mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${aging.cls}`}>
+                                <span className={`mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${aging.cls}`}>
                                   <Clock size={10} /> {aging.label}
                                 </span>
                               )}
@@ -5017,7 +5216,7 @@ type NavItem = {
                                     <Pencil size={14} />
                                   </button>
                                 )}
-                                {acc.currentBalance > 0 && (
+                                {acc.currentBalance > 0 ? (
                                   <a
                                     href={whatsappReminderHref(acc)}
                                     target="_blank"
@@ -5028,6 +5227,8 @@ type NavItem = {
                                   >
                                     <MessageSquare size={14} />
                                   </a>
+                                ) : (
+                                  <span aria-hidden="true" className="w-10 shrink-0" />
                                 )}
                                 <button
                                   onClick={() => openInvoiceModal(acc)}
@@ -5077,13 +5278,13 @@ type NavItem = {
                             <div className="font-bold text-sm truncate">{acc.name}</div>
                             <div className="text-xs text-gray-500 truncate">Owner: {acc.ownerName}</div>
                           </div>
-                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold whitespace-nowrap shrink-0 ${instMeta.cls}`}>
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shrink-0 ${instMeta.cls}`}>
                             {instMeta.label}
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                           <span className="inline-flex items-center gap-1"><Phone size={12} /> {acc.phone}</span>
-                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold text-slate-600">
                             {DIVISION_LABEL[acc.division || 'DHAKA'] || acc.division}{acc.district ? ` — ${acc.district}` : ''}
                           </span>
                           <span>Agent: {acc.assignedAgentName || '—'}</span>
@@ -5092,7 +5293,7 @@ type NavItem = {
                           <span className="text-xs font-medium text-slate-500">Current Due</span>
                           <span className="flex items-center gap-2">
                             {aging && (
-                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${aging.cls}`}>
+                              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${aging.cls}`}>
                                 <Clock size={10} /> {aging.label}
                               </span>
                             )}
@@ -5143,33 +5344,13 @@ type NavItem = {
                   )}
                 </div>
 
-                {/* Phase 2: pagination footer (desktop table + mobile cards) */}
-                {filteredAccounts.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <p className="text-[11px] font-semibold text-slate-500">
-                      Showing {(accPage - 1) * ACCOUNTS_PER_PAGE + 1}–{Math.min(accPage * ACCOUNTS_PER_PAGE, filteredAccounts.length)} of {filteredAccounts.length} account{filteredAccounts.length === 1 ? '' : 's'}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setAccPage((p) => Math.max(1, p - 1))}
-                        disabled={accPage <= 1}
-                        className="min-h-[36px] px-3 inline-flex items-center gap-1 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <ChevronLeft size={13} /> Prev
-                      </button>
-                      <span className="text-[11px] font-bold text-slate-600 px-2">
-                        Page {accPage} of {Math.max(1, Math.ceil(filteredAccounts.length / ACCOUNTS_PER_PAGE))}
-                      </span>
-                      <button
-                        onClick={() => setAccPage((p) => (p * ACCOUNTS_PER_PAGE >= filteredAccounts.length ? p : p + 1))}
-                        disabled={accPage * ACCOUNTS_PER_PAGE >= filteredAccounts.length}
-                        className="min-h-[36px] px-3 inline-flex items-center gap-1 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        Next <ChevronRight size={13} />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <Pager
+                  page={accPage}
+                  total={filteredAccounts.length}
+                  perPage={ACCOUNTS_PER_PAGE}
+                  onPage={setAccPage}
+                  noun={filteredAccounts.length === 1 ? 'account' : 'accounts'}
+                />
                 </>
                 )}
               </div>
@@ -5202,8 +5383,8 @@ type NavItem = {
                       </span>
                       <span className="min-w-0">
                         <span className="block text-xl font-semibold text-slate-900 tracking-tight leading-tight">{m.value}</span>
-                        <span className="block text-[10px] sm:text-[11px] font-semibold text-slate-500 leading-tight line-clamp-2">{m.label}</span>
-                        <span className="block text-[11px] text-slate-500">{m.sub}</span>
+                        <span className="block text-[11px] sm:text-xs font-semibold text-slate-500 leading-tight line-clamp-2">{m.label}</span>
+                        <span className="block text-xs text-slate-500">{m.sub}</span>
                       </span>
                     </div>
                   ))}
@@ -5216,7 +5397,7 @@ type NavItem = {
                       <button
                         key={g.key}
                         onClick={() => setUserRoleFilter(g.key)}
-                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-[11px] font-bold transition-all ${
+                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                           userRoleFilter === g.key
                             ? 'bg-white text-teal-700 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700'
@@ -5224,7 +5405,7 @@ type NavItem = {
                       >
                         {g.label}
                         <span
-                          className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                          className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
                             userRoleFilter === g.key ? 'bg-teal-700/10 text-teal-700' : 'bg-slate-200/80 text-slate-500'
                           }`}
                         >
@@ -5270,7 +5451,7 @@ type NavItem = {
                           </span>
                           <span className="min-w-0">
                             <span className="block text-base sm:text-lg font-semibold tracking-tight leading-tight truncate">{m.value}</span>
-                            <span className="block text-[10px] sm:text-[11px] font-semibold text-slate-500 leading-tight line-clamp-2">{m.label}</span>
+                            <span className="block text-[11px] sm:text-xs font-semibold text-slate-500 leading-tight line-clamp-2">{m.label}</span>
                           </span>
                         </div>
                       ))}
@@ -5284,28 +5465,28 @@ type NavItem = {
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <h4 className="font-bold text-slate-900 text-sm">{m.agent.name}</h4>
-                              <p className="text-[11px] text-slate-500 mt-0.5">{m.agent.phone || 'No phone'}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{m.agent.phone || 'No phone'}</p>
                             </div>
-                            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-[11px] font-bold text-slate-700 whitespace-nowrap">
+                            <span className="px-2.5 py-1 rounded-full bg-slate-100 text-xs font-bold text-slate-700 whitespace-nowrap">
                               {m.cases} cases
                             </span>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50/70 p-3 rounded-xl border border-slate-100">
                             <div>
-                              <span className="text-[10px] uppercase font-bold text-slate-500 block">Sales Volume</span>
+                              <span className="text-[11px] uppercase font-bold text-slate-500 block">Sales Volume</span>
                               <span className="font-semibold text-slate-800">{formatBDT(m.sales)}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] uppercase font-bold text-slate-500 block">Cash Collected</span>
+                              <span className="text-[11px] uppercase font-bold text-slate-500 block">Cash Collected</span>
                               <span className="font-bold text-emerald-600">{formatBDT(m.collected)}</span>
                             </div>
                             <div className="mt-1">
-                              <span className="text-[10px] uppercase font-bold text-slate-500 block">Commission Earned</span>
+                              <span className="text-[11px] uppercase font-bold text-slate-500 block">Commission Earned</span>
                               <span className="font-semibold text-slate-800">{formatBDT(m.earned)}</span>
                             </div>
                             <div className="mt-1">
-                              <span className="text-[10px] uppercase font-bold text-slate-500 block">Pending Payout</span>
+                              <span className="text-[11px] uppercase font-bold text-slate-500 block">Pending Payout</span>
                               <span className={`font-semibold ${m.pending > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                 {formatBDT(m.pending)}
                               </span>
@@ -5329,7 +5510,7 @@ type NavItem = {
                     <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
                       <table className="w-full text-left tabular-nums">
                         <thead>
-                          <tr className="text-[10px] uppercase font-semibold border-b text-slate-500 bg-slate-50/60">
+                          <tr className="text-[11px] uppercase font-semibold border-b text-slate-500 bg-slate-50/60">
                             <th className="px-4 py-3 pr-4">Agent</th>
                             <th className="px-2 py-3 pr-4">Cases</th>
                             <th className="px-2 py-3 pr-4">Sales (৳)</th>
@@ -5340,12 +5521,12 @@ type NavItem = {
                             <th className="px-2 py-3 text-right">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y">
+                        <tbody className="divide-y divide-slate-100">
                           {agentMetrics.map((m) => (
                             <tr key={m.agent.id} className="hover:bg-slate-50/80 transition-colors">
                               <td className="px-4 py-3 pr-4">
                                 <div className="font-bold text-sm">{m.agent.name}</div>
-                                <div className="text-[11px] text-slate-500">{m.agent.phone || '—'}</div>
+                                <div className="text-xs text-slate-500">{m.agent.phone || '—'}</div>
                               </td>
                               <td className="px-2 py-3 pr-4 text-sm font-bold">{m.cases}</td>
                               <td className="px-2 py-3 pr-4 text-sm font-semibold">{formatBDT(m.sales)}</td>
@@ -5358,7 +5539,7 @@ type NavItem = {
                               <td className="px-2 py-3 text-right">
                                 <button
                                   onClick={() => openPayoutModal(m.agent)}
-                                  className="min-h-[36px] px-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 text-[11px] font-bold text-white hover:bg-emerald-700 transition-colors whitespace-nowrap"
+                                  className="min-h-[36px] px-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 transition-colors whitespace-nowrap"
                                 >
                                   <Plus size={13} /> Pay Commission
                                 </button>
@@ -5380,7 +5561,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto rounded-xl">
                   <table className="w-full text-left tabular-nums">
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         <th className="pb-4 pr-4">User</th>
                         <th className="pb-4 pr-4">Phone</th>
                         <th className="pb-4 pr-4">Email</th>
@@ -5391,7 +5572,7 @@ type NavItem = {
                         <th className="pb-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-100">
                       {filteredUsers.map((u) => {
                         const roleMeta = ROLE_META[u.role] || ROLE_META.DOCTOR;
                         const isSelf = me?.uid === u.id;
@@ -5404,19 +5585,19 @@ type NavItem = {
                                 </span>
                                 <span className="font-bold text-sm">
                                   {u.name}
-                                  {isSelf && <span className="ml-1.5 text-[10px] font-bold text-slate-500">(you)</span>}
+                                  {isSelf && <span className="ml-1.5 text-[11px] font-bold text-slate-500">(you)</span>}
                                 </span>
                               </div>
                             </td>
                             <td className="py-4 pr-4 text-sm">{u.phone}</td>
                             <td className="py-4 pr-4 text-sm text-gray-500 max-w-[180px] truncate" title={u.email || ''}>{u.email || '—'}</td>
                             <td className="py-4 pr-4">
-                              <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold whitespace-nowrap ${roleMeta.cls}`}>
+                              <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold whitespace-nowrap ${roleMeta.cls}`}>
                                 {roleMeta.label}
                               </span>
                             </td>
                             <td className="py-4 pr-4">
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap ${u.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ${u.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
                                 {u.status}
                               </span>
                             </td>
@@ -5481,14 +5662,14 @@ type NavItem = {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-sm truncate">
-                              {u.name}{isSelf && <span className="ml-1 text-[10px] font-bold text-slate-500">(you)</span>}
+                              {u.name}{isSelf && <span className="ml-1 text-[11px] font-bold text-slate-500">(you)</span>}
                             </span>
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap shrink-0 ${roleMeta.cls}`}>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap shrink-0 ${roleMeta.cls}`}>
                               {roleMeta.label}
                             </span>
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5">{u.phone}{u.email ? ` · ${u.email}` : ''}</div>
-                          {u.address && <div className="text-[11px] text-slate-500 truncate mt-0.5">{u.address}</div>}
+                          {u.address && <div className="text-xs text-slate-500 truncate mt-0.5">{u.address}</div>}
                           <div className="flex items-center gap-2 mt-2">
                             <button
                               onClick={() => openEditUser(u)}
@@ -5549,11 +5730,11 @@ type NavItem = {
                       value={expSearch}
                       onChange={(e) => setExpSearch(e.target.value)}
                       placeholder="Search title, notes, voucher…"
-                      className="w-full min-h-[36px] pl-9 pr-3 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
+                      className="w-full min-h-[36px] pl-9 pr-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Category</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Category</label>
                     <select
                       value={expCat}
                       onChange={(e) => setExpCat(e.target.value)}
@@ -5566,7 +5747,7 @@ type NavItem = {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Month</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Month</label>
                     <select
                       value={expMonth}
                       onChange={(e) => setExpMonth(e.target.value)}
@@ -5583,7 +5764,7 @@ type NavItem = {
                   {(expSearch || expCat !== 'ALL' || expMonth !== 'ALL') && (
                     <button
                       onClick={() => { setExpSearch(''); setExpCat('ALL'); setExpMonth('ALL'); }}
-                      className="min-h-[36px] px-3 inline-flex items-center gap-1 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-500 hover:bg-slate-50"
+                      className="min-h-[36px] px-3 inline-flex items-center gap-1 rounded-lg border border-slate-200 text-xs font-bold text-slate-500 hover:bg-slate-50"
                     >
                       <X size={12} /> Clear
                     </button>
@@ -5594,7 +5775,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto rounded-xl">
                   <table className="w-full text-left tabular-nums">
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         <th className="pb-4 pr-4">Date</th>
                         <th className="pb-4 pr-4">Voucher No</th>
                         <th className="pb-4 pr-4">Category</th>
@@ -5604,8 +5785,8 @@ type NavItem = {
                         {me?.role === 'SUPERADMIN' && <th className="pb-4 text-right">Actions</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
-                      {filteredExpenses.map((x) => {
+                    <tbody className="divide-y divide-slate-100">
+                      {pagedExpenses.map((x) => {
                         const catMeta = EXPENSE_CATEGORY_META[x.category] || EXPENSE_CATEGORY_META.OTHER;
                         return (
                           <tr key={x.id} className="hover:bg-slate-50/80 transition-colors">
@@ -5614,7 +5795,7 @@ type NavItem = {
                             </td>
                             <td className="py-3.5 pr-4 text-sm font-mono text-xs">{x.voucherNo || '—'}</td>
                             <td className="py-3.5 pr-4">
-                              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold whitespace-nowrap ${catMeta.cls}`}>
+                              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold whitespace-nowrap ${catMeta.cls}`}>
                                 {catMeta.label}
                               </span>
                             </td>
@@ -5662,16 +5843,16 @@ type NavItem = {
 
                 {/* Mobile: expense rows */}
                 <div className="md:hidden divide-y divide-slate-100">
-                  {filteredExpenses.map((x) => {
+                  {pagedExpenses.map((x) => {
                     const catMeta = EXPENSE_CATEGORY_META[x.category] || EXPENSE_CATEGORY_META.OTHER;
                     return (
                       <div key={x.id} className="py-3.5 flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-sm truncate">{x.title}</span>
-                            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${catMeta.cls}`}>{catMeta.label}</span>
+                            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${catMeta.cls}`}>{catMeta.label}</span>
                           </div>
-                          <div className="text-[11px] font-semibold text-slate-600 mt-0.5">
+                          <div className="text-xs font-semibold text-slate-600 mt-0.5">
                             <span className="inline-flex items-center gap-1"><CalendarDays size={11} /> {formatDate(x.expenseDate)}</span>
                             {x.voucherNo ? ` · Voucher ${x.voucherNo}` : ''}
                           </div>
@@ -5708,6 +5889,13 @@ type NavItem = {
                     </p>
                   )}
                 </div>
+                <Pager
+                  page={expPage}
+                  total={filteredExpenses.length}
+                  perPage={EXPENSES_PER_PAGE}
+                  onPage={setExpPage}
+                  noun={filteredExpenses.length === 1 ? 'expense' : 'expenses'}
+                />
               </div>
             ) : tab === 'capex' ? (
               /* ---------- MACHINERY & CAPEX ---------- */
@@ -5733,7 +5921,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto rounded-xl">
                   <table className="w-full text-left tabular-nums">
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         <th className="pb-4 pr-4">Machine Name</th>
                         <th className="pb-4 pr-4">Cost (BDT)</th>
                         <th className="pb-4 pr-4">Purchase Date</th>
@@ -5742,14 +5930,14 @@ type NavItem = {
                         {me?.role === 'SUPERADMIN' && <th className="pb-4 text-right">Actions</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-100">
                       {erpAssets.map((a) => (
                         <tr key={a.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-3.5 pr-4 font-bold text-sm">{a.machineName}</td>
                           <td className="py-3.5 pr-4 font-semibold text-teal-700 whitespace-nowrap">{formatBDT(a.purchaseCost)}</td>
                           <td className="py-3.5 pr-4 text-xs text-gray-500 whitespace-nowrap">{a.purchaseDate ? formatDate(a.purchaseDate).split(',')[0] : '—'}</td>
                           <td className="py-3.5 pr-4">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap ${ASSET_STATUS_META[a.status] || ASSET_STATUS_META.OPERATIONAL}`}>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap ${ASSET_STATUS_META[a.status] || ASSET_STATUS_META.OPERATIONAL}`}>
                               {a.status.replace(/_/g, ' ')}
                             </span>
                           </td>
@@ -5798,7 +5986,7 @@ type NavItem = {
                     <div key={a.id} className="rounded-2xl border border-slate-200 p-4">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-bold text-sm truncate">{a.machineName}</span>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap shrink-0 ${ASSET_STATUS_META[a.status] || ASSET_STATUS_META.OPERATIONAL}`}>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap shrink-0 ${ASSET_STATUS_META[a.status] || ASSET_STATUS_META.OPERATIONAL}`}>
                           {a.status.replace(/_/g, ' ')}
                         </span>
                       </div>
@@ -5811,14 +5999,14 @@ type NavItem = {
                         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
                           <button
                             onClick={() => openEditCapex(a)}
-                            className="min-h-[36px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600"
+                            className="min-h-[36px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600"
                           >
                             <Pencil size={12} /> Edit
                           </button>
                           <button
                             onClick={() => deleteCapex(a)}
                             disabled={deletingId === `capex-${a.id}`}
-                            className="min-h-[36px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 text-[11px] font-bold text-rose-600 disabled:opacity-50"
+                            className="min-h-[36px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 text-xs font-bold text-rose-600 disabled:opacity-50"
                           >
                             <Trash2 size={12} /> Delete
                           </button>
@@ -5870,7 +6058,7 @@ type NavItem = {
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
                     {erpShareholders.map((s, i) => (
-                      <span key={s.id} className="inline-flex items-center gap-1.5 text-[10px] font-bold text-gray-500">
+                      <span key={s.id} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-gray-500">
                         <span className={`w-2 h-2 rounded-full ${['bg-teal-700', 'bg-emerald-500', 'bg-amber-400', 'bg-slate-1000', 'bg-slate-1000', 'bg-rose-400'][i % 6]}`} />
                         {s.name} · {s.sharesCount}%
                       </span>
@@ -5882,7 +6070,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto rounded-xl">
                   <table className="w-full text-left tabular-nums">
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         <th className="pb-4 pr-4">Shareholder Name</th>
                         <th className="pb-4 pr-4">Phone</th>
                         <th className="pb-4 pr-4">Shares Held</th>
@@ -5891,7 +6079,7 @@ type NavItem = {
                         <th className="pb-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-100">
                       {erpShareholders.map((s, i) => (
                         <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-3.5 pr-4">
@@ -5901,7 +6089,7 @@ type NavItem = {
                               </span>
                               <div className="min-w-0">
                                 <div className="font-bold text-sm">{s.name}</div>
-                                {s.paymentDetails && <div className="text-[10px] text-slate-500 max-w-[200px] truncate" title={s.paymentDetails}>{s.paymentDetails}</div>}
+                                {s.paymentDetails && <div className="text-[11px] text-slate-500 max-w-[200px] truncate" title={s.paymentDetails}>{s.paymentDetails}</div>}
                               </div>
                             </div>
                           </td>
@@ -5965,7 +6153,7 @@ type NavItem = {
                           <div className="font-bold text-sm truncate">{s.name}</div>
                           <div className="text-xs text-gray-500 truncate">{s.phone || 'No phone'}</div>
                         </div>
-                        <span className="inline-flex items-center rounded-full bg-teal-700/10 text-teal-700 px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap shrink-0">
+                        <span className="inline-flex items-center rounded-full bg-teal-700/10 text-teal-700 px-2.5 py-1 text-xs font-semibold whitespace-nowrap shrink-0">
                           {s.sharesCount} sh · {s.sharesCount}%
                         </span>
                       </div>
@@ -6016,7 +6204,7 @@ type NavItem = {
                 <div className="hidden md:block overflow-x-auto rounded-xl">
                   <table className="w-full text-left tabular-nums">
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                         <th className="pb-4 pr-4">Shareholder</th>
                         <th className="pb-4 pr-4">Shares</th>
                         <th className="pb-4 pr-4">Amount Paid</th>
@@ -6025,7 +6213,7 @@ type NavItem = {
                         <th className="pb-4">Date</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-100">
                       {erpDividends.map((d) => (
                         <tr key={d.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-3.5 pr-4 font-bold text-sm">{d.shareholderName}</td>
@@ -6055,7 +6243,7 @@ type NavItem = {
                     <div key={d.id} className="py-3.5 flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="font-bold text-sm truncate">{d.shareholderName}</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">
+                        <div className="text-xs text-slate-500 mt-0.5">
                           {d.sharesCount} shares · {d.payoutMonth}{d.paymentMethod ? ` · ${d.paymentMethod}` : ''}
                         </div>
                       </div>
@@ -6131,14 +6319,14 @@ type NavItem = {
                           className={i < review.rating ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}
                         />
                       ))}
-                      <span className="text-[10px] font-semibold text-slate-500 ml-1">{review.rating}/5</span>
+                      <span className="text-[11px] font-semibold text-slate-500 ml-1">{review.rating}/5</span>
                     </div>
 
                     <div className="mt-3 bg-slate-50 rounded-xl p-4 text-xs md:text-sm leading-relaxed text-gray-700 whitespace-pre-wrap flex-1">
                       {review.comment}
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500">
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
                       <span>{review.location}</span>
                       <span>{formatDate(review.createdAt)}</span>
                     </div>
@@ -6162,6 +6350,8 @@ type NavItem = {
           >
             <div
               className="bg-white w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
+              role="dialog"
+              aria-modal="true"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal header */}
@@ -6271,12 +6461,13 @@ type NavItem = {
       {serviceModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setServiceModal(false)}
         >
           <form
             onSubmit={submitService}
             className="bg-white w-full sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <h3 className="text-base sm:text-lg font-semibold text-teal-700">
@@ -6354,11 +6545,26 @@ type NavItem = {
                   ) : (
                     <div className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-300 bg-white flex flex-col items-center justify-center text-slate-400 shrink-0">
                       <Package size={26} />
-                      <span className="text-[10px] font-bold mt-1">No Photo</span>
+                      <span className="text-[11px] font-bold mt-1">No Photo</span>
                     </div>
                   )}
 
-                  <div className="flex-1 w-full space-y-2">
+                  <div
+                    className={`flex-1 w-full space-y-2 rounded-xl border-2 border-dashed p-3 transition-colors ${
+                      dragZone === 'product' ? 'border-teal-700 bg-teal-700/5' : 'border-transparent'
+                    }`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragZone('product');
+                    }}
+                    onDragLeave={() => setDragZone(null)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragZone(null);
+                      const file = e.dataTransfer.files?.[0];
+                      if (file && !uploadingProduct) uploadProductImage(file);
+                    }}
+                  >
                     <div className="flex flex-wrap items-center gap-2">
                       <label className="min-h-[38px] px-4 inline-flex items-center justify-center gap-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors shadow-xs">
                         <ImagePlus size={15} className="text-teal-700" />
@@ -6370,6 +6576,7 @@ type NavItem = {
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) uploadProductImage(file);
+                            e.target.value = ''; // allow re-picking the same file
                           }}
                           className="hidden"
                         />
@@ -6385,12 +6592,12 @@ type NavItem = {
                       )}
                     </div>
                     {serviceForm.imageUrl ? (
-                      <p className="text-[11px] font-mono text-slate-500 truncate max-w-full">
+                      <p className="text-xs font-mono text-slate-500 truncate max-w-full">
                         {serviceForm.imageUrl}
                       </p>
                     ) : (
-                      <p className="text-[11px] text-slate-400">
-                        Upload JPEG, PNG or WebP. Automatically converted to 1200px WebP via Sharp and synced to production.
+                      <p className="text-xs text-slate-400">
+                        Drop an image here or click Upload. JPEG, PNG or WebP up to 10 MB, converted to 1200px WebP.
                       </p>
                     )}
                   </div>
@@ -6499,12 +6706,13 @@ type NavItem = {
       {blogModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={closeBlogModal}
         >
           <form
             onSubmit={submitBlog}
             className="bg-white w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <h3 className="text-base sm:text-lg font-semibold text-teal-700">
@@ -6584,13 +6792,18 @@ type NavItem = {
                   Cover Image <span className="normal-case font-medium">(auto-optimized to WebP, max 1200px)</span>
                 </label>
                 <label
-                  onDragOver={(e) => e.preventDefault()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragZone('blog');
+                  }}
+                  onDragLeave={() => setDragZone(null)}
                   onDrop={(e) => {
                     e.preventDefault();
+                    setDragZone(null);
                     onBlogFilePicked(e.dataTransfer.files?.[0]);
                   }}
                   className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-6 text-center cursor-pointer transition-colors ${
-                    uploading
+                    uploading || dragZone === 'blog'
                       ? 'border-teal-700 bg-teal-700/5'
                       : 'border-slate-300 hover:border-teal-700/60 hover:bg-teal-700/5'
                   }`}
@@ -6651,12 +6864,13 @@ type NavItem = {
       {reviewModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={closeReviewModal}
         >
           <form
             onSubmit={submitReview}
             className="bg-white w-full sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <h3 className="text-base sm:text-lg font-semibold text-teal-700">
@@ -6764,8 +6978,9 @@ type NavItem = {
           >
             <aside
               className="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl flex flex-col"
-              onClick={(e) => e.stopPropagation()}
               role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
               aria-label="Full inquiry message"
             >
               {/* Drawer header */}
@@ -6804,7 +7019,7 @@ type NavItem = {
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-500 font-medium">Received {formatDate(msgModal.createdAt)}</p>
+                <p className="text-xs text-slate-500 font-medium">Received {formatDate(msgModal.createdAt)}</p>
 
                 <div className="bg-slate-50 rounded-2xl p-5 text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
                   {msgModal.message}
@@ -6856,11 +7071,12 @@ type NavItem = {
         return (
           <div
             className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-            onClick={() => setInvoiceModalAcc(null)}
           >
             <form
               onSubmit={submitInvoice}
               className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
+              role="dialog"
+              aria-modal="true"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
@@ -6961,12 +7177,13 @@ type NavItem = {
       {paymentModalAcc && (() => (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setPaymentModalAcc(null)}
         >
           <form
             onSubmit={submitPayment}
             className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div className="min-w-0">
@@ -7093,12 +7310,13 @@ type NavItem = {
       {accountModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setAccountModal(false)}
         >
           <form
             onSubmit={submitAccount}
             className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <h3 className="text-base sm:text-lg font-semibold text-teal-700">
@@ -7120,14 +7338,14 @@ type NavItem = {
                   <p className="font-semibold flex items-center gap-1.5">
                     <Phone size={13} /> Phone already registered — &ldquo;{accountDupWarning}&rdquo;
                   </p>
-                  <p className="mt-1 text-[11px] leading-relaxed">
+                  <p className="mt-1 text-xs leading-relaxed">
                     এই নম্বরে একটি অ্যাকাউন্ট রয়েছে। ভিন্ন নম্বর ব্যবহার করুন, অথবা নিশ্চিত হলে নিচের বাটনে গিয়ে যাই হোক তৈরি করুন।
                   </p>
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => setAccountDupWarning(null)}
-                      className="min-h-[36px] px-3.5 rounded-lg border border-amber-300 bg-white text-[11px] font-bold text-amber-800 hover:bg-amber-50"
+                      className="min-h-[36px] px-3.5 rounded-lg border border-amber-300 bg-white text-xs font-bold text-amber-800 hover:bg-amber-50"
                     >
                       Change Phone
                     </button>
@@ -7136,7 +7354,7 @@ type NavItem = {
                         type="button"
                         onClick={() => saveAccount(true)}
                         disabled={savingErp}
-                        className="min-h-[36px] px-3.5 rounded-lg bg-amber-600 text-[11px] font-bold text-white hover:bg-amber-700 disabled:opacity-50"
+                        className="min-h-[36px] px-3.5 rounded-lg bg-amber-600 text-xs font-bold text-white hover:bg-amber-700 disabled:opacity-50"
                       >
                         {savingErp ? 'Saving…' : 'Create Anyway (allow duplicate)'}
                       </button>
@@ -7268,7 +7486,7 @@ type NavItem = {
                     placeholder="0"
                     className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">Logged as an opening-balance invoice in the ledger.</p>
+                  <p className="text-[11px] text-slate-500 mt-1">Logged as an opening-balance invoice in the ledger.</p>
                 </div>
               )}
 
@@ -7307,12 +7525,13 @@ type NavItem = {
       {userModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setUserModal(false)}
         >
           <form
             onSubmit={submitErpUser}
             className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div className="min-w-0">
@@ -7442,12 +7661,13 @@ type NavItem = {
       {pwModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => !savingPw && setPwModal(false)}
         >
           <form
             onSubmit={submitChangePassword}
             className="bg-white w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div className="min-w-0">
@@ -7503,7 +7723,7 @@ type NavItem = {
                   }`}
                 />
                 {pwForm.next.length > 0 && pwForm.next.length < 6 && (
-                  <p className="text-[11px] font-semibold text-rose-500 mt-1">Password must be at least 6 characters</p>
+                  <p className="text-xs font-semibold text-rose-500 mt-1">Password must be at least 6 characters</p>
                 )}
               </div>
 
@@ -7522,10 +7742,10 @@ type NavItem = {
                   }`}
                 />
                 {pwForm.confirm.length > 0 && pwForm.confirm !== pwForm.next && (
-                  <p className="text-[11px] font-semibold text-rose-500 mt-1">Passwords do not match</p>
+                  <p className="text-xs font-semibold text-rose-500 mt-1">Passwords do not match</p>
                 )}
                 {pwForm.confirm.length > 0 && pwForm.confirm === pwForm.next && pwForm.next.length >= 6 && (
-                  <p className="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-emerald-600 mt-1 flex items-center gap-1">
                     <BadgeCheck size={12} /> Passwords match
                   </p>
                 )}
@@ -7561,7 +7781,9 @@ type NavItem = {
         >
           <div
             className="bg-white w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div>
@@ -7596,7 +7818,7 @@ type NavItem = {
                 return (
                   <div key={entry.id} className="rounded-2xl border border-slate-200 p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider ${
                         isDelete ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
                       }`}>
                         {isDelete ? 'Deleted' : 'Edited'}
@@ -7606,15 +7828,15 @@ type NavItem = {
                         <span className="font-semibold text-rose-600 text-sm">{formatBDT(snap.amount)}</span>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] text-gray-500">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-500">
                       {snap?.category && <span>Category: <span className="font-semibold">{snap.category.replace(/_/g, ' ')}</span></span>}
                       {snap?.expenseDate && <span>Date: <span className="font-semibold">{formatDay(snap.expenseDate)}</span></span>}
                       <span>By: <span className="font-semibold">{collectedByMap[entry.performedBy] || entry.performedBy}</span></span>
                       <span>At: <span className="font-semibold">{formatDate(entry.createdAt)}</span></span>
                     </div>
                     <details className="mt-2">
-                      <summary className="text-[11px] font-bold text-slate-400 cursor-pointer hover:text-slate-600 select-none">Original snapshot (JSON)</summary>
-                      <pre className="mt-1.5 rounded-xl bg-slate-50 border border-slate-100 p-3 text-[10px] leading-relaxed overflow-x-auto text-slate-600 whitespace-pre-wrap break-all">{entry.originalData}</pre>
+                      <summary className="text-xs font-bold text-slate-400 cursor-pointer hover:text-slate-600 select-none">Original snapshot (JSON)</summary>
+                      <pre className="mt-1.5 rounded-xl bg-slate-50 border border-slate-100 p-3 text-[11px] leading-relaxed overflow-x-auto text-slate-600 whitespace-pre-wrap break-all">{entry.originalData}</pre>
                     </details>
                   </div>
                 );
@@ -7627,12 +7849,13 @@ type NavItem = {
       {expenseModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setExpenseModal(false)}
         >
           <form
             onSubmit={submitExpense}
             className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <h3 className="text-base sm:text-lg font-semibold text-teal-700">{editingExpense ? 'Edit Expense' : 'Log Daily Expense'}</h3>
@@ -7648,7 +7871,7 @@ type NavItem = {
 
             <div className="px-6 py-5 space-y-4">
               {editingExpense && (
-                <p className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-[11px] text-amber-800 font-semibold">
+                <p className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-xs text-amber-800 font-semibold">
                   Editing is SuperAdmin-only — the pre-change state is snapshotted to the audit log.
                 </p>
               )}
@@ -7752,12 +7975,13 @@ type NavItem = {
       {capexModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setCapexModal(false)}
         >
           <form
             onSubmit={submitCapex}
             className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <h3 className="text-base sm:text-lg font-semibold text-teal-700">{editingCapex ? 'Edit Machine Asset' : 'Add Machine Asset'}</h3>
@@ -7857,12 +8081,13 @@ type NavItem = {
       {dividendModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setDividendModal(false)}
         >
           <form
             onSubmit={submitDividend}
             className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div className="min-w-0">
@@ -7982,12 +8207,13 @@ type NavItem = {
       {shareholderModal && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setShareholderModal(false)}
         >
           <form
             onSubmit={submitShareholder}
             className="bg-white w-full sm:max-w-lg max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div className="min-w-0">
@@ -8105,12 +8331,13 @@ type NavItem = {
       {payoutModalAgent && (
         <div
           className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-          onClick={() => setPayoutModalAgent(null)}
         >
           <form
             onSubmit={submitPayout}
             className="bg-white w-full sm:max-w-md max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
               <div className="min-w-0">
@@ -8174,7 +8401,7 @@ type NavItem = {
                   className="w-full min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white resize-none"
                 />
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 Recorded as a LOGISTICS expense — &ldquo;Agent Commission - {payoutModalAgent.name}&rdquo; — and subtracted from the agent&rsquo;s pending commission.
               </p>
             </div>
@@ -8207,11 +8434,12 @@ type NavItem = {
         return (
           <div
             className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-            onClick={() => setOfflineOrderModal(false)}
           >
             <form
               onSubmit={submitOfflineOrder}
               className="bg-white w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
+              role="dialog"
+              aria-modal="true"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
@@ -8287,7 +8515,7 @@ type NavItem = {
                     <div className="mb-3 p-3.5 rounded-xl border border-teal-700/30 bg-teal-700/5 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">Quick Add Client Account</span>
-                        <span className="text-[10px] text-slate-500 font-medium">Auto-selects on save</span>
+                        <span className="text-[11px] text-slate-500 font-medium">Auto-selects on save</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div>
@@ -8464,7 +8692,7 @@ type NavItem = {
                           ))}
                         </select>
                         {linkedAccount?.assignedAgentId && offlineOrderForm.agentId === linkedAccount.assignedAgentId && (
-                          <p className="text-[10px] text-teal-600 mt-1 font-semibold">Auto-selected from {linkedAccount.name}&rsquo;s assigned agent.</p>
+                          <p className="text-[11px] text-teal-600 mt-1 font-semibold">Auto-selected from {linkedAccount.name}&rsquo;s assigned agent.</p>
                         )}
                       </div>
                       <div>
@@ -8541,7 +8769,7 @@ type NavItem = {
                       ))}
                     </select>
                     {activeProducts.length === 0 && (
-                      <p className="text-[11px] text-rose-500 mt-1">No active products in the catalogue — add one under Dental Products.</p>
+                      <p className="text-xs text-rose-500 mt-1">No active products in the catalogue — add one under Dental Products.</p>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { readActiveSession, requireRole } from "@/lib/admin-auth";
+import { friendlyIssue } from "@/lib/validation";
 
 const testimonialSchema = z.object({
   doctorName: z.string().trim().min(3).max(120),
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     const parsed = testimonialSchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Validation failed", issues: parsed.error.issues.map((i) => i.message) },
+        { error: "Validation failed", issues: parsed.error.issues.map(friendlyIssue) },
         { status: 400 }
       );
     }

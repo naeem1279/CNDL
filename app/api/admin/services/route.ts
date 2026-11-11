@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { readActiveSession, requireRole } from "@/lib/admin-auth";
+import { friendlyIssue } from "@/lib/validation";
 
 const serviceCreateSchema = z.object({
   category: z.string().trim().min(2).max(100),
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     const parsed = serviceCreateSchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Validation failed", issues: parsed.error.issues.map((i) => i.message) },
+        { error: "Validation failed", issues: parsed.error.issues.map(friendlyIssue) },
         { status: 400 }
       );
     }

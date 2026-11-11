@@ -6,6 +6,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { ORDER_FILES_DIR } from "@/lib/paths";
+import { firstIssueMessage } from "@/lib/validation";
 
 /** P0 hardening (2026-11-05): strict validation, rate limiting, collision-safe Case IDs.
  *  P1/F1 (2026-11-05): accepts multipart/form-data and stores clinical files
@@ -31,10 +32,8 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB per file
 const MAX_FILES = 5;
 const ALLOWED_EXT = [".stl", ".obj", ".dcm", ".pdf", ".jpg", ".jpeg", ".png"];
 
-/** Extract the first human-readable message from a zod error (v4 `.issues`). */
 function firstZodMessage(err: unknown): string {
-  const e = err as { issues?: { message?: string }[] };
-  return e?.issues?.[0]?.message ?? "Validation failed";
+  return firstIssueMessage(err);
 }
 
 /** 8 hex chars from a CSPRNG (≈4.3 billion space) instead of Math.random's 5
