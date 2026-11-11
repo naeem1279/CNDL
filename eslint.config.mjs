@@ -17,6 +17,11 @@ const eslintConfig = defineConfig([
       "@next/next/no-img-element": "warn",
     },
   },
+  {
+    // PM2 config and other Node tooling files must be CommonJS.
+    files: ["**/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
   globalIgnores([
     ".next/**",
     "out/**",

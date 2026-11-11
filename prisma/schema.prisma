@@ -4,7 +4,10 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  // Absolute path required in production (the standalone server runs from
+  // .next/standalone, so a relative path could open a different, empty file).
+  // e.g. DATABASE_URL="file:/var/www/cndl-frontend/prisma/dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Order {

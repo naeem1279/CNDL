@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { requireRole } from "@/lib/admin-auth";
+import { PUBLIC_UPLOADS_DIR } from "@/lib/paths";
 
 export const runtime = "nodejs";
 
@@ -29,32 +30,9 @@ function safeBaseName(name: string): string {
   return base || "image";
 }
 
-/**
- * `next start` with `output: "standalone"` serves the public/ copy baked into
- * .next/standalone at build time, so writes go to BOTH locations — the project
- * root (survives for the next build) and the live standalone copy (visible now).
- */
-async function uploadDirs(): Promise<string[]> {
-  const root = path.join(process.cwd(), "public", "images", "uploads");
-  const standalone = path.join(
-    process.cwd(),
-    ".next",
-    "standalone",
-    "www",
-    "cndl-frontend",
-    "public",
-    "images",
-    "uploads"
-  );
-  const dirs = [root];
-  try {
-    await mkdir(standalone, { recursive: true });
-    dirs.push(standalone);
-  } catch {
-    // standalone copy unavailable — root write is still authoritative for builds
-  }
-  return dirs;
-}
+// Uploads are written ONCE, to the project folder (outside the build), and
+// served by app/images/uploads/[file]/route.ts — so they show up immediately
+// and survive rebuilds without being copied into .next/standalone.
 
 export async function POST(req: Request) {
   // Phase 1 (2026-11-06): file writes are SUPERADMIN-only — agents and other
@@ -87,7 +65,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "File is not a valid image" }, { status: 415 });
   }
 
-  const dirs = await uploadDirs();
   const filename = `${safeBaseName(file.name)}-${Date.now()}.webp`;
 
   // sharp is bundled with Next.js in production. If it is genuinely unavailable we
@@ -129,10 +106,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    for (const dir of dirs) {
-      await mkdir(dir, { recursive: true });
-      await writeFile(path.join(dir, stored.name), stored.buffer);
-    }
+    await mkdir(PUBLIC_UPLOADS_DIR, { recursive: true });
+    await writeFile(path.join(PUBLIC_UPLOADS_DIR, stored.name), stored.buffer);
   } catch {
     return NextResponse.json({ error: "Failed to store file" }, { status: 500 });
   }

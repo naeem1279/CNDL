@@ -5,6 +5,7 @@ import path from "path";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
+import { ORDER_FILES_DIR } from "@/lib/paths";
 
 /** P0 hardening (2026-11-05): strict validation, rate limiting, collision-safe Case IDs.
  *  P1/F1 (2026-11-05): accepts multipart/form-data and stores clinical files
@@ -168,7 +169,7 @@ export async function POST(req: Request) {
     // Persist clinical files privately AFTER the case row exists.
     if (incoming.length) {
       try {
-        const dir = path.join(process.cwd(), "uploads", "orders", order.caseId);
+        const dir = path.join(ORDER_FILES_DIR, order.caseId);
         await mkdir(dir, { recursive: true });
         for (let i = 0; i < incoming.length; i++) {
           await writeFile(path.join(dir, storedNames[i]), incoming[i].buffer);
