@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
   // Runtime data lives outside the build and must never be copied into it.
   outputFileTracingExcludes: {
-    '*': ['backups/**', 'uploads/**', 'public/images/uploads/**', 'prisma/*.db*', 'prisma/*.bak*'],
+    '*': ['backups/**', 'uploads/**', 'public/images/uploads/**', '**/*.db', '**/*.db-journal', '**/*.bak*', '.env*'],
   },
   poweredByHeader: false,
   async headers() {
