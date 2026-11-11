@@ -6,22 +6,7 @@ export const ACCOUNTS_PER_PAGE = 10;
 export const EXPENSES_PER_PAGE = 15;
 export const LEADS_PER_PAGE = 20;
 
-export const EMPTY_SERVICE_FORM = {
-  category: 'Zirconia & All-Ceramic',
-  name: '',
-  nameBn: '',
-  description: '',
-  specs: '',
-  imageUrl: '',
-  turnaroundDays: 3,
-  warrantyYears: 5,
-  basePrice: '',
-  isActive: true,
-  displayOrder: 1,
-};
 
-export const EMPTY_BLOG_FORM = { title: '', slug: '', category: 'Zirconia & CAD/CAM', excerpt: '', content: '', imageUrl: '/images/blog.jpg' };
-export const EMPTY_REVIEW_FORM = { doctorName: '', clinicName: '', location: 'Dhaka, Bangladesh', rating: 5, comment: '' };
 export const EMPTY_USER_FORM = { name: '', phone: '', email: '', address: '', role: 'AGENT', status: 'ACTIVE', password: '' };
 export const EMPTY_PAYOUT_FORM = { amountPaid: '', paymentMethod: 'Cash', payoutDate: '', notes: '' };
 

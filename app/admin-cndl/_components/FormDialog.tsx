@@ -16,6 +16,7 @@ export function FormDialog({
   submitLabel,
   saving,
   savingLabel = 'Saving…',
+  wide = false,
   children,
 }: {
   title: string;
@@ -25,6 +26,8 @@ export function FormDialog({
   submitLabel: string;
   saving?: boolean;
   savingLabel?: string;
+  /** Wider card (for long-form editors such as blog articles). */
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -38,7 +41,7 @@ export function FormDialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="flex max-h-[92vh] w-full flex-col rounded-t-xl bg-white shadow-xl sm:max-w-lg sm:rounded-xl"
+        className={`flex max-h-[92vh] w-full flex-col rounded-t-xl bg-white shadow-xl sm:rounded-xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'}`}
       >
         <header className="flex items-start justify-between gap-3 border-b border-zinc-100 px-5 py-4">
           <div className="min-w-0">

@@ -1,320 +1,222 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { Pencil, Plus, RefreshCw, Star, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { MapPin, MessageSquareQuote, MoreHorizontal, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ModalShell } from '../_components/ModalShell';
+import { FormDialog } from '../_components/FormDialog';
 import { SectionFrame } from '../_components/SectionFrame';
-import { EMPTY_REVIEW_FORM } from '../_lib/constants';
+import type { Kpi } from '../_components/StatTile';
+import { Button, EmptyState, Field, Input, MenuButton } from '../_components/ui';
 import { loadResources } from '../_lib/resources';
 import { useAdmin } from '../_lib/session';
-import type { BlogRow, Message, Order, ReviewRow, ServiceRow } from '../_lib/types';
-import { apiError, formatDate } from '../_lib/utils';
+import type { ReviewRow } from '../_lib/types';
+import { apiError } from '../_lib/utils';
+
+function Stars({ value, size = 14 }: { value: number; size?: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${value} out of 5`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={size} aria-hidden="true" className={i <= value ? 'fill-amber-400 text-amber-400' : 'fill-zinc-200 text-zinc-200'} />
+      ))}
+    </span>
+  );
+}
 
 export default function ReviewsPage() {
-  const { me, adminFetch, askConfirm } = useAdmin();
-
-  const [data, setData] = useState<{ orders: Order[]; messages: Message[]; blogs: BlogRow[]; reviews: ReviewRow[]; services: ServiceRow[] }>({ orders: [], messages: [], blogs: [], reviews: [], services: [] });
+  const { me, adminFetch, askConfirm, handleAuthLoss } = useAdmin();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [reviewModal, setReviewModal] = useState(false);
-  const [reviewForm, setReviewForm] = useState(EMPTY_REVIEW_FORM);
-  const [savingReview, setSavingReview] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editingReview, setEditingReview] = useState<ReviewRow | null>(null);
-
-  // Header "Synced" timestamp
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
+  /** undefined = closed, null = adding, a row = editing. */
+  const [dialog, setDialog] = useState<ReviewRow | null | undefined>(undefined);
 
-  /** Loads only this section's feeds: testimonials. */
   const fetchData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
       const r = await loadResources(adminFetch, ['testimonials'], me.role);
       if (!r) return;
-      setData((prev) => ({
-        orders: r.orders ?? prev.orders,
-        messages: r.messages ?? prev.messages,
-        blogs: r.blogs ?? prev.blogs,
-        reviews: r.reviews ?? prev.reviews,
-        services: r.services ?? prev.services,
-      }));
+      if (r.reviews) setReviews(r.reviews);
       setLastSyncedAt(Date.now());
     } catch {
-      toast.error('Failed to load data');
+      toast.error('Failed to load testimonials');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-
-  const closeReviewModal = () => {
-    setReviewModal(false);
-    setEditingReview(null);
-  };
-
-  const openEditReview = (review: ReviewRow) => {
-    setEditingReview(review);
-    setReviewForm({
-      doctorName: review.doctorName,
-      clinicName: review.clinicName,
-      location: review.location,
-      rating: review.rating,
-      comment: review.comment,
-    });
-    setReviewModal(true);
-  };
-
-  const submitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingReview(true);
-    try {
-      const res = await adminFetch(
-        editingReview ? `/api/admin/testimonials/${editingReview.id}` : '/api/admin/testimonials',
-        {
-          method: editingReview ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(reviewForm),
-        }
-      );
-      const body = await res.json().catch(() => ({}));
-      if (res.ok) {
-        toast.success(editingReview ? 'Review updated' : 'Doctor review added');
-        closeReviewModal();
-        setReviewForm(EMPTY_REVIEW_FORM);
-        await fetchData(true);
-      } else {
-        toast.error(apiError(body, 'Failed to save review'));
-      }
-    } catch {
-      toast.error('Failed to save review');
-    } finally {
-      setSavingReview(false);
-    }
-  };
-
-  const deleteReview = async (review: ReviewRow) => {
-    if (!(await askConfirm(`Delete review by ${review.doctorName}? This cannot be undone.`))) return;
-    setDeletingId(`review-${review.id}`);
-    try {
-      const res = await adminFetch(`/api/admin/testimonials/${review.id}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.success('Review deleted');
-        await fetchData(true);
-      } else {
-        toast.error(res.status === 401 ? 'Session expired — please sign in again' : 'Delete failed');
-      }
-    } catch {
-      toast.error('Delete failed');
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   useEffect(() => {
     void fetchData();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const sorted = useMemo(() => [...reviews].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()), [reviews]);
+  const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+  const kpis: Kpi[] = [
+    { label: 'Testimonials', value: String(reviews.length), icon: MessageSquareQuote, sub: 'On the website' },
+    { label: 'Average rating', value: reviews.length ? `${avg.toFixed(1)} / 5` : '—', icon: Star, sub: `${reviews.filter((r) => r.rating === 5).length} five-star` },
+    { label: 'Places', value: String(new Set(reviews.map((r) => r.location)).size), icon: MapPin, sub: 'Doctors from' },
+    { label: 'Latest', value: sorted[0] ? new Date(sorted[0].createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—', icon: MessageSquareQuote, sub: sorted[0]?.doctorName || 'Nothing yet' },
+  ];
+
+  const remove = async (r: ReviewRow) => {
+    if (!(await askConfirm(`Delete the testimonial from ${r.doctorName}? It disappears from the website. This cannot be undone.`))) return;
+    try {
+      const res = await adminFetch(`/api/admin/testimonials/${r.id}`, { method: 'DELETE' });
+      if (res.status === 401) return handleAuthLoss();
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) return void toast.error(apiError(body, 'Could not delete the testimonial'));
+      setReviews((prev) => prev.filter((x) => x.id !== r.id));
+      toast.success('Testimonial deleted');
+    } catch {
+      toast.error('Network error — nothing was deleted');
+    }
+  };
+
   return (
-    <>
-      <SectionFrame
-        tab="reviews"
-        loading={loading}
-        refreshing={refreshing}
-        lastSyncedAt={lastSyncedAt}
-        onRefresh={() => fetchData(true)}
-      >
-        {(
-          /* ================= DOCTOR REVIEWS ================= */
-          <div className="bg-white rounded-xl border border-slate-200/80 shadow-none p-4 sm:p-6 lg:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <h2 className="text-lg sm:text-2xl font-semibold">Doctor Reviews</h2>
-              <button
-                onClick={() => setReviewModal(true)}
-                className="min-h-[44px] px-5 inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 text-white text-xs font-bold hover:bg-teal-800 transition-colors"
-              >
-                <Plus size={16} /> Add Doctor Review
-              </button>
-            </div>
-
-            {data.reviews.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <span className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-gray-300 mb-4">
-                  <Star size={28} />
-                </span>
-                <p className="text-sm font-bold text-gray-500">No reviews yet</p>
-                <p className="text-xs text-slate-500 mt-1">Approved reviews appear on the homepage.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {(data?.reviews ?? []).map((review) => (
-                  <div key={review.id} className="rounded-2xl border border-slate-200 p-5 flex flex-col hover:shadow-md transition-shadow duration-300">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="w-10 h-10 rounded-full bg-teal-700/10 text-teal-700 font-semibold flex items-center justify-center shrink-0">
-                          {review.doctorName.replace(/^Dr\.?\s*/i, '').charAt(0).toUpperCase()}
-                        </span>
-                        <div className="min-w-0">
-                          <div className="font-bold text-sm truncate">{review.doctorName}</div>
-                          <div className="text-xs text-gray-500 truncate">{review.clinicName}</div>
-                        </div>
-                      </div>
-                      <div className="inline-flex items-center gap-2 shrink-0">
-                        <button
-                          onClick={() => openEditReview(review)}
-                          aria-label={`Edit review by ${review.doctorName}`}
-                          title="Edit review"
-                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-slate-200 text-gray-500 hover:text-teal-700 hover:border-teal-700/20 hover:bg-teal-700/5 transition-colors"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          onClick={() => deleteReview(review)}
-                          disabled={deletingId === `review-${review.id}`}
-                          aria-label={`Delete review by ${review.doctorName}`}
-                          title="Delete review"
-                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-slate-200 text-gray-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-colors disabled:opacity-40"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1 mt-3">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={14}
-                          className={i < review.rating ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}
-                        />
-                      ))}
-                      <span className="text-[11px] font-semibold text-slate-500 ml-1">{review.rating}/5</span>
-                    </div>
-
-                    <div className="mt-3 bg-slate-50 rounded-xl p-4 text-xs md:text-sm leading-relaxed text-gray-700 whitespace-pre-wrap flex-1">
-                      {review.comment}
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
-                      <span>{review.location}</span>
-                      <span>{formatDate(review.createdAt)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </SectionFrame>
-
-      {reviewModal && (
-        <ModalShell onClose={closeReviewModal}
-          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-6"
-        >
-          <form
-            onSubmit={submitReview}
-            className="bg-white w-full sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-t-xl sm:rounded-xl shadow-xl"
-            role="dialog"
-              aria-modal="true"
-              onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between gap-3 rounded-t-xl">
-              <h3 className="text-base sm:text-lg font-semibold text-teal-700">
-                {editingReview ? 'Edit Doctor Review' : 'Add Doctor Review'}
-              </h3>
-              <button
-                type="button"
-                onClick={closeReviewModal}
-                aria-label="Close"
-                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-50"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Doctor Name *</label>
-                  <input
-                    required
-                    value={reviewForm.doctorName}
-                    onChange={(e) => setReviewForm({ ...reviewForm, doctorName: e.target.value })}
-                    placeholder="Staff / Agent Full Name"
-                    className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Clinic Name *</label>
-                  <input
-                    required
-                    value={reviewForm.clinicName}
-                    onChange={(e) => setReviewForm({ ...reviewForm, clinicName: e.target.value })}
-                    placeholder="Clinic / Hospital"
-                    className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
+    <SectionFrame
+      tab="reviews"
+      kpis={kpis}
+      loading={loading}
+      refreshing={refreshing}
+      lastSyncedAt={lastSyncedAt}
+      onRefresh={() => fetchData(true)}
+      actions={
+        <Button variant="primary" icon={Plus} onClick={() => setDialog(null)}>
+          <span className="hidden sm:inline">Add testimonial</span>
+          <span className="sm:hidden">Add</span>
+        </Button>
+      }
+    >
+      {sorted.length === 0 ? (
+        <div className="rounded-lg border border-zinc-200 bg-white">
+          <EmptyState icon={MessageSquareQuote} title="No testimonials yet">
+            Add what doctors say about the lab; they appear on the website.
+          </EmptyState>
+        </div>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {sorted.map((r) => (
+            <li key={r.id} className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-2">
+                <Stars value={r.rating} />
+                <div className="-mr-1.5 -mt-1.5">
+                  <MenuButton
+                    label={`Actions for ${r.doctorName}'s testimonial`}
+                    icon={MoreHorizontal}
+                    iconOnly
+                    variant="ghost"
+                    items={[
+                      { label: 'Edit', icon: Pencil, onSelect: () => setDialog(r) },
+                      { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(r) },
+                    ]}
                   />
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Location</label>
-                  <input
-                    value={reviewForm.location}
-                    onChange={(e) => setReviewForm({ ...reviewForm, location: e.target.value })}
-                    placeholder="Dhaka, Bangladesh"
-                    className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Rating *</label>
-                  <select
-                    value={reviewForm.rating}
-                    onChange={(e) => setReviewForm({ ...reviewForm, rating: parseInt(e.target.value) })}
-                    className="w-full min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-bold bg-white outline-none focus:ring-2 focus:ring-teal-700/20"
-                  >
-                    {[5, 4, 3, 2, 1].map((n) => (
-                      <option key={n} value={n}>{n} Star{n > 1 ? 's' : ''}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1.5">Comment *</label>
-                <textarea
-                  required
-                  rows={5}
-                  value={reviewForm.comment}
-                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                  placeholder="The doctor's review text"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-teal-700/20 bg-white resize-y"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-2 pb-6 sm:pb-2">
-                <button
-                  type="button"
-                  onClick={closeReviewModal}
-                  className="min-h-[44px] px-5 rounded-xl border border-slate-200 text-xs font-bold text-gray-600 bg-white hover:bg-slate-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingReview}
-                  className="min-h-[44px] px-6 inline-flex items-center gap-2 rounded-xl bg-teal-700 text-white text-xs font-bold hover:bg-teal-800 transition-colors disabled:opacity-40"
-                >
-                  <RefreshCw size={14} className={savingReview ? 'animate-spin' : 'hidden'} />
-                  {savingReview ? 'Saving...' : editingReview ? 'Save Changes' : 'Add Review'}
-                </button>
-              </div>
-            </div>
-          </form>
-        </ModalShell>
+              <blockquote className="mt-2 flex-1 text-body text-zinc-700 [overflow-wrap:anywhere]">
+                <p className="line-clamp-6">“{r.comment}”</p>
+              </blockquote>
+              <footer className="mt-3 border-t border-zinc-100 pt-3">
+                <p className="text-body font-medium text-zinc-900 [overflow-wrap:anywhere]">{r.doctorName}</p>
+                <p className="text-meta text-zinc-500 [overflow-wrap:anywhere]">
+                  {r.clinicName} · {r.location}
+                </p>
+              </footer>
+            </li>
+          ))}
+        </ul>
       )}
+      {dialog !== undefined && <ReviewDialog editing={dialog} onClose={() => setDialog(undefined)} onSaved={() => void fetchData(true)} />}
+    </SectionFrame>
+  );
+}
 
-      {/* Client Inquiry Full-Message Drawer */}
-    </>
+function ReviewDialog({ editing, onClose, onSaved }: { editing: ReviewRow | null; onClose: () => void; onSaved: () => void }) {
+  const { adminFetch, handleAuthLoss } = useAdmin();
+  const [f, setF] = useState({
+    doctorName: editing?.doctorName || '',
+    clinicName: editing?.clinicName || '',
+    location: editing?.location || 'Dhaka, Bangladesh',
+    rating: editing?.rating ?? 5,
+    comment: editing?.comment || '',
+  });
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [saving, setSaving] = useState(false);
+  const set = (k: 'doctorName' | 'clinicName' | 'location' | 'comment') => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setF((x) => ({ ...x, [k]: e.target.value }));
+    setErrors((x) => ({ ...x, [k]: undefined }));
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const err: Record<string, string | undefined> = {};
+    if (f.doctorName.trim().length < 3) err.doctorName = "Enter the doctor's name";
+    if (f.clinicName.trim().length < 2) err.clinicName = 'Enter the clinic';
+    if (f.location.trim().length < 2) err.location = 'Enter the town or city';
+    if (f.comment.trim().length < 10) err.comment = 'Write what they said (at least 10 characters)';
+    if (f.comment.length > 1500) err.comment = 'Keep it under 1,500 characters';
+    setErrors(err);
+    const first = Object.keys(err).find((k) => err[k]);
+    if (first) return void document.getElementById(`rv-${first}`)?.focus();
+    setSaving(true);
+    try {
+      const res = await adminFetch(editing ? `/api/admin/testimonials/${editing.id}` : '/api/admin/testimonials', {
+        method: editing ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ doctorName: f.doctorName.trim(), clinicName: f.clinicName.trim(), location: f.location.trim(), rating: f.rating, comment: f.comment.trim() }),
+      });
+      if (res.status === 401) return handleAuthLoss();
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) return void toast.error(apiError(body, 'Could not save the testimonial'));
+      toast.success(editing ? 'Testimonial updated' : 'Testimonial added');
+      onClose();
+      onSaved();
+    } catch {
+      toast.error('Network error — nothing was saved');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <FormDialog title={editing ? 'Edit testimonial' : 'Add testimonial'} onClose={onClose} onSubmit={submit} submitLabel={editing ? 'Save changes' : 'Add testimonial'} saving={saving}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Doctor" htmlFor="rv-doctorName" required error={errors.doctorName}>
+          <Input id="rv-doctorName" value={f.doctorName} onChange={set('doctorName')} invalid={!!errors.doctorName} placeholder="Dr. Full Name" />
+        </Field>
+        <Field label="Clinic" htmlFor="rv-clinicName" required error={errors.clinicName}>
+          <Input id="rv-clinicName" value={f.clinicName} onChange={set('clinicName')} invalid={!!errors.clinicName} />
+        </Field>
+      </div>
+      <Field label="Location" htmlFor="rv-location" required error={errors.location}>
+        <Input id="rv-location" value={f.location} onChange={set('location')} invalid={!!errors.location} />
+      </Field>
+      <div className="space-y-1.5">
+        <span className="block text-table font-medium text-zinc-700">Rating</span>
+        <div role="radiogroup" aria-label="Rating" className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <button
+              key={i}
+              type="button"
+              role="radio"
+              aria-checked={f.rating === i}
+              aria-label={`${i} star${i === 1 ? '' : 's'}`}
+              onClick={() => setF((x) => ({ ...x, rating: i }))}
+              className="rounded-md p-1 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+            >
+              <Star size={22} aria-hidden="true" className={i <= f.rating ? 'fill-amber-400 text-amber-400' : 'fill-zinc-200 text-zinc-200'} />
+            </button>
+          ))}
+        </div>
+      </div>
+      <Field label="What they said" htmlFor="rv-comment" required error={errors.comment} hint={`${f.comment.length}/1500`}>
+        <textarea
+          id="rv-comment"
+          rows={5}
+          value={f.comment}
+          onChange={set('comment')}
+          className={`block w-full rounded-lg border bg-white px-3 py-2 text-body text-zinc-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 ${errors.comment ? 'border-rose-400' : 'border-zinc-200'}`}
+        />
+      </Field>
+    </FormDialog>
   );
 }
