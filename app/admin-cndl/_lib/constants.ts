@@ -66,8 +66,6 @@ export const EMPTY_INVOICE_FORM = { grossAmount: '', discountAmount: '0', orderI
 export const EMPTY_PAYMENT_FORM = { netAmount: '', collectedById: '', isVerified: false, notes: '', paymentDate: '', paymentMethod: '' };
 export const EMPTY_EXPENSE_FORM = { category: 'RAW_MATERIAL', title: '', voucherNo: '', amount: '', notes: '', expenseDate: '' };
 export const EMPTY_CAPEX_FORM = { machineName: '', purchaseCost: '', purchaseDate: '', status: 'OPERATIONAL', notes: '' };
-export const EMPTY_DIVIDEND_FORM = { shareholderName: '', sharesCount: '1', amountPaid: '', payoutMonth: '', paymentMethod: '', notes: '' };
-export const EMPTY_SHAREHOLDER_FORM = { name: '', phone: '', address: '', sharesCount: '1', paymentDetails: '', notes: '' };
 export const EMPTY_OFFLINE_ORDER_FORM = {
   orderDate: '', deliveryDate: '', orderSource: 'OFFLINE_RIDER',
   clientAccountId: '', doctorName: '', clinicName: '', phone: '',

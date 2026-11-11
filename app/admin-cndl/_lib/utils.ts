@@ -20,6 +20,27 @@ export function formatBDT(n: number) {
   return `${v < 0 ? '-' : ''}৳${Math.abs(v).toLocaleString('en-IN')}`;
 }
 
+const BD_OFFSET_MS = 6 * 60 * 60 * 1000;
+
+/** "YYYY-MM" of a timestamp in Bangladesh time (UTC+6), the same month
+    boundaries /api/admin/erp/overview-metrics uses. Empty for bad input. */
+export function bdMonthKey(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? '' : new Date(t + BD_OFFSET_MS).toISOString().slice(0, 7);
+}
+
+/** "November 2026" for "2026-11"; anything else is returned as stored. */
+export function monthLabel(key: string, short = false): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(key || '');
+  if (!m) return key || '—';
+  return new Date(Date.UTC(+m[1], +m[2] - 1, 1)).toLocaleDateString('en-GB', {
+    month: short ? 'short' : 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 /** Client-side check before uploading: returns an error message, or null if OK. */
 export function checkImageFile(file: File): string | null {
   if (!UPLOAD_TYPES.includes(file.type)) return 'Use a JPEG, PNG, WebP, GIF or AVIF image';
