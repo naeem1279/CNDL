@@ -1,8 +1,4 @@
 @import 'tailwindcss';
-@import 'swiper/css';
-@import 'swiper/css/navigation';
-
-
 
 :root {
   --background-primary: #ffffff;
@@ -56,37 +52,6 @@ body {
     font-family: var(--font-dm-sans), sans-serif;
   }
 }
-/* 
-.size-72 {
-  @apply text-3xl sm:text-5xl md:text-6xl lg:text-[64px] xl:text-7xl;
-}
-
-.size-52 {
-  @apply text-2xl sm:text-3xl md:text-4xl lg:text-[44px] xl:text-[52px];
-}
-
-.size-48 {
-  @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px];
-}
-
-.size-32 {
-    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[32px];
-}
-
-.size-24 {
-    @apply text-base md:text-lg lg:text-xl xl:text-2xl;
-}
-
-.size-20 {
-    @apply text-sm md:text-base lg:text-lg xl:text-xl;
-}
-.size-18 {
-    @apply text-xs md:text-sm lg:text-base xl:text-lg;
-
-}
-.size-16 {
-    @apply text-[10px] md:text-xs lg:text-base;
-} */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -102,11 +67,35 @@ body {
   animation: fadeInUp 0.8s ease-out forwards;
 }
 
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Review wall: two columns scrolling in opposite directions (ReviewsSection). */
+@keyframes reviewScrollUp {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
 }
 
-.hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+@keyframes reviewScrollDown {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0); }
+}
+
+.review-scroll-up {
+  animation: reviewScrollUp 22s linear infinite;
+}
+
+.review-scroll-down {
+  animation: reviewScrollDown 26s linear infinite;
+}
+
+.review-scroll-up:hover,
+.review-scroll-down:hover {
+  animation-play-state: paused;
+}
+
+/* Respect the OS "reduce motion" setting for every decorative animation. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .review-scroll-up,
+  .review-scroll-down {
+    animation: none;
+  }
 }

@@ -12,13 +12,16 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
   const generatedId = useId();
   const inputId = props.id ?? generatedId;
 
-  const openDatePicker = (input: any) => {
+  const openDatePicker = (input: HTMLInputElement) => {
     if (type !== 'date') return;
-    if ('showPicker' in input) {
-      (input as any)?.showPicker?.();
+    if (typeof input.showPicker === 'function') {
+      try {
+        input.showPicker();
+      } catch {
+        input.focus();
+      }
     } else {
-      input?.focus?.();
-      (input as any).type = 'date';
+      input.focus();
     }
   };
 
@@ -39,9 +42,9 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
       )}
       {type === 'textarea' ? (
         <textarea
-          {...(props as any)}
+          {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
           id={inputId}
-          rows='6'
+          rows={6}
           placeholder={placeholder}
           className="w-full border border-(--border-primary) rounded-[8px] p-2.5 text-[10px] md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary)"
         />

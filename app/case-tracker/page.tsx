@@ -74,11 +74,24 @@ function mainProduct(productType: string | null | undefined): string {
   return seg?.trim() || '—';
 }
 
+/** Public, field-whitelisted case shape returned by GET /api/tracker. */
+type TrackedCase = {
+  id: string;
+  caseId: string;
+  customerName: string;
+  productType: string | null;
+  quantity: number;
+  status: string;
+  progress: number;
+  deliveryDate: string | null;
+  updatedAt: string;
+};
+
 function CaseTrackerPage() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [caseData, setCaseData] = useState<any>(null);
-  const [cases, setCases] = useState<any[]>([]);
+  const [caseData, setCaseData] = useState<TrackedCase | null>(null);
+  const [cases, setCases] = useState<TrackedCase[]>([]);
   const [searched, setSearched] = useState(false);
 
   const track = async (raw: string) => {
@@ -118,7 +131,7 @@ function CaseTrackerPage() {
       setQuery(q);
       track(q);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const activeIdx = caseData ? activeStepIndex(caseData.status, caseData.progress ?? 0) : -1;

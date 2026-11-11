@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { readActiveSession, requireRole } from "@/lib/admin-auth";
+import { readActiveSession } from "@/lib/admin-auth";
 
 const invoiceSchema = z.object({
   transactionType: z.literal("INVOICE"),

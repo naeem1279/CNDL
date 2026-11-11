@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CNDL Frontend
 
-## Getting Started
+Public website and admin ERP console (`/admin-cndl`) for CN Dental Lab, Dhaka.
+Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · Prisma 6 on SQLite.
 
-First, run the development server:
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+cp .env.example .env.local      # fill in ADMIN_SECRET (32+ chars)
+cp .env.example .env            # Prisma CLI reads DATABASE_URL from .env
+# for local work, point DATABASE_URL at a local file, e.g. file:./local.db
+npx prisma db push              # create the local SQLite schema
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script | What it does |
+|---|---|
+| `npm run dev` | Development server with hot reload |
+| `npm run build` | Production build, then copies `.next/static` and `public/` into `.next/standalone` |
+| `npm start` | Runs the standalone server with `.env.local` loaded (Node 20.6+) |
+| `npm run typecheck` | Generates Next route types, then `tsc --noEmit` |
+| `npm run lint` | ESLint (Next core-web-vitals + TypeScript rules) |
+| `npm run check` | Type check and lint together; run before every push |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Runtime data (never in git, never in the build)
 
-## Learn More
+| Path | Contents |
+|---|---|
+| `prisma/dev.db` | Production database (`DATABASE_URL` must be an absolute path) |
+| `public/images/uploads/` | Admin-uploaded images, served by `app/images/uploads/[file]/route.ts` |
+| `uploads/orders/<caseId>/` | Private clinical files (patient scans); not web-served |
+| `backups/` | Database snapshots from `scripts/backup-db.sh` |
 
-To learn more about Next.js, take a look at the following resources:
+The standalone server changes its working directory to `.next/standalone`.
+`lib/paths.ts` resolves runtime data against `CNDL_APP_ROOT` (set by PM2), so
+uploads and case files always land in the project folder and survive rebuilds.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Production deploy (VPS, PM2)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cd /var/www/cndl-frontend
+git pull
+npm ci
+npm run check
+npm run build
+pm2 reload ecosystem.config.cjs
+```
 
-## Deploy on Vercel
+First switch from the old `npm start` process (one time only):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pm2 delete cndl-global-app
+pm2 start ecosystem.config.cjs
+pm2 save
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.env.local` must contain `DATABASE_URL` (absolute) and `ADMIN_SECRET`; see
+`.env.example` for every variable.

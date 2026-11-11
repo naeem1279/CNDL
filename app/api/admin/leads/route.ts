@@ -21,7 +21,6 @@ import { readActiveSession } from "@/lib/admin-auth";
 
 const LEADS_FILE = process.env.CNDL_LEADS_FILE || "/var/lib/naeemmia-leads/prospects.jsonl";
 const ALLOWED_STATUS = ["new", "visited", "sample_given", "client"] as const;
-type LeadStatus = (typeof ALLOWED_STATUS)[number];
 
 /** Activity history cap per lead (oldest entries are dropped beyond this). */
 const ACTIVITY_LOG_CAP = 50;

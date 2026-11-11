@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDown, ArrowDownRight, ArrowRight, MoveRight, MessageCircle } from 'lucide-react';
+import { ArrowDownRight, MoveRight, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';

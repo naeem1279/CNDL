@@ -1,9 +1,10 @@
 'use client';
+import type { ServiceApiRow } from '@/lib/service-types';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Truck, FileCheck2, ShieldCheck, Sparkles, FileText, BookOpen } from 'lucide-react';
+import { Truck, FileCheck2, ShieldCheck, FileText, BookOpen } from 'lucide-react';
 
 /**
  * Canonical catalogue — mirrors the official CNDL Physical Lab Prescription Slip exactly.
@@ -145,7 +146,7 @@ export default function ProductsComponent() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.services) && data.services.length > 0) {
-          const mapped: DynamicItem[] = data.services.map((s: any, idx: number) => {
+          const mapped: DynamicItem[] = data.services.map((s: ServiceApiRow, idx: number) => {
             const fallback = LAB_SLIP_CATALOGUE.find(
               (c) => c.title.toLowerCase() === s.name.toLowerCase()
             );
@@ -293,7 +294,7 @@ export default function ProductsComponent() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-          {visible.map((item, index) => (
+          {visible.map((item) => (
             <div key={item.id ?? item.title} className="bg-(--bg-secondary) rounded-[10px] md:rounded-[16px] lg:rounded-[24px] group flex flex-col">
               <div className="relative h-[220px]">
                 <div className="relative h-full w-full overflow-hidden  rounded-t-[10px] md:rounded-t-[16px] lg:rounded-t-[24px]">

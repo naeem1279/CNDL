@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Printer, ArrowLeft, Check, Sparkles, Phone, Mail, MapPin } from 'lucide-react';
+import { Printer, ArrowLeft } from 'lucide-react';
 
 const UPPER_TEETH = [
   // Upper Right (Quadrant 1): 18 down to 11
@@ -149,7 +149,7 @@ export default function LabSlipPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-slate-300 text-[10px]">
                 <div className="p-1.5 col-span-2 sm:col-span-2">
-                  <span className="font-bold text-slate-500 block text-[9px] uppercase">Doctor's Name:</span>
+                  <span className="font-bold text-slate-500 block text-[9px] uppercase">Doctor&apos;s Name:</span>
                   <span className="font-semibold text-slate-800">Dr. ____________________________________</span>
                 </div>
                 <div className="p-1.5 col-span-2 sm:col-span-2">
@@ -157,7 +157,7 @@ export default function LabSlipPage() {
                   <span className="font-semibold text-slate-800">__________________________________________</span>
                 </div>
                 <div className="p-1.5">
-                  <span className="font-bold text-slate-500 block text-[9px] uppercase">Doctor's Phone:</span>
+                  <span className="font-bold text-slate-500 block text-[9px] uppercase">Doctor&apos;s Phone:</span>
                   <span className="font-semibold text-slate-800">+880 ________________</span>
                 </div>
                 <div className="p-1.5">
@@ -424,7 +424,7 @@ export default function LabSlipPage() {
             <div className="grid grid-cols-2 gap-8 text-[9.5px]">
               <div>
                 <span className="font-bold text-slate-500 block text-[8.5px] uppercase mb-6">
-                  Prescribing Doctor's Signature &amp; BMDC Reg. No:
+                  Prescribing Doctor&apos;s Signature &amp; BMDC Reg. No:
                 </span>
                 <div className="border-t border-slate-800 pt-1 flex justify-between">
                   <span className="font-bold text-slate-800">Signature: _______________________</span>

@@ -1,9 +1,15 @@
 import type { NextConfig } from 'next';
-import path from 'path';
 
 const nextConfig: NextConfig = {
+  // Self-contained server at .next/standalone/server.js (run by PM2, see
+  // ecosystem.config.cjs). Tracing is rooted at the project itself, so the
+  // output is flat: .next/standalone/{server.js,.next,public,node_modules}.
   output: 'standalone',
-  outputFileTracingRoot: path.join(__dirname, '../../'),
+  outputFileTracingRoot: __dirname,
+  // Runtime data lives outside the build and must never be copied into it.
+  outputFileTracingExcludes: {
+    '*': ['backups/**', 'uploads/**', 'public/images/uploads/**', '**/*.db', '**/*.db-journal', '**/*.bak*', '.env*'],
+  },
   poweredByHeader: false,
   async headers() {
     return [
@@ -18,23 +24,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  webpack(config) {
-    const fileLoaderRule = config.module.rules.find(
-      (rule: any) => rule.test?.test?.('.svg')
-    );
-
-    if (fileLoaderRule) {
-      fileLoaderRule.exclude = /\.svg$/i;
-    }
-
-    config.module.rules.push({
-      test: /\.svg$/i,
-      issuer: /\.[jt]sx?$/,
-      use: ['@svgr/webpack'],
-    });
-
-    return config;
   },
 };
 

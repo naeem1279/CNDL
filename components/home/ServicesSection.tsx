@@ -1,9 +1,10 @@
 'use client';
+import type { ServiceApiRow } from '@/lib/service-types';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Truck, FileCheck2, Package, Sparkles } from 'lucide-react';
+import { Truck, FileCheck2, Package } from 'lucide-react';
 
 type ProductCard = {
   id?: string;
@@ -69,7 +70,7 @@ export default function ServicesSection() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.services) && data.services.length > 0) {
-          const mapped: ProductCard[] = data.services.map((s: any, idx: number) => {
+          const mapped: ProductCard[] = data.services.map((s: ServiceApiRow, idx: number) => {
             const fallback = INITIAL_PRODUCTS.find(
               (p) => p.title.toLowerCase() === s.name.toLowerCase()
             );
@@ -129,7 +130,7 @@ export default function ServicesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-          {products.map((item, idx) => (
+          {products.map((item) => (
             <div
               key={item.id || item.title}
               className="bg-(--bg-primary) rounded-[10px] md:rounded-[16px] lg:rounded-[24px] group flex flex-col overflow-hidden border border-(--border-primary)/60 shadow-xs"

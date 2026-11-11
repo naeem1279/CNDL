@@ -48,7 +48,6 @@ const PROGRESS_BY_STATUS: Record<string, number> = {
 const ORDERS_PER_PAGE = 8;
 const MESSAGES_PER_PAGE = 12;
 const ACCOUNTS_PER_PAGE = 10;
-const EXPENSES_PER_PAGE = 10;
 
 type Order = {
   id: string;
@@ -899,8 +898,6 @@ export default function AdminDashboard() {
   const [expSearch, setExpSearch] = useState('');
   const [expCat, setExpCat] = useState('ALL');
   const [expMonth, setExpMonth] = useState('ALL');
-  // Phase 2: inquiry read tracking (local to this browser)
-  const [readMsgIds, setReadMsgIds] = useState<string[]>([]);
 
   const openNewService = () => {
     setEditingService(null);
@@ -984,8 +981,8 @@ export default function AdminDashboard() {
       setEditingService(null);
       setServiceForm(EMPTY_SERVICE_FORM);
       await fetchData(true);
-    } catch (err: any) {
-      toast.error(err.message || 'Operation failed');
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Operation failed');
     } finally {
       setSavingService(false);
     }
@@ -2271,7 +2268,7 @@ export default function AdminDashboard() {
       }
     }, 5 * 60 * 1000);
     return () => clearInterval(id);
-  }, [auth]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [auth]);  
 
   const permittedTabs = ROLE_TABS[me?.role ?? 'SUPERADMIN'] ?? ROLE_TABS.SUPERADMIN;
 
@@ -2499,7 +2496,7 @@ export default function AdminDashboard() {
     [erpAssets]
   );
 
-  const { totalDividendsPaid, allocatedShares, unallocatedShares, dividendsByName, monthRealizedRevenue, shareholderHoldings } =
+  const { totalDividendsPaid, allocatedShares, unallocatedShares, dividendsByName, shareholderHoldings } =
     useMemo(() => {
       const byName: Record<string, number> = {};
       let paid = 0;
@@ -2802,11 +2799,9 @@ export default function AdminDashboard() {
   const msgThisMonth = catalogueStats.msgMonth;
   const chairmanUsers = teamStats.chairman;
   const accountsUsers = teamStats.accounts;
-  const partnerLabUsers = teamStats.partnerLab;
 
   /* ---------- User Management: department metrics + role-group filtering ---------- */
   const superAdminUsers = teamStats.superAdmin;
-  const doctorUsers = teamStats.doctor;
   const leadershipCount = superAdminUsers + chairmanUsers;
   const userGroupCount = (key: UserGroupKey) =>
     key === 'all'
@@ -4436,7 +4431,6 @@ type NavItem = {
                       </thead>
                       <tbody className="divide-y">
                         {filtered.map((l) => {
-                          const statusMeta = LEAD_STATUS_META[l.status] || { label: l.status || 'Unknown', cls: 'bg-slate-100 text-slate-600 border border-slate-200' };
                           const activeStatus = LEAD_STATUS_META[l.status] ? l.status : 'new';
                           const isNoteOpen = leadNoteKey === l.key;
                           const isSaving = savingLeadKey === l.key;
