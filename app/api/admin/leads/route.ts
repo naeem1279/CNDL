@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { readActiveSession } from "@/lib/admin-auth";
+import { requireRole } from "@/lib/admin-auth";
+
+/** Only SUPERADMIN has the Dental Leads section (ROLE_TABS), so only it may read or edit leads. */
+const LEAD_ROLES = ["SUPERADMIN"];
 
 /**
  * /api/admin/leads — Dhaka Dental Leads (CNDL) panel data source.
  * Reads/writes brand-cndl records from the naeemmia-leads registry
  * (/var/lib/naeemmia-leads/prospects.jsonl). LOCAL-ONLY by rule: CNDL leads are
  * never pushed to GHL, so this route is the single view into them. No Prisma.
+ *
+ * 2026-11-12: a PATCH used to rewrite the file with only the CNDL records it had
+ * read, deleting every other brand's prospect from the shared registry. Writes
+ * now replace just the edited line and keep all other lines as they were.
  *
  * Phase 1 (2026-11-06):
  * - All read-modify-write cycles are serialized through an in-process mutex
@@ -45,33 +52,44 @@ function isCndl(p: Record<string, unknown>): boolean {
   return tags.includes("brand-cndl") || p.suggestedBrand === "cndl" || p.brand_context === "cndl";
 }
 
-function readLeads(): Lead[] {
+/**
+ * Reads the whole shared registry. `lines` keeps every original line (other
+ * brands' prospects and any malformed lines) so a write-back never drops them;
+ * `cndl` holds the CNDL records with their line numbers.
+ */
+function readRegistry(): { lines: string[]; cndl: { line: number; rec: Lead }[] } {
   let raw = "";
   try {
     raw = fs.readFileSync(LEADS_FILE, "utf8");
   } catch {
-    return [];
+    return { lines: [], cndl: [] };
   }
-  const out: Lead[] = [];
-  for (const line of raw.split("\n")) {
+  const lines = raw.split("\n");
+  if (lines.length && lines[lines.length - 1] === "") lines.pop();
+  const cndl: { line: number; rec: Lead }[] = [];
+  lines.forEach((line, i) => {
     const t = line.trim();
-    if (!t) continue;
+    if (!t) return;
     try {
       const p = JSON.parse(t) as Record<string, unknown>;
-      if (isCndl(p) && typeof p.key === "string") out.push(p as Lead);
+      if (isCndl(p) && typeof p.key === "string") cndl.push({ line: i, rec: p as Lead });
     } catch {
-      /* skip malformed line */
+      /* not ours to touch: kept verbatim */
     }
-  }
-  return out;
+  });
+  return { lines, cndl };
 }
 
-function writeLeadsAtomic(rows: Lead[]): void {
+function readLeads(): Lead[] {
+  return readRegistry().cndl.map((c) => c.rec);
+}
+
+/** Rewrites the registry with every line preserved (atomic rename). */
+function writeLinesAtomic(lines: string[]): void {
   const dir = path.dirname(LEADS_FILE);
-  const body = rows.map((r) => JSON.stringify(r)).join("\n") + "\n";
   const tmp = LEADS_FILE + ".tmp_cndl_panel";
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(tmp, body);
+  fs.writeFileSync(tmp, lines.join("\n") + "\n");
   fs.renameSync(tmp, LEADS_FILE);
 }
 
@@ -101,7 +119,8 @@ function toPublic(p: Lead) {
 }
 
 export async function GET(req: Request) {
-  if (!(await readActiveSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const denied = await requireRole(req, LEAD_ROLES);
+  if (denied) return denied;
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") || "").trim().toLowerCase();
   const status = (url.searchParams.get("status") || "").trim();
@@ -119,7 +138,8 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  if (!(await readActiveSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const denied = await requireRole(req, LEAD_ROLES);
+  if (denied) return denied;
   let body: { key?: string; status?: string; notes?: string };
   try {
     body = await req.json();
@@ -142,11 +162,11 @@ export async function PATCH(req: Request) {
   // instead of racing on the shared JSONL file.
   try {
     const lead = await withLeadsLock(() => {
-      const rows = readLeads();
-      const idx = rows.findIndex((r) => r.key === key);
-      if (idx === -1) return null;
+      const { lines, cndl } = readRegistry();
+      const hit = cndl.find((c) => c.rec.key === key);
+      if (!hit) return null;
 
-      const rec = rows[idx] as Record<string, unknown>;
+      const rec = hit.rec as Record<string, unknown>;
       const now = new Date().toISOString();
 
       // Append-only history: keep previous notes visible with timestamps.
@@ -165,9 +185,10 @@ export async function PATCH(req: Request) {
           (notes || (!status ? "নোট আপডেট" : "")),
         at: now,
       };
-      rows[idx] = rec as Lead;
-      writeLeadsAtomic(rows);
-      return rows[idx] as Lead;
+      // Replace only this lead's line; every other line is written back as read.
+      lines[hit.line] = JSON.stringify(rec);
+      writeLinesAtomic(lines);
+      return rec as Lead;
     });
 
     if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
