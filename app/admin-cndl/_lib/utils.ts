@@ -127,6 +127,9 @@ export function phoneLinks(phone: string): { tel: string; wa: string } | null {
  */
 export function extractWaPhone(msg: Message): string | null {
   const candidates: string[] = [];
+  // The phone the sender typed into the form wins.
+  const typed = (msg.phone || '').replace(/\D/g, '');
+  if (typed.length >= 10) candidates.push(typed);
   const local = msg.email.split('@')[0] ?? '';
   const digitsFromEmail = local.replace(/\D/g, '');
   if (digitsFromEmail.length >= 10) candidates.push(digitsFromEmail);
