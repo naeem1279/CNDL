@@ -46,8 +46,9 @@ export default function FAQSection({ cta = true }: { cta?: boolean }) {
     },
   ];
 
+  // Slate on the home page; white where it follows the slate Process section (/products).
   return (
-    <section className="border-y border-slate-200 bg-slate-50 py-16 md:py-24">
+    <section className={`py-16 md:py-24 ${cta ? 'border-y border-slate-200 bg-slate-50' : 'bg-white'}`}>
       <div className="container">
         {cta ? (
           // The page's one blue band: the closing call to action.

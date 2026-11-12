@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { OG_IMAGE } from '@/lib/seo';
-import Link from 'next/link';
-import ShareHero from '@/components/share/ShareHero';
+import PageHeader from '@/components/ui/PageHeader';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { ButtonLink } from '@/components/ui/Button';
 import {
   Cog, Flame, Sparkles, Printer, ScanLine, CheckCircle2, ShieldCheck, ArrowRight, Cpu, Gauge, FileCheck2,
 } from 'lucide-react';
@@ -36,7 +37,6 @@ const machines = [
     origin: 'Engineered in Japan',
     role: '5-Axis Simultaneous Dental CNC Dry Milling',
     icon: Cog,
-    accent: '#1977C5',
     accuracy: '±5 µm Marginal Precision',
     description:
       'The gold standard in dental CAD/CAM milling. Engineered for continuous industrial operation with an internal ionizer that neutralizes static electricity when milling zirconia blanks, ensuring ultra-smooth surfaces and razor-sharp margin adaptation.',
@@ -59,7 +59,6 @@ const machines = [
     origin: 'High-Temperature Thermal Engineering',
     role: 'Rapid Thermal Profiling & Zirconia Crystallization',
     icon: Flame,
-    accent: '#E65100',
     accuracy: '1530°C Precision Thermal Curve',
     description:
       'Controlled thermal crystallization furnace optimized for Aidite monolithic and multilayer zirconia blanks. Precise multi-segment heating schedules allow optimal light transmittance without compromising the 1200+ MPa flexural matrix.',
@@ -82,7 +81,6 @@ const machines = [
     origin: 'Specialized Ceramic Finishing',
     role: 'Authentic Japanese Shofu Glaze (900°C Curve)',
     icon: Sparkles,
-    accent: '#8E24AA',
     accuracy: '900°C Vacuum Glaze Cycle',
     description:
       'Dedicated vacuum porcelain and stain/glaze furnace running calibrated heating profiles for authentic Japanese Shofu Vintage Art systems. Generates an enamel-like fluorescent luster that prevents opposing tooth abrasion.',
@@ -104,7 +102,6 @@ const machines = [
     origin: 'Advanced Additive Manufacturing',
     role: 'Ultra-High-Resolution 3D Model & Guide Printing',
     icon: Printer,
-    accent: '#00897B',
     accuracy: '28 µm XY Micro-Resolution',
     description:
       'High-speed mono LCD 3D printing system delivering 28-micron pixel resolution for intraoral model verification, working removable dies, orthodontic aligner staging models, and implant surgical guides.',
@@ -126,7 +123,6 @@ const machines = [
     origin: 'Optical Digitization Platform',
     role: 'Micron-Accurate Optical Scanner for Models & Impressions',
     icon: ScanLine,
-    accent: '#1E88E5',
     accuracy: '< 10 µm Optical Digitization',
     description:
       'High-speed structured light scanner with multi-die scanning capability. Digitizes full arches, triple trays, and bite registrations in seconds with direct open-STL/OBJ pipeline export into exocad and 3Shape dental software.',
@@ -177,186 +173,173 @@ const comparisonData = [
   },
 ];
 
+const metrics = [
+  { value: '±5 µm', label: 'Marginal Adaptation' },
+  { value: '5-Axis', label: 'Simultaneous CNC Milling' },
+  { value: '1530°C', label: 'Zirconia Sintering' },
+  { value: '28 µm', label: '3D Print Resolution' },
+  { value: '3-4 Days', label: 'Guaranteed Delivery' },
+];
+
 export default function TechnologyPage() {
   return (
-    <div className="bg-(--bg-primary) text-(--text-primary)">
-      {/* Hero Banner */}
-      <ShareHero>
-        <div className="space-y-4 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1977C5]/10 border border-[#1977C5]/20 text-[#1977C5] text-xs font-semibold uppercase tracking-wider">
-            <Cpu size={14} /> Certified Digital Hardware Architecture
-          </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight secondary text-(--text-tertiary)">
-            Industrial CAD/CAM Machinery &amp; Sub-Micron Precision
-          </h1>
-          <p className="text-xs md:text-sm lg:text-base text-(--text-tertiary)/90 leading-relaxed">
-            Every restoration at CNDL is manufactured 100% in-house on authentic Japanese and global digital dentistry hardware. We never outsource or use unverified domestic casting centers.
-          </p>
-        </div>
-      </ShareHero>
+    <div className="bg-white text-slate-900">
+      <PageHeader
+        eyebrow={
+          <>
+            <Cpu size={14} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+            <span className="min-w-0">Certified Digital Hardware Architecture</span>
+          </>
+        }
+        title="Industrial CAD/CAM Machinery & Sub-Micron Precision"
+        lead="Every restoration at CNDL is manufactured 100% in-house on authentic Japanese and global digital dentistry hardware. We never outsource or use unverified domestic casting centers."
+      />
 
       {/* Metrics Strip */}
-      <section className="border-y border-(--border-primary) bg-(--bg-secondary) py-8">
+      <section className="border-b border-slate-200 bg-white py-10">
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
-            <div className="p-3">
-              <div className="text-2xl md:text-4xl font-semibold text-[#1977C5]">±5 µm</div>
-              <div className="text-xs font-semibold text-(--text-secondary) mt-1">Marginal Adaptation</div>
-            </div>
-            <div className="p-3">
-              <div className="text-2xl md:text-4xl font-semibold text-[#1977C5]">5-Axis</div>
-              <div className="text-xs font-semibold text-(--text-secondary) mt-1">Simultaneous CNC Milling</div>
-            </div>
-            <div className="p-3">
-              <div className="text-2xl md:text-4xl font-semibold text-[#E65100]">1530°C</div>
-              <div className="text-xs font-semibold text-(--text-secondary) mt-1">Zirconia Sintering</div>
-            </div>
-            <div className="p-3">
-              <div className="text-2xl md:text-4xl font-semibold text-[#00897B]">28 µm</div>
-              <div className="text-xs font-semibold text-(--text-secondary) mt-1">3D Print Resolution</div>
-            </div>
-            <div className="col-span-2 md:col-span-1 p-3">
-              <div className="text-2xl md:text-4xl font-semibold text-[#88C845]">3-4 Days</div>
-              <div className="text-xs font-semibold text-(--text-secondary) mt-1">Guaranteed Delivery</div>
-            </div>
-          </div>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-5">
+            {metrics.map((m, i) => (
+              <div key={m.label} className={`text-center ${i === metrics.length - 1 ? 'col-span-2 md:col-span-1' : ''}`}>
+                <dt className="sr-only">{m.label}</dt>
+                <dd className="secondary text-3xl font-semibold text-slate-900 md:text-4xl">{m.value}</dd>
+                <dd className="mt-1 text-sm text-slate-600">{m.label}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
       {/* Core Machines Showcase */}
-      <section className="py-14 md:py-20">
-        <div className="container space-y-16">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold secondary">
-              Our 5 Pillars of Manufacturing Excellence
-            </h2>
-            <p className="text-xs md:text-sm text-(--text-secondary)">
-              Explore the dedicated machines powering our restorative production in Khilgaon, Dhaka.
-            </p>
-          </div>
+      <section className="bg-slate-50 py-16 md:py-24">
+        <div className="container">
+          <SectionHeader
+            align="center"
+            title="Our 5 Pillars of Manufacturing Excellence"
+            lead="Explore the dedicated machines powering our restorative production in Khilgaon, Dhaka."
+          />
 
-          <div className="space-y-12">
+          <div className="space-y-6">
             {machines.map((m) => {
               const Icon = m.icon;
               return (
-                <div
-                  key={m.id}
-                  className="rounded-[20px] md:rounded-[28px] border border-(--border-primary) bg-(--bg-secondary) p-6 sm:p-8 lg:p-10 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 pb-6 border-b border-(--border-primary)">
+                <article key={m.id} id={m.id} className="scroll-mt-32 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 lg:p-10">
+                  <div className="flex flex-col justify-between gap-6 border-b border-slate-100 pb-6 lg:flex-row lg:items-start">
                     <div className="flex items-start gap-4">
-                      <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-md"
-                        style={{ backgroundColor: m.accent }}
-                      >
-                        <Icon size={28} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                        <Icon size={24} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                             {m.origin}
                           </span>
-                          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1977C5]">
+                          <span className="rounded-full bg-[#1977C5]/10 px-2.5 py-0.5 text-xs font-medium text-[#1668AD]">
                             {m.accuracy}
                           </span>
                         </div>
-                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold mt-1.5 secondary">
-                          {m.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm font-semibold text-[#1977C5] mt-0.5">
-                          {m.role}
-                        </p>
+                        <h3 className="secondary mt-2 text-xl font-semibold leading-snug text-slate-900 sm:text-2xl">{m.name}</h3>
+                        <p className="mt-1 text-sm font-medium text-[#1668AD]">{m.role}</p>
                       </div>
                     </div>
 
-                    <Link
-                      href="/order-create"
-                      className="self-start lg:self-center inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1977C5] text-white text-xs font-semibold hover:bg-[#1668ad] transition-colors shadow-sm"
-                    >
-                      Send Case on this Tech <ArrowRight size={14} />
-                    </Link>
+                    <ButtonLink href="/order-create" variant="secondary" className="self-start lg:self-center">
+                      Send Case on this Tech
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </ButtonLink>
                   </div>
 
-                  <p className="py-6 text-xs sm:text-sm md:text-base text-(--text-secondary) leading-relaxed">
-                    {m.description}
-                  </p>
+                  <p className="py-6 text-base leading-relaxed text-slate-600">{m.description}</p>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
+                  <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
                     {/* Specifications List */}
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                        <Gauge size={14} /> Technical Specifications
+                    <div>
+                      <h4 className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <Gauge size={14} aria-hidden="true" /> Technical Specifications
                       </h4>
-                      <div className="space-y-2">
-                        {m.specs.map((s, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-(--bg-muted)/40 text-xs gap-1 border border-(--border-primary)/50"
-                          >
-                            <span className="font-semibold text-(--text-secondary)">{s.label}</span>
-                            <span className="font-semibold text-(--text-primary) sm:text-right">{s.val}</span>
+                      <dl className="divide-y divide-slate-100">
+                        {m.specs.map((s) => (
+                          <div key={s.label} className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:justify-between sm:gap-6">
+                            <dt className="shrink-0 text-slate-500">{s.label}</dt>
+                            <dd className="font-medium text-slate-900 sm:text-right">{s.val}</dd>
                           </div>
                         ))}
-                      </div>
+                      </dl>
                     </div>
 
                     {/* Clinical Benefits */}
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                        <ShieldCheck size={14} /> Clinical Benefits for Clinicians
+                    <div>
+                      <h4 className="mb-4 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                        <ShieldCheck size={14} aria-hidden="true" /> Clinical Benefits for Clinicians
                       </h4>
-                      <div className="space-y-2.5">
-                        {m.clinicalBenefits.map((b, bIdx) => (
-                          <div
-                            key={bIdx}
-                            className="flex items-start gap-3 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 text-xs"
-                          >
-                            <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
-                            <span className="text-emerald-950 font-medium leading-relaxed">{b}</span>
-                          </div>
+                      <ul className="space-y-3">
+                        {m.clinicalBenefits.map((b) => (
+                          <li key={b} className="flex items-start gap-3 text-sm leading-relaxed text-slate-700">
+                            <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
+                            {b}
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Comparison Table: CAD/CAM vs Analog */}
-      <section className="py-14 md:py-20 bg-(--bg-secondary) border-t border-(--border-primary)">
-        <div className="container space-y-10">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#88C845]/15 text-[#4d7220] text-xs font-semibold uppercase tracking-wider">
-              Clinical Precision Comparison
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold secondary">
-              Why Dentists Switch from Analog Casting to CNDL
-            </h2>
-            <p className="text-xs md:text-sm text-(--text-secondary)">
-              A side-by-side comparison between CNDL&apos;s automated 5-axis digital workflow and conventional manual dental laboratories.
-            </p>
+      {/* Comparison: CAD/CAM vs Analog */}
+      <section className="border-t border-slate-200 bg-white py-16 md:py-24">
+        <div className="container">
+          <SectionHeader
+            align="center"
+            eyebrow="Clinical Precision Comparison"
+            title="Why Dentists Switch from Analog Casting to CNDL"
+            lead="A side-by-side comparison between CNDL's automated 5-axis digital workflow and conventional manual dental laboratories."
+          />
+
+          {/* Phones and tablets: one card per parameter */}
+          <div className="space-y-4 lg:hidden">
+            {comparisonData.map((row) => (
+              <div key={row.metric} className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="text-base font-semibold text-slate-900">{row.metric}</h3>
+                <dl className="mt-3 space-y-3 text-sm">
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">CNDL 5-Axis Digital CAD/CAM</dt>
+                    <dd className="mt-0.5 font-medium text-slate-900">{row.cndl}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Traditional Analog Lab</dt>
+                    <dd className="mt-0.5 text-slate-600">{row.analog}</dd>
+                  </div>
+                  <div className="border-t border-slate-100 pt-3">
+                    <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Chairside Clinical Impact</dt>
+                    <dd className="mt-0.5 text-slate-700">{row.impact}</dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
           </div>
 
-          <div className="overflow-x-auto rounded-[20px] border border-(--border-primary) bg-(--bg-primary) shadow-sm">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="border-b border-(--border-primary) bg-(--bg-muted) text-(--text-tertiary)">
-                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider">Restoration Parameter</th>
-                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider text-[#1977C5]">CNDL 5-Axis Digital CAD/CAM</th>
-                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider text-slate-400">Traditional Analog Lab</th>
-                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider text-emerald-600">Chairside Clinical Impact</th>
+          {/* Desktop: full table */}
+          <div className="hidden overflow-hidden rounded-2xl border border-slate-200 lg:block">
+            <table className="w-full border-collapse text-left text-sm">
+              <thead className="bg-slate-50">
+                <tr className="border-b border-slate-200">
+                  <th scope="col" className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-slate-500">Restoration Parameter</th>
+                  <th scope="col" className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-[#1668AD]">CNDL 5-Axis Digital CAD/CAM</th>
+                  <th scope="col" className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-slate-500">Traditional Analog Lab</th>
+                  <th scope="col" className="px-5 py-4 text-xs font-medium uppercase tracking-wide text-slate-500">Chairside Clinical Impact</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-(--border-primary)">
-                {comparisonData.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-5 font-semibold text-(--text-primary)">{row.metric}</td>
-                    <td className="py-4 px-5 font-semibold text-[#1977C5] bg-blue-50/20">{row.cndl}</td>
-                    <td className="py-4 px-5 text-(--text-secondary)">{row.analog}</td>
-                    <td className="py-4 px-5 font-medium text-emerald-800">{row.impact}</td>
+              <tbody className="divide-y divide-slate-100">
+                {comparisonData.map((row) => (
+                  <tr key={row.metric}>
+                    <th scope="row" className="px-5 py-4 font-semibold text-slate-900">{row.metric}</th>
+                    <td className="bg-[#1977C5]/[0.03] px-5 py-4 font-medium text-slate-900">{row.cndl}</td>
+                    <td className="px-5 py-4 text-slate-600">{row.analog}</td>
+                    <td className="px-5 py-4 text-slate-700">{row.impact}</td>
                   </tr>
                 ))}
               </tbody>
@@ -365,33 +348,28 @@ export default function TechnologyPage() {
         </div>
       </section>
 
-      {/* Direct Open STL Acceptance Banner */}
-      <section className="py-12 border-t border-(--border-primary) bg-(--bg-primary)">
+      {/* Direct Open STL Acceptance Banner: the page's one blue band */}
+      <section className="bg-white pb-16 md:pb-24">
         <div className="container">
-          <div className="rounded-[24px] bg-[#0A2540] text-white p-8 sm:p-12 flex flex-col lg:flex-row lg:items-center justify-between gap-8 shadow-xl">
-            <div className="space-y-3 max-w-xl">
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#88C845] bg-[#88C845]/20 px-3 py-1 rounded-full">
-                Open Scan Protocol
-              </span>
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold secondary leading-tight">
+          <div className="flex flex-col justify-between gap-8 rounded-2xl bg-[#1977C5] p-8 text-white sm:p-12 lg:flex-row lg:items-center">
+            <div className="max-w-xl">
+              <p className="text-sm font-medium text-white/80">Open Scan Protocol</p>
+              <h2 className="secondary mt-2 text-2xl font-semibold leading-tight sm:text-3xl">
                 Direct Integration with Any Intraoral Scanner
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Accepting open STL, OBJ, and PLY files from <strong>3Shape TRIOS, Medit, iTero, Carestream</strong>, and Shining 3D. Send digital files 24/7 with zero physical transit delay.
+              </h2>
+              <p className="mt-3 text-base leading-relaxed text-white/85">
+                Accepting open STL, OBJ, and PLY files from <strong className="font-semibold text-white">3Shape TRIOS, Medit, iTero, Carestream</strong>, and Shining 3D. Send digital files 24/7 with zero physical transit delay.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
-              <Link
-                href="/order-create"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#1977C5] text-white font-semibold text-xs sm:text-sm hover:bg-[#1668ad] transition-all shadow-md"
-              >
-                <FileCheck2 size={16} /> Submit Digital Case
-              </Link>
+            <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
+              <ButtonLink href="/order-create" variant="inverse" size="lg">
+                <FileCheck2 size={18} aria-hidden="true" /> Submit Digital Case
+              </ButtonLink>
               <a
                 href="https://wa.me/8801743167963"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full border-2 border-white/30 text-white font-semibold text-xs sm:text-sm hover:bg-white/10 transition-all"
+                className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/40 px-6 text-base font-medium text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1977C5]"
               >
                 Discuss Clinical Tech
               </a>

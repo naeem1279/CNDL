@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
-import ShareHero from '@/components/share/ShareHero';
+import { ArrowRight, BookOpen, FileText } from 'lucide-react';
+import PageHeader from '@/components/ui/PageHeader';
+import { ButtonLink } from '@/components/ui/Button';
 import ProductsComponent from '@/components/products/productsComponent';
 import FAQSection from '@/components/home/FAQSection';
 import ProcessSection from '@/components/home/ProcessSection';
@@ -23,17 +25,33 @@ export const metadata: Metadata = {
 function ProductsPage() {
   return (
     <section>
-      <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
-          Comprehensive Dental
-          <br />
-          Lab Services for Dentists
-        </h1>
-
-        <p className="text-xs md:text-sm lg:text-base xl:text-lg mt-2 md:mt-4  text-(--text-tertiary)">
-          From Zirconia to Flexible Dentures – precise and consistent quality you can rely on.
+      <PageHeader
+        title={
+          <>
+            Comprehensive Dental
+            <br className="hidden sm:block" /> Lab Services for Dentists
+          </>
+        }
+        lead="From Zirconia to Flexible Dentures – precise and consistent quality you can rely on."
+      >
+        <p className="mb-4 text-sm font-medium text-slate-700">
+          Ready to send a case? Submit online or print our official lab slip.
         </p>
-      </ShareHero>
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <ButtonLink href="/order-create" size="lg">
+            Order Online
+            <ArrowRight size={18} aria-hidden="true" />
+          </ButtonLink>
+          <ButtonLink href="/prep-guide" variant="secondary" size="lg">
+            <BookOpen size={18} aria-hidden="true" />
+            Clinical Prep Guide
+          </ButtonLink>
+          <ButtonLink href="/lab-slip" target="_blank" variant="secondary" size="lg">
+            <FileText size={18} aria-hidden="true" />
+            Open Printable Lab Slip
+          </ButtonLink>
+        </div>
+      </PageHeader>
       <ProductsComponent />
       <ProcessSection />
       <FAQSection cta={false} />
