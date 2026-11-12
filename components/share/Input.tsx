@@ -2,6 +2,13 @@
 
 import { useId } from 'react';
 
+/** Shared with Select. 16px text stops iOS from zooming into the field on focus. */
+export const LABEL = 'mb-2 block text-sm font-medium text-slate-700';
+export const FIELD =
+  'w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-slate-900 placeholder:text-slate-400 ' +
+  'transition-colors duration-150 hover:border-slate-400 focus:border-[#1977C5] focus:outline-none focus:ring-4 focus:ring-[#1977C5]/15 ' +
+  'disabled:cursor-not-allowed disabled:bg-slate-50';
+
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
   placeholder?: string;
@@ -36,7 +43,7 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
   return (
     <div>
       {label && (
-        <label htmlFor={inputId} className="block text-xs md:text-xs lg:text-base mb-2.5">
+        <label htmlFor={inputId} className={LABEL}>
           {label}
         </label>
       )}
@@ -46,7 +53,7 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
           id={inputId}
           rows={6}
           placeholder={placeholder}
-          className="w-full border border-(--border-primary) rounded-[8px] p-2.5 text-xs md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary)"
+          className={`${FIELD} min-h-36 py-3`}
         />
       ) : (
         <input
@@ -56,9 +63,7 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
           onClick={handleClick}
           onFocus={handleFocus}
           placeholder={placeholder}
-          className={`w-full border border-(--border-primary) rounded-[8px] p-2.5 text-xs md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary)${
-            type === 'date' ? ' cursor-pointer' : ''
-          }`}
+          className={`${FIELD} h-12${type === 'date' ? ' cursor-pointer' : ''}`}
         />
       )}
     </div>
