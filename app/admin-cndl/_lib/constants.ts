@@ -21,7 +21,7 @@ export const VITA_SHADES = ['A1', 'A2', 'A3', 'A3.5', 'A4', 'B1', 'B2', 'B3', 'B
 
 export const PAYMENT_METHODS = ['Cash', 'bKash', 'Bank'];
 
-export const TOTAL_SHARES = 100;
+export { TOTAL_SHARES } from '@/lib/shares';
 
 /** Which sidebar sections each role can see. First entry = landing tab. */
 export const ROLE_TABS: Record<string, TabKey[]> = {

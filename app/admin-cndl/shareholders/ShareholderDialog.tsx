@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { FormDialog } from '../_components/FormDialog';
 import { Field, Input } from '../_components/ui';
 import { TOTAL_SHARES } from '../_lib/constants';
+import { MIN_SHARES, formatShares, hasTwoDecimalsAtMost, roundShares, toHundredths } from '@/lib/shares';
 import { useAdmin } from '../_lib/session';
 import type { ErpShareholder } from '../_lib/types';
 import { apiError } from '../_lib/utils';
@@ -32,7 +33,7 @@ export function ShareholderDialog({
     name: editing?.name ?? '',
     phone: editing?.phone ?? '',
     address: editing?.address ?? '',
-    sharesCount: editing ? String(editing.sharesCount) : available > 0 ? '1' : '',
+    sharesCount: editing ? formatShares(editing.sharesCount) : available >= 1 ? '1' : available > 0 ? formatShares(available) : '',
     paymentDetails: editing?.paymentDetails ?? '',
     notes: editing?.notes ?? '',
   }));
@@ -47,8 +48,10 @@ export function ShareholderDialog({
     const e: Errors = {};
     if (form.name.trim().length < 2) e.name = 'Enter the full name (at least 2 characters)';
     const n = Number(form.sharesCount);
-    if (!Number.isInteger(n) || n < 1) e.sharesCount = 'Enter a whole number of shares, at least 1';
-    else if (n > available) e.sharesCount = available > 0 ? `Only ${available} share${available === 1 ? ' is' : 's are'} available` : 'No shares are available';
+    if (!form.sharesCount.trim() || !Number.isFinite(n) || n < MIN_SHARES) e.sharesCount = `Enter at least ${MIN_SHARES} share (e.g. 0.5 or 2)`;
+    else if (!hasTwoDecimalsAtMost(n)) e.sharesCount = 'Use at most 2 decimal places (e.g. 0.25)';
+    else if (toHundredths(n) > toHundredths(available))
+      e.sharesCount = available > 0 ? `Only ${formatShares(available)} ${available > 1 ? 'shares are' : 'share is'} available` : 'No shares are available';
     if (form.phone.trim() && form.phone.trim().length < 6) e.phone = 'Phone must be at least 6 characters';
     return e;
   };
@@ -70,7 +73,7 @@ export function ShareholderDialog({
           name: form.name.trim(),
           phone: form.phone.trim() || null,
           address: form.address.trim() || null,
-          sharesCount: Number(form.sharesCount),
+          sharesCount: roundShares(Number(form.sharesCount)),
           paymentDetails: form.paymentDetails.trim() || null,
           notes: form.notes.trim() || null,
         }),
@@ -94,7 +97,7 @@ export function ShareholderDialog({
   return (
     <FormDialog
       title={editing ? 'Edit shareholder' : 'Add shareholder'}
-      description={`${available} of ${TOTAL_SHARES} shares available${editing ? ' to this shareholder' : ''}`}
+      description={`${formatShares(available)} of ${TOTAL_SHARES} shares available${editing ? ' to this shareholder' : ''}`}
       onClose={onClose}
       onSubmit={submit}
       submitLabel={editing ? 'Save changes' : 'Add shareholder'}
@@ -110,12 +113,13 @@ export function ShareholderDialog({
         <Input id="sh-name" value={form.name} onChange={set('name')} invalid={!!errors.name} autoComplete="off" />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Shares" htmlFor="sh-sharesCount" required error={errors.sharesCount} hint={`1 to ${available}`}>
+        <Field label="Shares" htmlFor="sh-sharesCount" required error={errors.sharesCount} hint={`${MIN_SHARES} to ${formatShares(available)} · decimals allowed, e.g. 0.5`}>
           <Input
             id="sh-sharesCount"
             type="number"
-            inputMode="numeric"
-            min={1}
+            inputMode="decimal"
+            step={MIN_SHARES}
+            min={MIN_SHARES}
             max={available}
             value={form.sharesCount}
             onChange={set('sharesCount')}

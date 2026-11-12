@@ -4,6 +4,7 @@ import { Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge, Button, EmptyState, Field, Input, Panel, Select } from '../_components/ui';
 import { TOTAL_SHARES } from '../_lib/constants';
+import { formatShares, shareFraction, sharesLabel, sumShares, toHundredths, unallocatedShares } from '@/lib/shares';
 import { useAdmin } from '../_lib/session';
 import type { ErpDividend, ErpExpense, ErpLedgerEntry, ErpShareholder } from '../_lib/types';
 import { apiError, bdMonthKey, formatBDT, monthLabel } from '../_lib/utils';
@@ -63,7 +64,7 @@ export function PayoutRun({
   useEffect(() => setRows({}), [month, profit]);
 
   const lines = shareholders.map((s) => {
-    const due = Math.round((profit * s.sharesCount) / TOTAL_SHARES);
+    const due = Math.round(profit * shareFraction(s.sharesCount));
     const already = paidThisMonth[s.name] || 0;
     const st = rows[s.id];
     const include = st ? st.include : already === 0 && due > 0;
@@ -73,7 +74,7 @@ export function PayoutRun({
   });
   const selected = lines.filter((l) => l.include && l.amount > 0);
   const total = selected.reduce((sum, l) => sum + l.amount, 0);
-  const allocated = shareholders.reduce((sum, s) => sum + s.sharesCount, 0);
+  const allocated = sumShares(shareholders.map((s) => s.sharesCount));
   const retained = profit - lines.reduce((sum, l) => sum + l.due, 0);
 
   const setRow = (id: string, patch: Partial<RowState>, current: { include: boolean; amountText: string }) =>
@@ -215,7 +216,7 @@ export function PayoutRun({
                   <label htmlFor={id} className="min-w-0 flex-1 cursor-pointer">
                     <span className="block text-body font-medium text-zinc-900 [overflow-wrap:anywhere]">{l.s.name}</span>
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-meta text-zinc-500 tabular-nums">
-                      {l.s.sharesCount} share{l.s.sharesCount === 1 ? '' : 's'} · share {formatBDT(l.due)}
+                      {sharesLabel(l.s.sharesCount)} · share {formatBDT(l.due)}
                       {l.already > 0 && (
                         <Badge tone="warning">
                           Already paid {formatBDT(l.already)} for {monthLabel(month, true)}
@@ -244,8 +245,8 @@ export function PayoutRun({
             <div className="text-meta text-zinc-500 tabular-nums">
               <span className="text-body font-semibold text-zinc-900">{formatBDT(total)}</span> to {selected.length} of{' '}
               {shareholders.length}
-              {allocated < TOTAL_SHARES && retained > 0 && (
-                <> · {formatBDT(retained)} stays with the lab ({TOTAL_SHARES - allocated} unallocated shares)</>
+              {toHundredths(allocated) < toHundredths(TOTAL_SHARES) && retained > 0 && (
+                <> · {formatBDT(retained)} stays with the lab ({formatShares(unallocatedShares(allocated))} unallocated shares)</>
               )}
             </div>
             <Button variant="primary" onClick={record} disabled={recording || selected.length === 0} className="w-full sm:w-auto">

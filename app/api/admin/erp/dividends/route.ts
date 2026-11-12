@@ -3,10 +3,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
 import { friendlyIssue } from "@/lib/validation";
+import { sharesField } from "@/lib/shares";
 
 const dividendCreateSchema = z.object({
   shareholderName: z.string().trim().min(2).max(150),
-  sharesCount: z.coerce.number().int().min(1).default(1),
+  sharesCount: sharesField.default(1),
   amountPaid: z.coerce.number().positive(),
   payoutMonth: z.string().trim().min(3).max(20),
   paymentMethod: z.string().trim().max(100).nullish(),

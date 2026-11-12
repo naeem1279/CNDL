@@ -3,8 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
 import { firstIssueMessage } from "@/lib/validation";
-
-const TOTAL_SHARES = 100;
+import { TOTAL_SHARES, formatShares, sharesField, sumShares, toHundredths, unallocatedShares } from "@/lib/shares";
 
 const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
 
@@ -12,11 +11,7 @@ const shareholderCreateSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(150),
   phone: z.preprocess(emptyToNull, z.string().trim().min(6, "Phone must be at least 6 characters").max(30).nullish()),
   address: z.preprocess(emptyToNull, z.string().trim().max(500).nullish()),
-  sharesCount: z.coerce
-    .number({ message: "Shares must be a number" })
-    .int("Shares must be a whole number")
-    .min(1, "Shares must be between 1 and 100")
-    .max(TOTAL_SHARES, `Shares must be between 1 and ${TOTAL_SHARES}`),
+  sharesCount: sharesField,
   paymentDetails: z.preprocess(emptyToNull, z.string().trim().max(1000).nullish()),
   notes: z.preprocess(emptyToNull, z.string().trim().max(1000).nullish()),
 });
@@ -32,11 +27,11 @@ export async function GET(req: Request) {
     const shareholders = await prisma.shareholder.findMany({
       orderBy: { createdAt: "asc" },
     });
-    const totalShares = shareholders.reduce((sum, s) => sum + (s.sharesCount || 0), 0);
+    const totalShares = sumShares(shareholders.map((s) => s.sharesCount));
     return NextResponse.json({
       shareholders,
       totalShares,
-      unallocated: Math.max(0, TOTAL_SHARES - totalShares),
+      unallocated: unallocatedShares(totalShares),
     });
   } catch {
     return NextResponse.json({ error: "Failed to fetch shareholders" }, { status: 500 });
@@ -54,11 +49,11 @@ export async function POST(req: Request) {
     }
     const data = parsed.data;
 
-    const agg = await prisma.shareholder.aggregate({ _sum: { sharesCount: true } });
-    const allocated = agg._sum.sharesCount ?? 0;
-    if (allocated + data.sharesCount > TOTAL_SHARES) {
+    const holdings = await prisma.shareholder.findMany({ select: { sharesCount: true } });
+    const allocated = sumShares(holdings.map((h) => h.sharesCount));
+    if (toHundredths(allocated) + toHundredths(data.sharesCount) > toHundredths(TOTAL_SHARES)) {
       return NextResponse.json(
-        { error: `Only ${Math.max(0, TOTAL_SHARES - allocated)} of ${TOTAL_SHARES} shares remain unallocated` },
+        { error: `Only ${formatShares(unallocatedShares(allocated))} of ${TOTAL_SHARES} shares remain unallocated` },
         { status: 400 }
       );
     }

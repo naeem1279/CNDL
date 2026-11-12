@@ -199,7 +199,8 @@ model Shareholder {
   name           String
   phone          String?
   address        String?
-  sharesCount    Int      @default(1)
+  /// Out of 100 (1 share = 1% of payouts); fractional down to 0.01, e.g. 0.2 or 0.5.
+  sharesCount    Float    @default(1)
   paymentDetails String?
   notes          String?
   createdAt      DateTime @default(now())
@@ -209,7 +210,7 @@ model Shareholder {
 model ShareholderPayout {
   id              String   @id @default(cuid())
   shareholderName String
-  sharesCount     Int      @default(1)
+  sharesCount     Float    @default(1)
   amountPaid      Float
   payoutMonth     String
   paymentMethod   String?
