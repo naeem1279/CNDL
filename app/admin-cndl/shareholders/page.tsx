@@ -6,6 +6,7 @@ import { SectionFrame } from '../_components/SectionFrame';
 import type { Kpi } from '../_components/StatTile';
 import { Button, EmptyState, MenuButton, Panel, Select } from '../_components/ui';
 import { TOTAL_SHARES } from '../_lib/constants';
+import { formatShares, roundShares, sharesLabel, sumShares, unallocatedShares } from '@/lib/shares';
 import { loadResources } from '../_lib/resources';
 import { useAdmin } from '../_lib/session';
 import type { ErpDividend, ErpExpense, ErpLedgerEntry, ErpShareholder } from '../_lib/types';
@@ -66,8 +67,8 @@ export default function ShareholdersPage() {
 
   /* --------------------------------------------------------- derived */
 
-  const allocated = shareholders.reduce((sum, s) => sum + (s.sharesCount || 0), 0);
-  const unallocated = Math.max(0, TOTAL_SHARES - allocated);
+  const allocated = sumShares(shareholders.map((s) => s.sharesCount));
+  const unallocated = unallocatedShares(allocated);
   const sorted = useMemo(() => [...shareholders].sort((a, b) => b.sharesCount - a.sharesCount || a.name.localeCompare(b.name)), [shareholders]);
   const colour = (id: string) => SEGMENT[Math.max(0, sorted.findIndex((s) => s.id === id)) % SEGMENT.length];
 
@@ -97,11 +98,11 @@ export default function ShareholdersPage() {
   const kpis: Kpi[] = [
     {
       label: 'Shares allocated',
-      value: `${allocated} / ${TOTAL_SHARES}`,
+      value: `${formatShares(allocated)} / ${TOTAL_SHARES}`,
       icon: PieChart,
-      sub: unallocated > 0 ? `${unallocated} unallocated` : 'Fully allocated',
+      sub: unallocated > 0 ? `${formatShares(unallocated)} unallocated` : 'Fully allocated',
     },
-    { label: 'Shareholders', value: String(shareholders.length), icon: Coins, sub: sorted[0] ? `Largest: ${sorted[0].sharesCount}%` : 'None yet' },
+    { label: 'Shareholders', value: String(shareholders.length), icon: Coins, sub: sorted[0] ? `Largest: ${formatShares(sorted[0].sharesCount)}%` : 'None yet' },
     { label: 'Paid this month', value: formatBDT(paidThisMonth), icon: CalendarCheck, sub: monthLabel(thisMonth) },
     {
       label: 'Paid all time',
@@ -115,7 +116,7 @@ export default function ShareholdersPage() {
 
   const remove = async (s: ErpShareholder) => {
     const ok = await askConfirm(
-      `Remove ${s.name} and their ${s.sharesCount} share${s.sharesCount === 1 ? '' : 's'} from the register? Their past payouts stay in the history.`
+      `Remove ${s.name} and their ${sharesLabel(s.sharesCount)} from the register? Their past payouts stay in the history.`
     );
     if (!ok) return;
     setRemovingId(s.id);
@@ -168,12 +169,12 @@ export default function ShareholdersPage() {
           <div
             className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full bg-white"
             role="img"
-            aria-label={`${sorted.map((s) => `${s.name} ${s.sharesCount}%`).join(', ')}${unallocated ? `, unallocated ${unallocated}%` : ''}`}
+            aria-label={`${sorted.map((s) => `${s.name} ${formatShares(s.sharesCount)}%`).join(', ')}${unallocated ? `, unallocated ${formatShares(unallocated)}%` : ''}`}
           >
             {sorted.map((s) => (
-              <div key={s.id} title={`${s.name}: ${s.sharesCount}%`} style={{ width: `${s.sharesCount}%` }} className={`h-full ${colour(s.id)}`} />
+              <div key={s.id} title={`${s.name}: ${formatShares(s.sharesCount)}%`} style={{ width: `${s.sharesCount}%` }} className={`h-full ${colour(s.id)}`} />
             ))}
-            {unallocated > 0 && <div title={`Unallocated: ${unallocated}%`} style={{ width: `${unallocated}%` }} className="h-full bg-zinc-200" />}
+            {unallocated > 0 && <div title={`Unallocated: ${formatShares(unallocated)}%`} style={{ width: `${unallocated}%` }} className="h-full bg-zinc-200" />}
           </div>
 
           {sorted.length === 0 ? (
@@ -207,7 +208,7 @@ export default function ShareholdersPage() {
                     <div>
                       <dt className="text-meta text-zinc-500">Shares</dt>
                       <dd className="text-title font-semibold text-zinc-900 tabular-nums">
-                        {s.sharesCount} <span className="text-table font-normal text-zinc-500">· {s.sharesCount}%</span>
+                        {formatShares(s.sharesCount)} <span className="text-table font-normal text-zinc-500">· {formatShares(s.sharesCount)}%</span>
                       </dd>
                     </div>
                     <div className="min-w-0">
@@ -231,7 +232,7 @@ export default function ShareholdersPage() {
                   >
                     <Plus size={18} aria-hidden="true" />
                     <span className="text-body font-medium">Add shareholder</span>
-                    <span className="text-meta tabular-nums">{unallocated} shares unallocated</span>
+                    <span className="text-meta tabular-nums">{formatShares(unallocated)} shares unallocated</span>
                   </button>
                 </li>
               )}
@@ -286,7 +287,7 @@ export default function ShareholdersPage() {
                         {d.shareholderName}
                       </td>
                       <td className="px-3 py-2.5 text-zinc-700">{monthLabel(d.payoutMonth)}</td>
-                      <td className="px-3 py-2.5 text-right text-zinc-700 tabular-nums">{d.sharesCount}</td>
+                      <td className="px-3 py-2.5 text-right text-zinc-700 tabular-nums">{formatShares(d.sharesCount)}</td>
                       <td className="px-3 py-2.5 text-right font-medium text-zinc-900 tabular-nums">{formatBDT(d.amountPaid)}</td>
                       <td className="hidden truncate px-3 py-2.5 text-zinc-600 xl:table-cell">{d.paymentMethod || '—'}</td>
                       <td className="whitespace-nowrap px-5 py-2.5 text-zinc-500 tabular-nums">{formatDay(d.createdAt)}</td>
@@ -300,7 +301,7 @@ export default function ShareholdersPage() {
                     <div className="min-w-0">
                       <p className="text-body font-medium text-zinc-900 [overflow-wrap:anywhere]">{d.shareholderName}</p>
                       <p className="text-meta text-zinc-500">
-                        {monthLabel(d.payoutMonth, true)} · {d.sharesCount} share{d.sharesCount === 1 ? '' : 's'}
+                        {monthLabel(d.payoutMonth, true)} · {sharesLabel(d.sharesCount)}
                         {d.paymentMethod ? ` · ${d.paymentMethod}` : ''}
                       </p>
                     </div>
@@ -323,7 +324,7 @@ export default function ShareholdersPage() {
       {dialog !== undefined && (
         <ShareholderDialog
           editing={dialog}
-          available={dialog ? unallocated + dialog.sharesCount : unallocated}
+          available={dialog ? roundShares(unallocated + dialog.sharesCount) : unallocated}
           onClose={() => setDialog(undefined)}
           onSaved={() => fetchData(true)}
         />

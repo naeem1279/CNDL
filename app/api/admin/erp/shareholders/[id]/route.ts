@@ -3,8 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
 import { firstIssueMessage } from "@/lib/validation";
-
-const TOTAL_SHARES = 100;
+import { TOTAL_SHARES, formatShares, sharesField, sumShares, toHundredths, unallocatedShares } from "@/lib/shares";
 
 const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
 
@@ -12,12 +11,7 @@ const shareholderUpdateSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(150).optional(),
   phone: z.preprocess(emptyToNull, z.string().trim().min(6, "Phone must be at least 6 characters").max(30).nullish()),
   address: z.preprocess(emptyToNull, z.string().trim().max(500).nullish()),
-  sharesCount: z.coerce
-    .number({ message: "Shares must be a number" })
-    .int("Shares must be a whole number")
-    .min(1, "Shares must be between 1 and 100")
-    .max(TOTAL_SHARES, `Shares must be between 1 and ${TOTAL_SHARES}`)
-    .optional(),
+  sharesCount: sharesField.optional(),
   paymentDetails: z.preprocess(emptyToNull, z.string().trim().max(1000).nullish()),
   notes: z.preprocess(emptyToNull, z.string().trim().max(1000).nullish()),
 });
@@ -39,17 +33,17 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     const data = parsed.data;
 
     if (data.sharesCount !== undefined) {
-      const [existing, agg] = await Promise.all([
+      const [existing, holdings] = await Promise.all([
         prisma.shareholder.findUnique({ where: { id } }),
-        prisma.shareholder.aggregate({ _sum: { sharesCount: true } }),
+        prisma.shareholder.findMany({ where: { id: { not: id } }, select: { sharesCount: true } }),
       ]);
       if (!existing) {
         return NextResponse.json({ error: "Shareholder not found" }, { status: 404 });
       }
-      const others = (agg._sum.sharesCount ?? 0) - existing.sharesCount;
-      if (others + data.sharesCount > TOTAL_SHARES) {
+      const others = sumShares(holdings.map((h) => h.sharesCount));
+      if (toHundredths(others) + toHundredths(data.sharesCount) > toHundredths(TOTAL_SHARES)) {
         return NextResponse.json(
-          { error: `Only ${Math.max(0, TOTAL_SHARES - others)} of ${TOTAL_SHARES} shares are available (held by others)` },
+          { error: `Only ${formatShares(unallocatedShares(others))} of ${TOTAL_SHARES} shares are available (held by others)` },
           { status: 400 }
         );
       }
