@@ -13,7 +13,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 export default function FloatingWhatsApp() {
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 group/fab">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 group/fab print:hidden">
       {/* Direct call option — revealed on hover/focus */}
       <a
         href={PHONE_URL}

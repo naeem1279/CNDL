@@ -15,7 +15,7 @@ export default function Footer() {
   const bn = lang === 'bn';
 
   return (
-    <footer className="border-t border-slate-200 bg-white">
+    <footer className="border-t border-slate-200 bg-white print:hidden">
       <div className="container pb-28 pt-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-5">
@@ -94,7 +94,7 @@ export default function Footer() {
               </li>
               <li><Link href="/blog" className={LINK}>Blog</Link></li>
               <li><Link href="/terms-conditions" className={LINK}>{t.footer.termsConditions}</Link></li>
-              <li><Link href="/terms-conditions" className={LINK}>{t.footer.privacyPolicy}</Link></li>
+              <li><Link href="/terms-conditions#privacy" className={LINK}>{t.footer.privacyPolicy}</Link></li>
             </ul>
           </nav>
         </div>
