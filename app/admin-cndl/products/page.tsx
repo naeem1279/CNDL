@@ -204,7 +204,7 @@ export default function ProductsPage() {
                     <td className="hidden truncate px-3 py-2.5 text-zinc-600 xl:table-cell">{s.category}</td>
                     <td className="px-3 py-2.5 text-right font-medium tabular-nums">{priceLabel(s.basePrice)}</td>
                     <td className="hidden px-3 py-2.5 text-zinc-600 lg:table-cell">
-                      {s.turnaroundDays}d · {s.warrantyYears}y warranty
+                      {s.turnaroundDays}d{s.warrantyYears > 0 ? ` · ${s.warrantyYears}y warranty` : ' · no warranty'}
                     </td>
                     <td className="px-3 py-2.5">
                       <button
@@ -366,7 +366,7 @@ function ProductDialog({
         <Field label="Turnaround (days)" htmlFor="pr-turnaroundDays" error={errors.turnaroundDays}>
           <Input id="pr-turnaroundDays" type="number" min={1} max={30} value={f.turnaroundDays} onChange={set('turnaroundDays')} invalid={!!errors.turnaroundDays} />
         </Field>
-        <Field label="Warranty (years)" htmlFor="pr-warrantyYears" error={errors.warrantyYears}>
+        <Field label="Warranty (years)" htmlFor="pr-warrantyYears" error={errors.warrantyYears} hint="0 = none; not shown on the website">
           <Input id="pr-warrantyYears" type="number" min={0} max={30} value={f.warrantyYears} onChange={set('warrantyYears')} invalid={!!errors.warrantyYears} />
         </Field>
         <Field label="Order" htmlFor="pr-displayOrder" hint="Lower shows first">

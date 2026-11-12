@@ -175,7 +175,8 @@ export default function ServicesSection() {
                       {item.category}
                     </span>
                   </div>
-                  {item.warrantyYears && (
+                  {/* `> 0`, not truthiness: a 0 would render as a stray "0". */}
+                  {!!item.warrantyYears && item.warrantyYears > 0 && (
                     <span className="shrink-0 text-[10px] font-bold text-slate-400">
                       {item.warrantyYears}y Warranty
                     </span>

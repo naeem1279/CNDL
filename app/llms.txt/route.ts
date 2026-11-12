@@ -57,7 +57,11 @@ export async function GET() {
     '## Products',
     '',
     ...(products.length
-      ? products.map((p) => `- ${p.name} (${p.category}): ${price(p.basePrice)}, about ${p.turnaroundDays} working days, ${p.warrantyYears}-year warranty`)
+      ? products.map(
+          (p) =>
+            // A warranty of 0 means "not set" in the catalogue, so it is left out rather than shown as "0-year".
+            `- ${p.name} (${p.category}): ${price(p.basePrice)}, about ${p.turnaroundDays} working days${p.warrantyYears > 0 ? `, ${p.warrantyYears}-year warranty` : ''}`
+        )
       : [`- See the [product catalogue](${BASE}/products)`]),
     '',
     '## Pages',
