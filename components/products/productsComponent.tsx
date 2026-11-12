@@ -2,9 +2,10 @@
 import type { ServiceApiRow } from '@/lib/service-types';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Truck, FileCheck2, ShieldCheck, FileText, BookOpen } from 'lucide-react';
+import { Truck, FileCheck2, ShieldCheck } from 'lucide-react';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { ButtonLink } from '@/components/ui/Button';
 
 /**
  * Canonical catalogue — mirrors the official CNDL Physical Lab Prescription Slip exactly.
@@ -182,174 +183,143 @@ export default function ProductsComponent() {
       : items.filter((p) => p.category === activeFilter);
 
   return (
-    <section className="py-7 sm:py-10 md:py-20">
+    <section className="bg-white py-16 md:py-24">
       <div className="container">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6 sm:mb-8 md:mb-10 lg:mb-12 xl:mb-14">
-          <div className="space-y-3">
-            <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary max-w-2xl leading-tight">
+        <SectionHeader
+          title={
+            <>
               Dental Products &amp; Restorations Catalogue
-              <br />
-              <span className="text-[#1977C5]">Precision Lab Engineering</span>
-            </div>
-            <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) max-w-md">
-              Single Source of Truth: Canonical catalogue driven directly by our dynamic laboratory database.
-              Every product is 100% fabricated in-house across Zirconia &amp; All-Ceramic, Porcelain (PFM), and Dual-Workflow Dentures.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-start gap-3 sm:gap-4 max-w-[340px]">
-            <p className="text-sm md:text-base lg:text-lg xl:text-xl font-medium">
-              Ready to send a case? Submit online or print our official lab slip.
-            </p>
-            <div className="flex flex-wrap items-center gap-2 w-full">
-              <Link
-                href="/order-create"
-                className="inline-flex items-center justify-center rounded-full bg-(--bg-muted) px-5 py-2.5 text-xs md:text-xs lg:text-sm font-medium text-(--text-tertiary) hover:bg-(--bg-muted)/98 transition text-center shadow-xs"
-              >
-                Order Online
-              </Link>
-              <Link
-                href="/prep-guide"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-emerald-600 bg-emerald-50 px-4 py-2 text-xs md:text-xs lg:text-sm font-semibold text-emerald-700 hover:bg-emerald-600 hover:text-white transition text-center shadow-xs"
-              >
-                <BookOpen size={14} />
-                Clinical Prep Guide
-              </Link>
-              <Link
-                href="/lab-slip"
-                target="_blank"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-[#1977C5] bg-white px-4 py-2 text-xs md:text-xs lg:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition text-center shadow-xs"
-              >
-                <FileText size={14} />
-                Open Printable Lab Slip
-              </Link>
-            </div>
-          </div>
-        </div>
+              <span className="block text-[#1977C5]">Precision Lab Engineering</span>
+            </>
+          }
+          lead="Single Source of Truth: Canonical catalogue driven directly by our dynamic laboratory database. Every product is 100% fabricated in-house across Zirconia & All-Ceramic, Porcelain (PFM), and Dual-Workflow Dentures."
+        />
 
         {/* ================= DUAL-WORKFLOW DENTURE WING SPOTLIGHT ================= */}
-        <div className="mb-8 sm:mb-10 md:mb-12 rounded-[16px] md:rounded-[24px] bg-linear-to-r from-slate-900 via-[#13324d] to-slate-900 border border-blue-500/20 p-6 sm:p-8 md:p-10 text-white shadow-xl">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="max-w-2xl space-y-3">
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+            <div className="max-w-2xl">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-blue-300">
-                  <ShieldCheck size={13} />
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1977C5]/10 px-3 py-1 text-xs font-medium text-[#1668AD]">
+                  <ShieldCheck size={14} aria-hidden="true" />
                   Dual-Workflow Denture Wing · Since 2015
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-emerald-300">
-                  Dual Digital &amp; Manual Workflows
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-cyan-300">
-                  High Patient Adaptation Rate
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/20 border border-purple-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-purple-300">
-                  Unbreakable Flexible Resin
-                </span>
+                {['Dual Digital & Manual Workflows', 'High Patient Adaptation Rate', 'Unbreakable Flexible Resin'].map((chip) => (
+                  <span key={chip} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                    {chip}
+                  </span>
+                ))}
               </div>
-              <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-tight text-white">
+              <h3 className="secondary mt-4 text-2xl font-semibold leading-tight text-slate-900">
                 Digital CAD/CAM + Master Manual Denture Craftsmanship
               </h3>
-              <p className="text-xs md:text-sm lg:text-base text-slate-300 leading-relaxed">
+              <p className="mt-3 text-base leading-relaxed text-slate-600">
                 Combining high-precision digital scanning and 3D printing with 11+ years of chairside master technician finishing. Experience unmatched retention, biological chewing comfort, and rapid adaptation.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:w-[460px] shrink-0">
-              <div className="rounded-[12px] bg-white/5 border border-white/10 p-4 backdrop-blur-sm">
-                <span className="text-xs font-semibold text-blue-400 block mb-1">Full Dentures</span>
-                <p className="text-xs text-slate-300 leading-relaxed">High-impact heat-cure acrylic &amp; digital 3D-milled precision bases with bilateral balanced occlusion.</p>
+            <div className="grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:w-[460px]">
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <span className="mb-1 block text-sm font-semibold text-slate-900">Full Dentures</span>
+                <p className="text-sm leading-relaxed text-slate-600">High-impact heat-cure acrylic &amp; digital 3D-milled precision bases with bilateral balanced occlusion.</p>
               </div>
-              <div className="rounded-[12px] bg-white/5 border border-white/10 p-4 backdrop-blur-sm">
-                <span className="text-xs font-semibold text-emerald-400 block mb-1">Flexible Partial Dentures</span>
-                <p className="text-xs text-slate-300 leading-relaxed">Unbreakable Valplast-style nylon resin with anatomical gingival blending &amp; invisible clasps.</p>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <span className="mb-1 block text-sm font-semibold text-slate-900">Flexible Partial Dentures</span>
+                <p className="text-sm leading-relaxed text-slate-600">Unbreakable Valplast-style nylon resin with anatomical gingival blending &amp; invisible clasps.</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-[10px] md:rounded-[16px] bg-(--bg-muted) text-(--text-tertiary) p-4 sm:p-5 mb-8 sm:mb-10 md:mb-12 lg:mb-14">
-          <span className="w-10 h-10 sm:w-12 sm:h-12 rounded-[14px] bg-white/20 flex items-center justify-center shrink-0">
-            <Truck size={22} />
+        <div className="mb-10 flex items-center gap-4 rounded-2xl border border-[#1977C5]/15 bg-[#1977C5]/5 p-4 sm:p-5 md:mb-12">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5] text-white">
+            <Truck size={20} aria-hidden="true" />
           </span>
-          <p className="text-xs md:text-xs lg:text-base font-semibold">
+          <p className="text-sm font-medium text-slate-800 md:text-base">
             Fast 3-Day Turnaround across Dhaka via our Dedicated Lab Riders &amp; Pathao Logistics.
           </p>
         </div>
 
-        <div className="flex gap-2 md:gap-4 items-center flex-col md:flex-row w-full mb-8 sm:mb-10 md:mb-12 lg:mb-14 xl:mb-16">
-          {FILTERS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setActiveFilter(item)}
-              aria-pressed={item === activeFilter}
-              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-xs md:text-xs lg:text-base font-medium ${
-                item === activeFilter
-                  ? 'bg-(--bg-tertiary) hover:bg-(--bg-tertiary)/98 border-(--border-tertiary) text-(--text-tertiary)'
-                  : 'border-(--border-primary) hover:bg-(--bg-tertiary)/98 hover:border-(--border-tertiary) hover:text-(--text-tertiary)'
-              } transition duration-200 border-2  w-full cursor-pointer`}
-            >
-              {item}
-            </button>
-          ))}
+        <div className="no-scrollbar mb-8 flex gap-2 overflow-x-auto" role="group" aria-label="Filter by category">
+          {FILTERS.map((item) => {
+            const active = item === activeFilter;
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setActiveFilter(item)}
+                aria-pressed={active}
+                className={`inline-flex h-11 shrink-0 cursor-pointer items-center justify-center whitespace-nowrap rounded-full border px-5 text-sm font-medium transition-colors duration-150 ${
+                  active
+                    ? 'border-[#1977C5] bg-[#1977C5] text-white'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                {item}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
           {visible.map((item) => (
-            <div key={item.id ?? item.title} className="bg-(--bg-secondary) rounded-[10px] md:rounded-[16px] lg:rounded-[24px] group flex flex-col">
-              <div className="relative h-[220px]">
-                <div className="relative h-full w-full overflow-hidden  rounded-t-[10px] md:rounded-t-[16px] lg:rounded-t-[24px]">
-                  <div className="h-full w-full transition-transform duration-300 group-hover:scale-110">
-                    {item.image.startsWith('/images/uploads') ? (
-                      <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
-                    ) : (
-                      <Image src={item.image} alt={item.title} fill className="object-cover" />
-                    )}
-                  </div>
-                </div>
-
-                <div className="absolute -bottom-8 left-8 w-16 h-16 rounded-[16px] bg-(--bg-muted) flex items-center justify-center shadow text-2xl text-(--text-primary)">
-                  <Image
-                    src="/icon/Dental 03.svg"
-                    alt="Dental-icon"
-                    width={1000}
-                    height={1000}
-                    className="object-cover w-[40px] h-[40px]"
+            <div
+              key={item.id ?? item.title}
+              className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-colors duration-150 hover:border-slate-300"
+            >
+              <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                {item.image.startsWith('/images/uploads') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                   />
-                </div>
+                ) : (
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    sizes="(min-width: 1024px) 400px, (min-width: 640px) 45vw, 90vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  />
+                )}
               </div>
 
-              <div className="p-8 pt-16 flex flex-col flex-1">
-                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5]">
-                  {item.category}
-                </span>
-                <div className="mt-1.5 text-base md:text-lg lg:text-xl xl:text-2xl">{item.title}</div>
-                <div className="mt-2 flex items-center flex-wrap gap-2">
-                  <span className="inline-flex items-center self-start rounded-full bg-(--bg-tertiary)/15 px-3 py-1 text-xs md:text-xs font-semibold text-[#4d7220]">
+              <div className="flex flex-1 flex-col p-6">
+                <span className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">{item.category}</span>
+                <h3 className="secondary mt-2 text-xl font-semibold leading-snug text-slate-900">
+                  {item.title}
+                  {item.titleBn && (
+                    <span className="mt-0.5 block text-sm font-normal tracking-normal text-slate-500">{item.titleBn}</span>
+                  )}
+                </h3>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-700">
                     {item.tag}
                   </span>
-                  {item.turnaroundDays && (
-                    <span className="inline-flex items-center rounded-full bg-blue-50 text-[#1977C5] px-2.5 py-0.5 text-xs font-semibold">
+                  {!!item.turnaroundDays && (
+                    <span className="inline-flex items-center rounded-full bg-[#1977C5]/10 px-2.5 py-0.5 text-xs font-medium text-[#1668AD]">
                       {item.turnaroundDays}d Turnaround
                     </span>
                   )}
                   {item.basePrice && (
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-0.5 text-xs font-semibold">
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-900">
                       From ৳{item.basePrice}
                     </span>
                   )}
                 </div>
-                <p className="mt-2 sm:mt-3 md:mt-4 text-xs md:text-xs lg:text-base text-(--text-secondary)">
-                  {item.desc}
-                </p>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.desc}</p>
 
-                <div className="mt-auto pt-5">
-                  <Link
+                <div className="mt-auto pt-6">
+                  <ButtonLink
                     href={`/order-create?product=${encodeURIComponent(item.title)}`}
-                    className="inline-flex items-center justify-center gap-2 w-full rounded-full border-2 border-[#1977C5] px-5 py-2.5 text-xs md:text-xs lg:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition-colors duration-200"
+                    variant="secondary"
+                    className="w-full"
                   >
-                    <FileCheck2 size={15} />
+                    <FileCheck2 size={16} aria-hidden="true" />
                     Submit Case for This Item
-                  </Link>
+                  </ButtonLink>
                 </div>
               </div>
             </div>
