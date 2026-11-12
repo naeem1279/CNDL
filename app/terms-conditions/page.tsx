@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ShareHero from '@/components/share/ShareHero';
+import { OG_IMAGE } from '@/lib/seo';
 
 // G1 (2026-11-05): unique per-page metadata (was inheriting the homepage title).
 export const metadata: Metadata = {
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   description:
     'CNDL Global terms covering online case submission, billing cycles, warranty policy and lead-time commitments for dental restoration orders.',
   alternates: { canonical: 'https://cndl-global.com/terms-conditions' },
+  openGraph: { images: [OG_IMAGE] },
 };
 
 export default function TermsConditionsPage() {

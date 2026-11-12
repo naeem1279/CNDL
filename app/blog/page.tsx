@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ShareHero from '@/components/share/ShareHero';
 import { prisma } from '@/lib/prisma';
+import { OG_IMAGE } from '@/lib/seo';
 
 export const revalidate = 60;
 
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
     url: 'https://cndl-global.com/blog',
     type: 'website',
     alternateLocale: ['bn_BD'],
+    images: [OG_IMAGE],
   },
 };
 

@@ -6,7 +6,9 @@ import ReviewSection from '@/components/home/ReviewsSection';
 import ProcessSection from '@/components/home/ProcessSection';
 import FAQSection from '@/components/home/FAQSection';
 import BlogSection from '@/components/home/BlogSection';
+import { safeJsonLd } from '@/lib/safe-json-ld';
 import { Metadata } from 'next';
+import { OG_IMAGE } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'CN Dental Lab (CNDL) | #1 Digital CAD/CAM Zirconia Laboratory in Bangladesh',
@@ -24,7 +26,7 @@ export const metadata: Metadata = {
     title: 'CN Dental Lab (CNDL) | #1 Digital CAD/CAM Zirconia Laboratory in Bangladesh',
     description: 'Premier digital dental lab in Dhaka, Bangladesh specializing in 5-axis CAD/CAM Zirconia crowns, E-max veneers, PFM, clear aligners, and flexible dentures with guaranteed 3-4 day turnaround.',
     url: 'https://cndl-global.com',
-    images: [{ url: '/images/CTA.jpg' }],
+    images: [OG_IMAGE],
     type: 'website',
   },
   alternates: {
@@ -32,48 +34,6 @@ export const metadata: Metadata = {
   }
 };
 
-const medicalSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'MedicalOrganization',
-  '@id': 'https://cndl-global.com/#organization',
-  name: 'CNDL Global',
-  // G3 (2026-11-05): alternateName must be a real alternate name, not a
-  // marketing claim; unverifiable self-awarded `award` removed.
-  alternateName: 'CNDL Zirconia Laboratory',
-  url: 'https://cndl-global.com',
-  logo: 'https://cndl-global.com/icon/Logo.svg',
-  contactPoint: [
-    {
-      '@type': 'ContactPoint',
-      telephone: '+8801743167963',
-      contactType: 'customer service',
-      areaServed: 'BD',
-      availableLanguage: ['en', 'bn']
-    },
-    {
-      '@type': 'ContactPoint',
-      telephone: '+8801805976351',
-      contactType: 'customer service',
-      areaServed: 'BD',
-      availableLanguage: ['en', 'bn']
-    }
-  ],
-  description: 'CNDL Global is a digital dental laboratory in Dhaka, Bangladesh, specializing in high-end dental restorations using CAD/CAM technology.'
-};
-
-const productSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: 'Premium Zirconia Crowns & Bridges',
-  description: 'High-strength, aesthetic Zirconia restorations from the best Zirconia lab in Bangladesh.',
-  brand: {
-    '@type': 'Brand',
-    name: 'CNDL Global'
-  }
-};
-
-// G2 (2026-11-05): exactly ONE FAQPage per page (Google guideline) — the six
-// English and four Bengali Q&As merged into a single mainEntity list.
 const faqSchema = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
@@ -165,17 +125,10 @@ const faqSchema = {
 export default function HomePage() {
   return (
     <main>
+      {/* The organisation itself is described once, in app/layout.tsx. */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(medicalSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }}
       />
       <HeroSection />
       <WhyChooseSection />

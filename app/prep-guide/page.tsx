@@ -4,6 +4,7 @@ import {
   ShieldCheck, ArrowRight, FileText, CheckCircle2, AlertTriangle, Layers, Activity, Scissors, Sparkles, Microscope,
 } from 'lucide-react';
 import PrintPrepButton from '@/components/prep-guide/PrintPrepButton';
+import { OG_IMAGE } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Clinical Tooth Preparation & Margin Protocols for CAD/CAM | CNDL Global',
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
       'Official tooth reduction matrix and 5 critical remake prevention rules for CAD/CAM Zirconia, PFM, and E-max restorations.',
     url: 'https://cndl-global.com/prep-guide',
     type: 'article',
+    images: [OG_IMAGE],
   },
 };
 
