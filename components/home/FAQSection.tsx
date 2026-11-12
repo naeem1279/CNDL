@@ -1,8 +1,7 @@
 'use client';
 
-import { ArrowDownRight, MoveRight, MessageCircle } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { ArrowRight, ChevronDown, MessageCircle } from 'lucide-react';
+import { ButtonLink } from '@/components/ui/Button';
 import { useState } from 'react';
 
 export default function FAQSection({ cta = true }: { cta?: boolean }) {
@@ -48,97 +47,84 @@ export default function FAQSection({ cta = true }: { cta?: boolean }) {
   ];
 
   return (
-    <section className="py-7 sm:py-10 md:py-20">
+    <section className="border-y border-slate-200 bg-slate-50 py-16 md:py-24">
       <div className="container">
         {cta ? (
-          <div className="relative overflow-hidden rounded-[10px] md:rounded-[16px] lg:rounded-[24px] xl:rounded-[32px] bg-(--bg-muted) px-6 sm:px-10 py-16 text-center text-white mb-5 sm:mb-10 md:mb-12 lg:mb-16 xl:mb-20">
-            <div className="absolute inset-0 opacity-30">
-              <Image
-                src="/images/CTA.jpg"
-                alt="wave"
-                width={1920}
-                height={1080}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            <div className="relative z-10 max-w-5xl mx-auto">
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold">
+          // The page's one blue band: the closing call to action.
+          <div className="mb-16 rounded-2xl bg-[#1977C5] px-6 py-12 text-center text-white sm:px-10 md:mb-24 md:py-16">
+            <div className="mx-auto max-w-3xl">
+              <h2 className="secondary text-3xl font-semibold leading-tight md:text-4xl">
                 Ready to elevate your practice with precision CAD/CAM restorations?
               </h2>
 
-              <p className="mt-4 text-sm sm:text-base text-white/80">
+              <p className="mt-4 text-base leading-relaxed text-white/85 md:text-lg">
                 Partner with CNDL today. Dispatch your digital STL scan or physical impression and
                 experience guaranteed 3-day chamber delivery.
               </p>
 
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/order-create"
-                  className="inline-flex items-center gap-2 border-2 border-(--border-muted) rounded-full bg-(--bg-primary) px-6 py-3 text-xs md:text-sm lg:text-base xl:text-lg font-medium text-(--text-primary) hover:bg-(--bg-primary)/98 transition group"
-                >
-                  Submit Case Online{' '}
-                  <MoveRight size={24} className="group-hover:translate-x-2 transition" />
-                </Link>
+              <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+                <ButtonLink href="/order-create" variant="inverse" size="lg" className="group">
+                  Submit Case Online
+                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </ButtonLink>
 
                 <a
                   href="https://wa.me/8801743167963"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-(--border-muted) px-6 py-3 text-xs md:text-sm lg:text-base xl:text-lg font-medium text-(--text-tertiary) hover:text-(--text-primary) hover:bg-(--bg-primary) transition group"
+                  className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/40 px-6 text-base font-medium text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1977C5]"
                 >
-                  <MessageCircle size={20} />
+                  <MessageCircle size={18} aria-hidden="true" />
                   Chat with Senior Technician
                 </a>
               </div>
             </div>
           </div>
         ) : null}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10 lg:gap-16 xl:gap-[86px] items-start">
-          <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-medium secondary pb-8 sm:pb-10 md:pb-12">
+
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3 lg:gap-16">
+          <div className="lg:sticky lg:top-32">
+            <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               Clinical Questions from Dental Surgeons, Answered
             </h2>
-            <p className="text-xs md:text-sm lg:text-base xl:text-lg text-(--text-secondary)">
+            <p className="mt-4 text-base leading-relaxed text-slate-600 md:text-lg">
               Technical answers on materials, milling, prep guidelines and turnaround — for
               clinicians, NRB patients and partner labs.
             </p>
           </div>
 
-          <div className="space-y-2 md:space-y-4 col-span-2">
+          <div className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white lg:col-span-2">
             {faqs.map((item) => {
               const isOpen = active === item.id;
+              const panelId = `faq-panel-${item.id}`;
 
               return (
-                <div
-                  key={item.id}
-                  className="bg-(--bg-primary) border-b-[.5px] border-(--border-primary)"
-                >
-                  <button
-                    onClick={() => setActive(isOpen ? 0 : item.id)}
-                    className="w-full flex items-start justify-between px-4 py-2 md:px-6 md:py-5 text-left cursor-pointer"
-                  >
-                    <div className="text-sm md:text-base lg:text-lg xl:text-xl font-medium secondary">
-                      {item.question}
-                    </div>
-
-                    <ArrowDownRight
-                      className={`transition-transform  text-(--text-secondary) ${
-                        isOpen ? '-rotate-90' : ''
-                      }`}
-                    />
-                  </button>
+                <div key={item.id}>
+                  <h3>
+                    <button
+                      type="button"
+                      onClick={() => setActive(isOpen ? 0 : item.id)}
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      className="flex min-h-14 w-full cursor-pointer items-start justify-between gap-4 px-5 py-4 text-left md:px-6 md:py-5"
+                    >
+                      <span className="secondary text-base font-medium text-slate-900 md:text-lg">{item.question}</span>
+                      <ChevronDown
+                        size={20}
+                        aria-hidden="true"
+                        className={`mt-0.5 shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#1977C5]' : ''}`}
+                      />
+                    </button>
+                  </h3>
 
                   <div
-                    className={`grid transition-all duration-300 ease-in-out 
-                 ${
-                   isOpen
-                     ? 'grid-rows-[1fr] opacity-100 border-t-[.5px] border-(--border-primary) px-4 py-2 md:px-6 md:py-5'
-                     : 'grid-rows-[0fr] opacity-0'
-                 }`}
+                    id={panelId}
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                    }`}
                   >
-                    <div className="overflow-hidden text-left text-xs md:text-xs lg:text-base text-(--text-secondary)">
-                      {item.answer}
+                    <div className="overflow-hidden">
+                      <p className="px-5 pb-5 text-base leading-relaxed text-slate-600 md:px-6 md:pb-6">{item.answer}</p>
                     </div>
                   </div>
                 </div>

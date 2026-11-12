@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { Button } from '@/components/ui/Button';
 import {
   ScanLine, PenTool, Cog, Sparkles, X, ShieldCheck, Microscope,
   MonitorCheck, Boxes,
@@ -94,15 +96,29 @@ export default function ProcessSection() {
   const [protocolStep, setProtocolStep] = useState<(typeof steps)[number] | null>(null);
   const ActiveIcon = activeStep.icon;
 
+  // Escape closes the protocol window.
+  useEffect(() => {
+    if (!protocolStep) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setProtocolStep(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [protocolStep]);
+
   return (
-    <section className="py-7 sm:py-10 md:py-20 bg-(--bg-primary)">
-      <div className="container ">
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary mb-10">
-          How We Deliver Quality <br />
-          Restorations
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-          <div className="flex flex-row lg:flex-col items-center justify-center flex-wrap lg:flex-nowrap gap-4 lg:gap-0">
+    <section className="border-y border-slate-200 bg-slate-50 py-16 md:py-24">
+      <div className="container">
+        <SectionHeader
+          title={
+            <>
+              How We Deliver Quality <br />
+              Restorations
+            </>
+          }
+        />
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-12">
+          <div className="flex flex-col gap-2" role="tablist" aria-label="Production steps">
             {steps.map((step) => {
               const isActive = activeStep.id === step.id;
               const StepIcon = step.icon;
@@ -110,63 +126,59 @@ export default function ProcessSection() {
               return (
                 <button
                   key={step.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
                   onClick={() => setActiveStep(step)}
-                  className={`flex items-center gap-4 px-4 py-2 sm:px-3 sm:py-7 md:px-6 md:py-5 xl:px-7 xl:py-8 text-left transition border-2 lg:border-l-2 lg:border-0 cursor-pointer rounded-[12px]  lg:rounded-none w-fit lg:w-full ${
+                  className={`flex min-h-14 w-full cursor-pointer items-center gap-4 rounded-xl border px-4 py-3 text-left transition-colors duration-150 md:px-5 md:py-4 ${
                     isActive
-                      ? 'lg:border-l-4 bg-(--bg-muted)/10 border-(--border-secondary) lg:rounded-r-[24px]'
-                      : 'border-(--border-primary)'
+                      ? 'border-[#1977C5] bg-white'
+                      : 'border-slate-200 bg-white/60 hover:border-slate-300 hover:bg-white'
                   }`}
                 >
-                  <span className="text-sm md:text-base lg:text-lg xl:text-xl text-(--text-secondary)">
+                  <span className={`text-sm font-medium tabular-nums ${isActive ? 'text-[#1977C5]' : 'text-slate-400'}`}>
                     {step.id}
                   </span>
-
-                  <span className="font-semibold secondary text-base md:text-lg lg:text-xl xl:text-2xl">
-                    {step.title}
-                  </span>
+                  <span className="secondary flex-1 text-base font-semibold text-slate-900 md:text-lg">{step.title}</span>
                   <StepIcon
-                    size={18}
-                    className={`ml-auto hidden lg:block shrink-0 ${isActive ? 'text-[#1977C5]' : 'text-(--text-muted)'}`}
+                    size={20}
+                    className={`shrink-0 ${isActive ? 'text-[#1977C5]' : 'text-slate-400'}`}
+                    aria-hidden="true"
                   />
                 </button>
               );
             })}
           </div>
 
-          {/* Active step detail panel (replaces legacy dead video block) */}
-          <div className="relative rounded-[10px] md:rounded-[16px] lg:rounded-[24px] overflow-hidden shadow-lg bg-linear-to-br from-[#226AB4] to-[#3387CB] p-7 md:p-10 text-white min-h-[360px] flex flex-col">
-            <div className="flex items-center gap-4 mb-5">
-              <span className="w-14 h-14 rounded-[16px] bg-white/15 border border-white/25 flex items-center justify-center shrink-0">
-                <ActiveIcon size={26} />
+          {/* Active step detail panel */}
+          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-8" role="tabpanel">
+            <div className="flex items-center gap-4">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                <ActiveIcon size={24} aria-hidden="true" />
               </span>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-widest text-white/70 block">
-                  Step {activeStep.id}
-                </span>
-                <h3 className="text-lg md:text-2xl font-semibold leading-tight">{activeStep.title}</h3>
+                <span className="block text-sm font-medium text-[#1668AD]">Step {activeStep.id}</span>
+                <h3 className="secondary text-xl font-semibold leading-tight text-slate-900 md:text-2xl">
+                  {activeStep.title}
+                </h3>
               </div>
             </div>
 
-            <p className="text-xs md:text-sm lg:text-base text-white/90 leading-relaxed mb-4">
-              {activeStep.summary}
-            </p>
+            <p className="mt-5 text-base leading-relaxed text-slate-600">{activeStep.summary}</p>
 
-            <ul className="space-y-2 mb-7">
+            <ul className="mt-5 space-y-3">
               {activeStep.standards.map((s) => (
-                <li key={s} className="flex items-start gap-2 text-xs md:text-sm text-white/85">
-                  <ShieldCheck size={15} className="mt-0.5 shrink-0 text-white" />
+                <li key={s} className="flex items-start gap-3 text-sm text-slate-700">
+                  <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#1977C5]" aria-hidden="true" />
                   {s}
                 </li>
               ))}
             </ul>
 
-            <button
-              onClick={() => setProtocolStep(activeStep)}
-              className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-xs md:text-sm font-semibold text-[#1977C5] shadow-lg hover:shadow-xl transition-all group w-full sm:w-fit min-h-[48px]"
-            >
-              <Microscope size={16} />
+            <Button onClick={() => setProtocolStep(activeStep)} className="mt-8 w-full sm:w-fit">
+              <Microscope size={16} aria-hidden="true" />
               Inspect Quality Protocol
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -174,49 +186,51 @@ export default function ProcessSection() {
       {/* ================= QUALITY PROTOCOL MODAL ================= */}
       {protocolStep && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4"
           onClick={() => setProtocolStep(null)}
         >
           <div
-            className="w-full max-w-lg bg-white rounded-[16px] md:rounded-[24px] shadow-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="protocol-title"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl md:p-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 mb-5">
+            <div className="mb-5 flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="w-11 h-11 rounded-[14px] bg-(--bg-muted) flex items-center justify-center shrink-0">
-                  <protocolStep.icon size={21} className="text-[#1977C5]" />
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                  <protocolStep.icon size={20} aria-hidden="true" />
                 </span>
                 <div>
-                  <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5] block">
+                  <span className="block text-xs font-medium uppercase tracking-wide text-[#1668AD]">
                     Quality Protocol · Step {protocolStep.id}
                   </span>
-                  <h3 className="text-base md:text-xl font-semibold secondary leading-tight">
+                  <h3 id="protocol-title" className="secondary text-lg font-semibold leading-tight text-slate-900 md:text-xl">
                     {protocolStep.protocol}
                   </h3>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setProtocolStep(null)}
                 aria-label="Close protocol"
-                className="p-1.5 rounded-full hover:bg-(--bg-muted) transition-colors"
+                className="-mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <p className="text-xs md:text-sm text-(--text-secondary) leading-relaxed mb-6">
-              {protocolStep.clinical}
-            </p>
+            <p className="mb-6 text-sm leading-relaxed text-slate-600">{protocolStep.clinical}</p>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div>
-                <p className="flex items-center gap-1.5 text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
-                  <Boxes size={12} className="text-[#1977C5]" /> Equipment &amp; Materials
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <Boxes size={14} className="text-[#1977C5]" aria-hidden="true" /> Equipment &amp; Materials
                 </p>
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {protocolStep.equipment.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-xs md:text-sm text-(--text-secondary)">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#1977C5] mt-1.5 shrink-0" />
+                    <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
+                      <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#1977C5]" />
                       {item}
                     </li>
                   ))}
@@ -224,13 +238,13 @@ export default function ProcessSection() {
               </div>
 
               <div>
-                <p className="flex items-center gap-1.5 text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
-                  <ShieldCheck size={12} className="text-[#88C845]" /> Quality Standards
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <ShieldCheck size={14} className="text-[#1977C5]" aria-hidden="true" /> Quality Standards
                 </p>
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {protocolStep.standards.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-xs md:text-sm text-(--text-secondary)">
-                      <MonitorCheck size={14} className="mt-0.5 shrink-0 text-[#88C845]" />
+                    <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
+                      <MonitorCheck size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
                       {item}
                     </li>
                   ))}
