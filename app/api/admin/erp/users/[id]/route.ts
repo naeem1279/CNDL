@@ -69,6 +69,18 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Same rule as DELETE: you cannot lock yourself out by suspending or
+    // demoting your own account (it would end your session immediately).
+    const session = await readActiveSession(req);
+    if (session?.uid && session.uid === id) {
+      if ((rest.status && rest.status !== "ACTIVE") || (rest.role && rest.role !== existing.role)) {
+        return NextResponse.json(
+          { error: "You cannot suspend your own account or change your own role" },
+          { status: 403 }
+        );
+      }
+    }
+
     const data: Record<string, unknown> = { ...rest };
     // Undefined fields must not overwrite stored values (email/address use null explicitly).
     for (const key of Object.keys(data)) {
