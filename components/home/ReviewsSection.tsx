@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { safeJsonLd } from '@/lib/safe-json-ld';
 import SectionHeader from '@/components/ui/SectionHeader';
+import HomeText from './HomeText';
 
 type Review = {
   name: string;
@@ -78,7 +79,7 @@ export default async function ReviewComponent() {
         key={`${review.name}-${index}`}
         // The second half repeats the first so the scroll loops; hide it from screen readers.
         aria-hidden={copy || index >= items.length ? true : undefined}
-        className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6"
+        className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-900/[0.03]"
       >
         <div className="flex gap-0.5" role="img" aria-label={`${review.rating} out of 5`}>
           {[...Array(5)].map((_, i) => (
@@ -104,7 +105,7 @@ export default async function ReviewComponent() {
     ));
 
   return (
-    <section className="overflow-hidden bg-white py-16 md:py-24" id="review">
+    <section className="overflow-hidden bg-white py-20 md:py-28" id="review">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
@@ -112,8 +113,9 @@ export default async function ReviewComponent() {
       <div className="container">
         <SectionHeader
           align="center"
-          title="Trusted by Top Dental Practitioners."
-          lead="Real stories from dentists across Bangladesh who trust CNDL with their cases"
+          eyebrow={<HomeText path="reviews.eyebrow" />}
+          title={<HomeText path="reviews.title" />}
+          lead={<HomeText path="reviews.lead" />}
         />
 
         <div className="relative h-[560px] overflow-hidden md:h-[600px]">

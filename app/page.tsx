@@ -1,4 +1,4 @@
-import HeroSection from '@/components/home/HeroSection';
+import HeroSection, { type RatingSummary } from '@/components/home/HeroSection';
 import ServicesSection from '@/components/home/ServicesSection';
 import EquipmentSection from '@/components/home/EquipmentSection';
 import WhyChooseSection from '@/components/home/WhyChooseSection';
@@ -7,6 +7,7 @@ import ProcessSection from '@/components/home/ProcessSection';
 import FAQSection from '@/components/home/FAQSection';
 import BlogSection from '@/components/home/BlogSection';
 import { safeJsonLd } from '@/lib/safe-json-ld';
+import { prisma } from '@/lib/prisma';
 import { Metadata } from 'next';
 import { OG_IMAGE } from '@/lib/seo';
 
@@ -122,7 +123,22 @@ const faqSchema = {
   ]
 };
 
-export default function HomePage() {
+/** Approved testimonials only — the same set the Reviews section shows. */
+async function ratingSummary(): Promise<RatingSummary> {
+  try {
+    const r = await prisma.testimonial.aggregate({
+      where: { isApproved: true },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    return r._count._all > 0 ? { average: r._avg.rating ?? 0, count: r._count._all } : null;
+  } catch {
+    return null;
+  }
+}
+
+export default async function HomePage() {
+  const rating = await ratingSummary();
   return (
     <main>
       {/* The organisation itself is described once, in app/layout.tsx. */}
@@ -130,7 +146,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(faqSchema) }}
       />
-      <HeroSection />
+      <HeroSection rating={rating} />
       <WhyChooseSection />
       <ServicesSection />
       <EquipmentSection />

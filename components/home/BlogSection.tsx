@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import SectionHeader from '@/components/ui/SectionHeader';
+import HomeText from './HomeText';
 import { ButtonLink } from '@/components/ui/Button';
 
 export default async function BlogSection() {
@@ -18,19 +19,15 @@ export default async function BlogSection() {
     d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
   return (
-    <section className="bg-white py-16 md:py-24">
+    <section className="bg-white py-20 md:py-28">
       <div className="container">
         <SectionHeader
-          title={
-            <>
-              Choosing the Right <br />
-              Material for Your Case
-            </>
-          }
-          lead="Get in touch with our lab team or follow our blog for regular updates on dental materials and innovations."
+          eyebrow={<HomeText path="blog.eyebrow" />}
+          title={<HomeText path="blog.title" />}
+          lead={<HomeText path="blog.lead" />}
           action={
             <ButtonLink href="/blog" variant="secondary">
-              Blog
+              <HomeText path="blog.all" />
               <ArrowRight size={16} aria-hidden="true" />
             </ButtonLink>
           }
@@ -40,7 +37,7 @@ export default async function BlogSection() {
           {featured && (
             <Link
               href={`/blog/${featured.slug}`}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-colors duration-150 hover:border-slate-300"
+              className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5"
             >
               <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                 <Image

@@ -4,8 +4,8 @@ import { useLanguage } from '@/context/LanguageContext';
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight, ChevronDown, Menu, Search, X, Phone, MapPin, Clock4,
-  FileText, ScanSearch, Loader2, MessageCircle, Globe, Check,
+  ArrowRight, Menu, Search, X, Phone, MapPin, Clock4,
+  FileText, ScanSearch, Loader2, MessageCircle, Check,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -36,7 +36,6 @@ export default function NavBer() {
   const [isOpen, setIsOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
   const { lang, setLang, t: globalT } = useLanguage();
   const t = {
     ...globalT.nav,
@@ -120,11 +119,6 @@ export default function NavBer() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-
-  const switchLang = (next: 'en' | 'bn') => {
-    setLang(next);
-    setLangOpen(false);
-  };
 
   // Search dialog data (blog topics; empty q returns latest posts as suggestions)
   useEffect(() => {
@@ -232,43 +226,35 @@ export default function NavBer() {
               <Search size={20} />
             </button>
 
-            <div className="relative">
-              <button
-                onClick={() => setLangOpen((v) => !v)}
-                aria-label="Switch language"
-                aria-expanded={langOpen}
-                title="Switch language / ভাষা পরিবর্তন করুন"
-                className="inline-flex h-11 items-center gap-1 rounded-full px-2 text-sm font-medium hover:bg-slate-100 hover:text-slate-900 xl:px-3"
-              >
-                {lang === 'en' ? 'ENG' : 'বাংলা'}
-                <ChevronDown size={16} className={`transition-transform ${langOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {langOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
-                  <div className="absolute right-0 top-full z-20 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/5">
-                    <p className="px-3 pb-1 pt-1.5 text-xs font-medium text-slate-500">Language / ভাষা</p>
-                    {(
-                      [
-                        ['en', 'ENG', 'English'],
-                        ['bn', 'বাংলা', 'Bangla'],
-                      ] as const
-                    ).map(([code, label, sub]) => (
-                      <button
-                        key={code}
-                        onClick={() => switchLang(code)}
-                        className="flex h-11 w-full items-center justify-between rounded-lg px-3 text-sm text-slate-800 hover:bg-slate-100"
-                      >
-                        <span className="flex items-center gap-2">
-                          <Globe size={14} className="text-slate-400" />
-                          {label} <span className="text-xs text-slate-500">{sub}</span>
-                        </span>
-                        {lang === code && <Check size={15} className="text-[#1977C5]" />}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+            {/* Language: always visible, two-state toggle. The choice is saved (LanguageContext). */}
+            <div
+              role="group"
+              aria-label="Language / ভাষা"
+              className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/80 p-0.5"
+            >
+              {(
+                [
+                  ['en', 'EN', 'English'],
+                  ['bn', 'বাং', 'বাংলা'],
+                ] as const
+              ).map(([code, label, name]) => {
+                const on = lang === code;
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => setLang(code)}
+                    aria-pressed={on}
+                    aria-label={name}
+                    lang={code === 'bn' ? 'bn' : 'en'}
+                    className={`inline-flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ${
+                      on ? 'bg-[#1977C5] text-white shadow-sm shadow-[#1977C5]/30' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
 
             <span className={`ml-1 hidden xl:ml-2 ${wideLabels ? "xl:block" : "lg:block"}`}>

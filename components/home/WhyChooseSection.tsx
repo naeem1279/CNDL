@@ -2,75 +2,52 @@
 
 import { Crosshair, ShieldCheck, Truck, ScanLine } from 'lucide-react';
 import SectionHeader from '@/components/ui/SectionHeader';
+import Reveal from '@/components/ui/Reveal';
+import SpotlightCard from '@/components/ui/SpotlightCard';
+import { useHomeCopy } from './HomeText';
 
 /**
- * Homepage "Why Choose CNDL" — header first, then 4 clinical capability cards
- * in a 1 / 2 / 4-column grid. Flat white cards with a hairline border and
- * CNDL blue (#1977C5) icon tiles.
+ * Homepage "Why Choose CNDL": a 4-card bento (wide · narrow / narrow · wide on desktop).
+ * Cards carry a cursor spotlight and reveal on scroll.
  */
-const features = [
-  {
-    icon: Crosshair,
-    eyebrow: 'CAD/CAM Milling',
-    title: '5-Axis Sub-Micron Accuracy',
-    desc: 'Roland DWX-52Di Plus wet milling delivers razor-sharp margins and repeatable, micron-level fit.',
-    stat: 'DWX-52Di Plus',
-  },
-  {
-    icon: ShieldCheck,
-    eyebrow: 'Materials',
-    title: 'Certified Authentic Blanks',
-    desc: 'Aidite Multilayer zirconia and Shofu (Japan) ceramics — batch-traceable, never generic discs.',
-    stat: 'Aidite · Shofu Japan',
-  },
-  {
-    icon: Truck,
-    eyebrow: 'Logistics',
-    title: '3-Day Turnaround to Chamber',
-    desc: 'Dedicated lab riders and Pathao logistics across Dhaka — from impression to chair in 72 hours.',
-    stat: '72 Hours',
-  },
-  {
-    icon: ScanLine,
-    eyebrow: 'Digital Workflow',
-    title: 'Open Digital Scan Integration',
-    desc: 'Send direct STL/OBJ files from Medit, 3Shape or iTero — no physical impressions required.',
-    stat: 'STL / OBJ Ready',
-  },
-];
+const ICONS = [Crosshair, ShieldCheck, Truck, ScanLine];
+const SPAN = ['lg:col-span-2', '', '', 'lg:col-span-2'];
 
 export default function WhyChooseSection() {
-  return (
-    <section className="bg-white py-16 md:py-24">
-      <div className="container">
-        <SectionHeader
-          align="center"
-          eyebrow="Why CNDL"
-          title={
-            <>
-              Why Choose CNDL for Your <br className="hidden sm:block" />
-              Restorations?
-            </>
-          }
-          lead="Four reasons dental surgeons across Dhaka and nationwide trust our fully digital workflow — from scan intake to chamber delivery."
-        />
+  const c = useHomeCopy().why;
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-          {features.map((item) => {
-            const Icon = item.icon;
+  return (
+    <section className="bg-white py-20 md:py-28">
+      <div className="container">
+        <Reveal>
+          <SectionHeader align="center" eyebrow={c.eyebrow} title={c.title} lead={c.lead} />
+        </Reveal>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+          {c.features.map((item, i) => {
+            const Icon = ICONS[i];
+            const wide = SPAN[i] !== '';
             return (
-              <div
-                key={item.title}
-                className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 transition-colors duration-150 hover:border-slate-300"
-              >
-                <span className="flex size-11 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
-                  <Icon size={22} strokeWidth={1.75} aria-hidden="true" />
-                </span>
-                <p className="mt-5 text-xs font-medium uppercase tracking-wide text-slate-500">{item.eyebrow}</p>
-                <h3 className="secondary mt-1 text-lg font-semibold leading-snug text-slate-900">{item.title}</h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">{item.desc}</p>
-                <p className="mt-5 border-t border-slate-100 pt-4 text-sm font-medium text-[#1668AD]">{item.stat}</p>
-              </div>
+              <Reveal key={item.title} delay={i * 80} className={SPAN[i]}>
+                <SpotlightCard className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5 sm:p-8">
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="flex size-12 items-center justify-center rounded-2xl bg-linear-to-b from-[#1977C5] to-[#1668AD] text-white shadow-md shadow-[#1977C5]/25 ring-1 ring-inset ring-white/20 transition-transform duration-300 group-hover:scale-105">
+                      <Icon size={22} strokeWidth={1.75} aria-hidden="true" />
+                    </span>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+                      {item.eyebrow}
+                    </span>
+                  </div>
+                  <h3 className={`secondary mt-8 font-semibold leading-snug text-slate-900 ${wide ? 'text-2xl' : 'text-xl'}`}>
+                    {item.title}
+                  </h3>
+                  <p className={`mt-2 flex-1 leading-relaxed text-slate-600 ${wide ? 'max-w-lg text-base' : 'text-sm'}`}>{item.desc}</p>
+                  <p className="mt-6 inline-flex w-fit items-center gap-2 text-sm font-medium text-[#1668AD]">
+                    <span className="size-1.5 rounded-full bg-[#1977C5]" aria-hidden="true" />
+                    {item.stat}
+                  </p>
+                </SpotlightCard>
+              </Reveal>
             );
           })}
         </div>

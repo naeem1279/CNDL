@@ -1,6 +1,7 @@
 import { LanguageProvider } from '@/context/LanguageContext';
+import { LANG_BOOT_SCRIPT } from '@/lib/lang-detect';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Noto_Sans_Bengali } from 'next/font/google';
 import '../style/globals.css';
 import { Toaster } from 'sonner';
 import SiteChrome from '@/components/layout/SiteChrome';
@@ -10,6 +11,16 @@ const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'swap',
+});
+
+// Bengali glyphs only (Inter has none). The bengali subset's unicode-range means browsers
+// download it only when a page actually shows Bengali text; Latin text stays Inter.
+const bengali = Noto_Sans_Bengali({
+  variable: '--font-bengali',
+  subsets: ['bengali'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -139,14 +150,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <html lang="en">
+    // The boot script may set lang="bn-BD" before hydration, hence suppressHydrationWarning.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: LANG_BOOT_SCRIPT }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={inter.variable}>
+      <body className={`${inter.variable} ${bengali.variable}`}>
         <LanguageProvider>
           <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>
