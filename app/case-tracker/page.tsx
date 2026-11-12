@@ -1,7 +1,8 @@
 'use client';
-import ShareHero from '@/components/share/ShareHero';
+import PageHeader from '@/components/ui/PageHeader';
+import { Button } from '@/components/ui/Button';
 import {
-  Check, Search, MessageCircle, ArrowRight, PackageCheck,
+  ArrowLeft, Check, Search, MessageCircle, ArrowRight, PackageCheck,
   Loader2, ScanSearch, Sparkles, ShieldCheck,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -143,270 +144,288 @@ function CaseTrackerPage() {
     : WHATSAPP_URL;
 
   return (
-    <section className="text-black bg-(--bg-muted)">
-      <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
-          Track Your Dental Case<br />Status
-        </h1>
-        <p className="text-xs md:text-sm lg:text-base xl:text-lg mt-2 md:mt-4 max-w-3xl text-(--text-tertiary)">
-          Follow your restoration through every production stage — from digital intake to your chamber door in 3 working days.
-        </p>
-      </ShareHero>
+    <section className="text-slate-900">
+      <PageHeader
+        title={
+          <>
+            Track Your Dental Case
+            <br className="hidden sm:block" /> Status
+          </>
+        }
+        lead="Follow your restoration through every production stage — from digital intake to your chamber door in 3 working days."
+      />
 
-      <div className="container py-14 md:py-20">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* ============ SEARCH ============ */}
-          <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-white p-2 rounded-[16px] md:rounded-[24px] shadow-lg border border-gray-100">
-            <div className="flex items-center flex-1 gap-3 px-4">
-              <Search size={20} className="text-(--text-muted) shrink-0" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && track(query)}
-                placeholder="Enter Case ID e.g. CNDL-LEGACY-001 or Phone"
-                className="w-full h-14 focus:outline-none text-sm md:text-base lg:text-lg bg-transparent"
-              />
-            </div>
-            <button
-              onClick={() => track(query)}
-              disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-[12px] md:rounded-[16px] px-8 h-14 font-semibold bg-[#1977C5] text-white hover:brightness-110 transition-all disabled:opacity-50 text-sm md:text-base"
+      <div className="bg-slate-50 py-10 md:py-16">
+        <div className="container">
+          <div className="mx-auto max-w-4xl space-y-6">
+            {/* ============ SEARCH ============ */}
+            <form
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                track(query);
+              }}
+              className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center"
             >
-              {loading ? <Loader2 size={18} className="animate-spin" /> : <ScanSearch size={18} />}
-              {loading ? 'Searching…' : 'Track Case'}
-            </button>
-          </div>
-
-          {/* ============ MULTI-CASE PICKER (phone search) ============ */}
-          {cases.length > 1 && !caseData && (
-            <div className="reveal mt-10 bg-white p-6 sm:p-8 rounded-[16px] md:rounded-[24px] shadow-lg border border-gray-100">
-              <p className="text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
-                Found {cases.length} cases for this number
-              </p>
-              <h2 className="text-xl md:text-2xl font-semibold text-[#1977C5]">Your Active Cases</h2>
-              <p className="text-xs md:text-sm text-gray-500 mt-1">Select a case to view its live production timeline.</p>
-              <div className="grid sm:grid-cols-2 gap-3 mt-5">
-                {cases.map((c) => {
-                  const idx = activeStepIndex(c.status, c.progress ?? 0);
-                  const stage = c.status === 'PENDING' ? STEPS[idx].label : c.status;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={() => setCaseData(c)}
-                      className="text-left rounded-2xl border-2 border-gray-100 hover:border-[#1977C5]/50 hover:shadow-md p-4 transition-all"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono font-semibold text-sm text-[#1977C5]">{c.caseId}</span>
-                        <span className="inline-flex items-center rounded-full bg-[#88C845]/15 text-[#5a9424] border border-[#88C845]/30 px-2.5 py-1 text-xs font-semibold uppercase tracking-widest whitespace-nowrap">
-                          {stage}
-                        </span>
-                      </div>
-                      <div className="text-sm font-semibold mt-2 truncate">Chamber: {c.customerName}</div>
-                      <div className="text-xs text-gray-500 mt-1 truncate">{mainProduct(c.productType)}</div>
-                      <div className="text-xs text-gray-400 mt-2 font-semibold">
-                        Promised delivery: {c.deliveryDate
-                          ? new Date(c.deliveryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                          : '—'}
-                      </div>
-                    </button>
-                  );
-                })}
+              <label htmlFor="case-query" className="sr-only">
+                Case ID or phone number
+              </label>
+              <div className="flex flex-1 items-center gap-3 rounded-xl px-3 focus-within:ring-4 focus-within:ring-[#1977C5]/15">
+                <Search size={20} className="shrink-0 text-slate-400" aria-hidden="true" />
+                <input
+                  id="case-query"
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Enter Case ID e.g. CNDL-LEGACY-001 or Phone"
+                  autoComplete="off"
+                  className="h-12 w-full min-w-0 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                />
               </div>
-            </div>
-          )}
+              <Button type="submit" size="lg" disabled={loading} className="sm:px-8">
+                {loading ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : <ScanSearch size={18} aria-hidden="true" />}
+                {loading ? 'Searching…' : 'Track Case'}
+              </Button>
+            </form>
 
-          {/* ============ RESULT CARD ============ */}
-          {caseData && (
-            <div className="reveal mt-10 space-y-8 bg-white p-6 sm:p-8 md:p-10 rounded-[16px] md:rounded-[24px] lg:rounded-[32px] shadow-xl border border-gray-100">
-              {cases.length > 1 && (
-                <button
-                  onClick={() => setCaseData(null)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1977C5] hover:underline min-h-[36px]"
-                >
-                  ← All {cases.length} cases
-                </button>
-              )}
-              {/* header */}
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Case ID</p>
-                  <h2 className="text-2xl md:text-3xl font-semibold text-[#1977C5]">{caseData.caseId}</h2>
-                  <p className="text-gray-500 font-semibold uppercase tracking-widest text-xs md:text-xs mt-1">
-                    Chamber: {caseData.customerName}
-                  </p>
-                </div>
-                <div className="md:text-right">
-                  <span className="inline-flex items-center gap-2 bg-[#88C845]/15 text-[#5a9424] px-4 py-2 rounded-full font-semibold text-xs md:text-xs tracking-widest border border-[#88C845]/30 uppercase">
-                    <Sparkles size={13} />
-                    {caseData.status === 'PENDING' ? STEPS[activeIdx].label : caseData.status}
-                  </span>
-                  <p className="text-xs text-gray-400 mt-2 font-semibold uppercase">
-                    Last update: {new Date(caseData.updatedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </p>
-                </div>
-              </div>
-
-              {/* clinical summary */}
-              <div>
-                <p className="text-xs md:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Clinical Summary</p>
-                <div className="flex flex-wrap gap-2">
-                  {chips.length > 0 ? (
-                    chips.map((chip, i) => (
-                      <span
-                        key={i}
-                        className="inline-flex items-center gap-1.5 bg-(--bg-muted) border border-gray-200 rounded-full px-3.5 py-1.5 text-xs md:text-sm"
-                      >
-                        <span className="font-semibold text-[#1977C5] uppercase text-xs md:text-xs tracking-widest">{chip.label}</span>
-                        <span className="font-semibold">{chip.value}</span>
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs md:text-sm text-gray-400">Restoration details on file at the lab.</span>
-                  )}
-                  {typeof caseData.quantity === 'number' && caseData.quantity > 1 && (
-                    <span className="inline-flex items-center gap-1.5 bg-(--bg-muted) border border-gray-200 rounded-full px-3.5 py-1.5 text-xs md:text-sm">
-                      <span className="font-semibold text-[#1977C5] uppercase text-xs md:text-xs tracking-widest">Units</span>
-                      <span className="font-semibold">{caseData.quantity}</span>
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-5">
-                  <div className="flex items-center justify-between text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
-                    <span>Production Progress</span>
-                    <span className="text-[#1977C5] text-sm md:text-base">{caseData.progress}%</span>
-                  </div>
-                  <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-linear-to-r from-[#1977C5] to-[#3387CB] rounded-full transition-all duration-1000"
-                      style={{ width: `${Math.max(caseData.progress ?? 0, 4)}%` }}
-                    />
-                  </div>
-                </div>
-
-                <a
-                  href={inquireUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-xs md:text-sm font-semibold text-white shadow-md hover:brightness-105 transition-all min-h-[44px] w-full sm:w-auto"
-                >
-                  <MessageCircle size={16} />
-                  Inquire About This Case on WhatsApp
-                  <ArrowRight size={15} />
-                </a>
-              </div>
-
-              {/* ============ 5-STEP TIMELINE ============ */}
-              <div className="pt-2">
-                <p className="text-xs md:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">Delivery Timeline</p>
-                <div className="relative">
-                  {STEPS.map((step, index) => {
-                    const isCompleted = index < activeIdx || (index === activeIdx && (caseData.progress ?? 0) >= 100);
-                    const showActive = index === activeIdx;
-
+            {/* ============ MULTI-CASE PICKER (phone search) ============ */}
+            {cases.length > 1 && !caseData && (
+              <div className="reveal rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+                <p className="text-sm font-medium text-slate-500">Found {cases.length} cases for this number</p>
+                <h2 className="secondary mt-1 text-2xl font-semibold text-slate-900">Your Active Cases</h2>
+                <p className="mt-1 text-sm text-slate-600">Select a case to view its live production timeline.</p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {cases.map((c) => {
+                    const idx = activeStepIndex(c.status, c.progress ?? 0);
+                    const stage = c.status === 'PENDING' ? STEPS[idx].label : c.status;
                     return (
-                      <div key={step.key} className="relative flex gap-4 md:gap-5 pb-6 md:pb-8 last:pb-0">
-                        {/* connector */}
-                        {index < STEPS.length - 1 && (
-                          <div
-                            className={`absolute left-[19px] md:left-[23px] top-10 md:top-12 bottom-0 w-[2px] ${isCompleted ? 'bg-[#1977C5]' : 'bg-gray-100'}`}
-                          />
-                        )}
-
-                        {/* node */}
-                        <div
-                          className={`relative z-10 w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
-                            isCompleted
-                              ? 'bg-[#1977C5] border-[#1977C5] text-white shadow-lg shadow-blue-100'
-                              : showActive
-                                ? 'bg-white border-[#1977C5] text-[#1977C5] shadow-lg shadow-blue-100'
-                                : 'bg-white border-gray-200 text-gray-300'
-                          }`}
-                        >
-                          {isCompleted ? (
-                            <Check size={20} strokeWidth={3} />
-                          ) : (
-                            <span className={`font-semibold text-xs md:text-xs ${showActive ? 'text-[#1977C5]' : 'text-gray-300'}`}>
-                              {index + 1}
-                            </span>
-                          )}
-                          {showActive && !isCompleted && (
-                            <span className="absolute inset-0 rounded-full border-2 border-[#1977C5]/40 animate-ping" />
-                          )}
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setCaseData(c)}
+                        className="cursor-pointer rounded-xl border border-slate-200 p-4 text-left transition-colors hover:border-[#1977C5]/50 hover:bg-[#1977C5]/[0.03]"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-sm font-semibold text-[#1668AD]">{c.caseId}</span>
+                          <StatusChip status={c.status} label={stage} />
                         </div>
-
-                        {/* copy */}
-                        <div className="pt-1 md:pt-1.5">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className={`text-sm md:text-base lg:text-lg font-semibold ${isCompleted || showActive ? 'text-(--text-primary)' : 'text-gray-400'}`}>
-                              {step.label}
-                            </h3>
-                            {showActive && (
-                              <span className="text-xs md:text-xs font-semibold uppercase tracking-widest bg-[#1977C5] text-white rounded-full px-2.5 py-1">
-                                In Progress
-                              </span>
-                            )}
-                          </div>
-                          <p className={`text-xs md:text-sm mt-1 leading-relaxed max-w-xl ${isCompleted || showActive ? 'text-(--text-secondary)' : 'text-gray-300'}`}>
-                            {step.detail}
-                          </p>
+                        <div className="mt-2 truncate text-sm font-semibold">Chamber: {c.customerName}</div>
+                        <div className="mt-1 truncate text-sm text-slate-500">{mainProduct(c.productType)}</div>
+                        <div className="mt-2 text-xs text-slate-500">
+                          Promised delivery: {c.deliveryDate ? fmtDate(c.deliveryDate) : '—'}
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ============ NOT FOUND ============ */}
-          {searched && !caseData && !loading && (
-            <div className="mt-10 bg-white p-8 md:p-12 rounded-[16px] md:rounded-[24px] shadow-lg border border-gray-100 text-center">
-              <div className="w-14 h-14 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-4">
-                <Search size={24} className="text-red-400" />
-              </div>
-              <h3 className="text-base md:text-lg font-semibold mb-2">No case found for &ldquo;{query}&rdquo;</h3>
-              <p className="text-xs md:text-sm text-(--text-secondary) max-w-md mx-auto">
-                Double-check the Case ID from your confirmation SMS, or search with the phone number used on the order form.
-              </p>
-            </div>
-          )}
+            {/* ============ RESULT CARD ============ */}
+            {caseData && (
+              <div className="reveal space-y-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 md:p-10">
+                {cases.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setCaseData(null)}
+                    className="-ml-2 inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-2 text-sm font-medium text-[#1668AD] hover:bg-[#1977C5]/5"
+                  >
+                    <ArrowLeft size={16} aria-hidden="true" /> All {cases.length} cases
+                  </button>
+                )}
+                {/* header */}
+                <div className="flex flex-col items-start justify-between gap-4 border-b border-slate-100 pb-6 md:flex-row md:items-center">
+                  <div className="min-w-0">
+                    <p className="text-sm text-slate-500">Case ID</p>
+                    <h2 className="secondary break-all font-mono text-2xl font-semibold text-slate-900 md:text-3xl">{caseData.caseId}</h2>
+                    <p className="mt-1 text-sm text-slate-600">Chamber: {caseData.customerName}</p>
+                  </div>
+                  <div className="md:text-right">
+                    <StatusChip
+                      status={caseData.status}
+                      label={caseData.status === 'PENDING' ? STEPS[activeIdx].label : caseData.status}
+                      large
+                    />
+                    <p className="mt-2 text-sm text-slate-500">Last update: {fmtDate(caseData.updatedAt)}</p>
+                  </div>
+                </div>
 
-          {/* ============ EMPTY STATE ============ */}
-          {!caseData && !searched && (
-            <div className="mt-10 bg-white p-8 md:p-12 rounded-[16px] md:rounded-[24px] lg:rounded-[32px] shadow-lg border border-gray-100 text-center">
-              <div className="w-16 h-16 mx-auto rounded-[20px] bg-(--bg-muted) flex items-center justify-center mb-5">
-                <PackageCheck size={30} className="text-[#1977C5]" />
+                {/* clinical summary */}
+                <div>
+                  <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Clinical Summary</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {chips.length > 0 ? (
+                      chips.map((chip, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm"
+                        >
+                          <span className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">{chip.label}</span>
+                          <span className="font-medium text-slate-900">{chip.value}</span>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-slate-500">Restoration details on file at the lab.</span>
+                    )}
+                    {typeof caseData.quantity === 'number' && caseData.quantity > 1 && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm">
+                        <span className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">Units</span>
+                        <span className="font-medium text-slate-900">{caseData.quantity}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span id="progress-label" className="font-medium text-slate-700">Production Progress</span>
+                      <span className="font-semibold tabular-nums text-[#1668AD]">{caseData.progress}%</span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-labelledby="progress-label"
+                      aria-valuenow={caseData.progress ?? 0}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      className="h-2 w-full overflow-hidden rounded-full bg-slate-100"
+                    >
+                      <div
+                        className="h-full rounded-full bg-[#1977C5] transition-all duration-700"
+                        style={{ width: `${Math.max(caseData.progress ?? 0, 4)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <a
+                    href={inquireUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#128C7E] px-5 text-sm font-medium text-white transition-colors hover:bg-[#0F7A6D] sm:w-auto"
+                  >
+                    <MessageCircle size={16} aria-hidden="true" />
+                    Inquire About This Case on WhatsApp
+                  </a>
+                </div>
+
+                {/* ============ 5-STEP TIMELINE ============ */}
+                <div>
+                  <h3 className="mb-5 text-xs font-medium uppercase tracking-wide text-slate-500">Delivery Timeline</h3>
+                  <ol>
+                    {STEPS.map((step, index) => {
+                      const isCompleted = index < activeIdx || (index === activeIdx && (caseData.progress ?? 0) >= 100);
+                      const showActive = index === activeIdx && !isCompleted;
+                      const reached = isCompleted || showActive;
+
+                      return (
+                        <li key={step.key} className="relative flex gap-4 pb-7 last:pb-0" aria-current={showActive ? 'step' : undefined}>
+                          {/* connector */}
+                          {index < STEPS.length - 1 && (
+                            <span
+                              className={`absolute bottom-0 left-[19px] top-10 w-0.5 ${isCompleted ? 'bg-[#1977C5]' : 'bg-slate-200'}`}
+                              aria-hidden="true"
+                            />
+                          )}
+
+                          {/* node */}
+                          <span
+                            className={`relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold ${
+                              isCompleted
+                                ? 'border-[#1977C5] bg-[#1977C5] text-white'
+                                : showActive
+                                  ? 'border-[#1977C5] bg-white text-[#1977C5] ring-4 ring-[#1977C5]/15'
+                                  : 'border-slate-200 bg-white text-slate-400'
+                            }`}
+                          >
+                            {isCompleted ? <Check size={18} strokeWidth={2.5} aria-label="Done" /> : index + 1}
+                          </span>
+
+                          {/* copy */}
+                          <div className="pt-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className={`text-base font-semibold ${reached ? 'text-slate-900' : 'text-slate-500'}`}>{step.label}</h4>
+                              {showActive && (
+                                <span className="rounded-full bg-[#1977C5]/10 px-2.5 py-0.5 text-xs font-medium text-[#1668AD]">
+                                  In Progress
+                                </span>
+                              )}
+                            </div>
+                            <p className={`mt-1 max-w-xl text-sm leading-relaxed ${reached ? 'text-slate-600' : 'text-slate-500'}`}>
+                              {step.detail}
+                            </p>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
               </div>
-              <h3 className="text-lg md:text-xl lg:text-2xl font-semibold secondary mb-3">Live Case Visibility, Zero Guesswork</h3>
-              <p className="text-xs md:text-sm lg:text-base text-(--text-secondary) leading-relaxed max-w-xl mx-auto">
-                Every CNDL case is tracked through five verifiable production stages and dispatched within
-                <span className="font-semibold text-[#1977C5]"> 3 working days</span>. Enter the Case ID from your confirmation SMS
-                (or the phone number on your order) to see exactly where your restoration is right now.
-              </p>
-              <div className="mt-6 inline-flex flex-col sm:flex-row items-center gap-3">
-                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400">Try a sample ID</span>
-                <button
-                  onClick={() => {
-                    setQuery('CNDL-LEGACY-001');
-                    track('CNDL-LEGACY-001');
-                  }}
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-[#1977C5]/30 bg-[#1977C5]/5 px-5 py-2.5 font-mono text-xs md:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5]/10 transition-all"
-                >
-                  CNDL-LEGACY-001
-                  <ArrowRight size={14} />
-                </button>
+            )}
+
+            {/* ============ NOT FOUND ============ */}
+            {searched && !caseData && cases.length <= 1 && !loading && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center md:p-12" role="status">
+                <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                  <Search size={22} aria-hidden="true" />
+                </span>
+                <h3 className="mb-2 text-lg font-semibold">No case found for &ldquo;{query}&rdquo;</h3>
+                <p className="mx-auto max-w-md text-sm leading-relaxed text-slate-600">
+                  Double-check the Case ID from your confirmation SMS, or search with the phone number used on the order form.
+                </p>
               </div>
-              <div className="mt-7 flex items-center justify-center gap-2 text-xs md:text-xs text-gray-400">
-                <ShieldCheck size={14} className="text-[#88C845]" />
-                Patient-identifiable data is never displayed publicly — only clinical essentials.
+            )}
+
+            {/* ============ EMPTY STATE ============ */}
+            {!caseData && !searched && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center md:p-12">
+                <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                  <PackageCheck size={24} aria-hidden="true" />
+                </span>
+                <h2 className="secondary mb-3 text-xl font-semibold md:text-2xl">Live Case Visibility, Zero Guesswork</h2>
+                <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-600">
+                  Every CNDL case is tracked through five verifiable production stages and dispatched within
+                  <span className="font-semibold text-slate-900"> 3 working days</span>. Enter the Case ID from your confirmation SMS
+                  (or the phone number on your order) to see exactly where your restoration is right now.
+                </p>
+                <div className="mt-6 inline-flex flex-col items-center gap-3 sm:flex-row">
+                  <span className="text-sm text-slate-500">Try a sample ID</span>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setQuery('CNDL-LEGACY-001');
+                      track('CNDL-LEGACY-001');
+                    }}
+                    className="font-mono"
+                  >
+                    CNDL-LEGACY-001
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </Button>
+                </div>
+                <p className="mt-7 flex items-center justify-center gap-2 text-sm text-slate-500">
+                  <ShieldCheck size={16} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+                  Patient-identifiable data is never displayed publicly — only clinical essentials.
+                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </section>
+  );
+}
+
+const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+/** Production stage pill: green once dispatched, blue while in the lab. */
+function StatusChip({ status, label, large = false }: { status: string; label: string; large?: boolean }) {
+  const done = status === 'Dispatched' || status === 'Delivered';
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full font-medium ${
+        large ? 'px-3 py-1.5 text-sm' : 'px-2.5 py-0.5 text-xs'
+      } ${done ? 'bg-emerald-50 text-emerald-700' : 'bg-[#1977C5]/10 text-[#1668AD]'}`}
+    >
+      {large && <Sparkles size={14} aria-hidden="true" />}
+      {label}
+    </span>
   );
 }
 

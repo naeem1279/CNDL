@@ -1,18 +1,21 @@
 'use client';
 import Input from '@/components/share/Input';
 import Select from '@/components/share/Select';
-import ShareHero from '@/components/share/ShareHero';
+import PageHeader from '@/components/ui/PageHeader';
+import { Button, buttonClass } from '@/components/ui/Button';
 import {
   Facebook, Instagram, Mail, CheckCircle2, X, Phone, MapPin, Clock4,
-  Stethoscope, ScanLine, MessagesSquare, MoveRight,
+  Stethoscope, ScanLine, MessagesSquare, ArrowRight, Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 const WHATSAPP_URL =
   'https://wa.me/8801743167963?text=Hello%20CNDL,%20I%20would%20like%20to%20discuss%20a%20dental%20case.';
+
+const ICON_TILE = 'flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]';
 
 const PHONE_CARDS = [
   {
@@ -95,216 +98,200 @@ function ContactPage() {
     }
   };
 
+  // Escape closes the confirmation window.
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsModalOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isModalOpen]);
+
   return (
     <section>
-      <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
-          Get in Touch with CNDL
-          <br />
-          Dental Laboratory.
-        </h1>
-
-        <p className="text-xs md:text-sm lg:text-base xl:text-lg mt-2 md:mt-4 text-(--text-tertiary)">
-          We are here to support your practice and answer technical inquiries.
-        </p>
-      </ShareHero>
+      <PageHeader
+        title={
+          <>
+            Get in Touch with CNDL
+            <br className="hidden sm:block" /> Dental Laboratory.
+          </>
+        }
+        lead="We are here to support your practice and answer technical inquiries."
+      />
 
       {/* Quick-intent strip */}
-      <section className="container -mb-2 sm:-mb-4 md:mb-0 mt-6 sm:mt-8 md:mt-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+      <section className="bg-white pt-12 md:pt-16">
+        <div className="container grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-6">
           {INTENTS.map((item) => (
-            <div
-              key={item.title}
-              className="group flex flex-col rounded-[10px] md:rounded-[16px] lg:rounded-[20px] border border-[#1977C5]/15 bg-white/70 backdrop-blur-md p-5 md:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1977C5]/40 hover:shadow-[0_14px_36px_-12px_rgba(25,119,197,0.35)]"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-11 h-11 shrink-0 rounded-[13px] bg-linear-to-br from-[#1977C5] to-[#3387CB] text-white flex items-center justify-center shadow-[0_8px_18px_-6px_rgba(25,119,197,0.5)]">
-                  <item.icon size={20} strokeWidth={1.9} />
+            <div key={item.title} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="mb-3 flex items-center gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                  <item.icon size={22} strokeWidth={1.75} aria-hidden="true" />
                 </span>
-                <h3 className="text-sm md:text-base font-semibold secondary">{item.title}</h3>
+                <h2 className="secondary text-lg font-semibold text-slate-900">{item.title}</h2>
               </div>
-              <p className="text-xs md:text-xs lg:text-sm text-(--text-secondary) leading-relaxed flex-1">
-                {item.desc}
-              </p>
+              <p className="flex-1 text-sm leading-relaxed text-slate-600">{item.desc}</p>
               <Link
                 href={item.action.href}
-                className="mt-4 inline-flex items-center gap-1.5 text-xs md:text-xs font-semibold text-[#1977C5] group-hover:gap-2.5 transition-all"
+                className="group -ml-2 mt-4 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-full px-2 text-sm font-medium text-[#1668AD] hover:bg-[#1977C5]/5"
               >
                 {item.action.label}
-                <MoveRight size={14} />
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="container my-8 sm:my-12 md:my-14 lg:my-16 xl:my-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 md:gap-16 lg:gap-20">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="w-full md:w-[40%]">
-              <Image
-                src="/images/gallery-7.jpg"
-                className="w-full h-[572px] object-cover rounded-2xl"
-                alt=""
-                width={250}
-                height={572}
-              />
+      <section className="bg-white py-12 md:py-16">
+        <div className="container grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
+          {/* Lab photos: wide screens only, so phones reach the phone numbers first */}
+          <div className="hidden min-h-[480px] gap-4 lg:flex" aria-hidden="true">
+            <div className="relative w-[40%] overflow-hidden rounded-2xl bg-slate-100">
+              <Image src="/images/gallery-7.jpg" alt="" fill sizes="260px" className="object-cover" />
             </div>
-            <div className="w-full md:w-[60%]">
-              <Image
-                src="/images/gallery-5.png"
-                className="w-full h-[572px] object-cover rounded-2xl"
-                alt=""
-                width={320}
-                height={572}
-              />
+            <div className="relative w-[60%] overflow-hidden rounded-2xl bg-slate-100">
+              <Image src="/images/gallery-5.png" alt="" fill sizes="390px" className="object-cover" />
             </div>
           </div>
 
-          <div className="space-y-6 col-span-1">
+          <div className="space-y-8">
             <div>
-              <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary">
-                Contact Information
-              </h3>
-              <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) mt-1 md:mt-2 lg:mt-3">
+              <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">Contact Information</h2>
+              <p className="mt-3 text-base leading-relaxed text-slate-600 md:text-lg">
                 One-tap call or WhatsApp — you speak directly with the lab, never a call center.
               </p>
             </div>
 
             {/* Verified phone cards — one-tap Call & WhatsApp */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {PHONE_CARDS.map((card) => (
-                <div
-                  key={card.display}
-                  className="rounded-[10px] md:rounded-[16px] border border-[#1977C5]/15 bg-[#EAF2FA]/60 p-4"
-                >
-                  <p className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5]">
-                    {card.label}
-                  </p>
-                  <p className="mt-1 text-base md:text-lg font-semibold secondary whitespace-nowrap">
-                    {card.display}
-                  </p>
-                  <div className="mt-3 flex items-center gap-2">
-                    <a
-                      href={card.tel}
-                      className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#1977C5] text-white text-xs md:text-xs font-semibold px-3 hover:bg-[#1668ad] transition-colors"
-                    >
-                      <Phone size={13} /> Call
+                <div key={card.display} className="rounded-2xl border border-slate-200 p-5">
+                  <p className="text-sm text-slate-500">{card.label}</p>
+                  <p className="secondary mt-1 whitespace-nowrap text-xl font-semibold tabular-nums text-slate-900">{card.display}</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <a href={card.tel} className={buttonClass('primary', 'md', 'flex-1 px-3')}>
+                      <Phone size={16} aria-hidden="true" /> Call
                     </a>
                     <a
                       href={WHATSAPP_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] text-white text-xs md:text-xs font-semibold px-3 hover:brightness-105 transition-all"
+                      className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#128C7E] px-3 text-sm font-medium text-white transition-colors hover:bg-[#0F7A6D]"
                     >
-                      <WhatsAppIcon className="w-3.5 h-3.5" /> WhatsApp
+                      <WhatsAppIcon className="size-4" /> WhatsApp
                     </a>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Landmark address */}
-            <div className="flex items-start gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-full bg-[#1977C5]/10 text-[#1977C5] flex items-center justify-center">
-                <MapPin size={18} />
-              </span>
-              <div>
-                <p className="text-xs md:text-sm lg:text-base xl:text-lg font-medium">Lab Address</p>
-                <p className="text-xs md:text-xs lg:text-base text-(--text-secondary)">
-                  419/1/C Khilgaon — <span className="font-semibold text-(--text-primary)">West Side of Jorpukur Field</span>, Dhaka-1219, Bangladesh
+            <ul className="space-y-5">
+              {/* Landmark address */}
+              <li className="flex items-start gap-4">
+                <span className={ICON_TILE}>
+                  <MapPin size={20} aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-base font-medium text-slate-900">Lab Address</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-slate-600">
+                    419/1/C Khilgaon — <span className="font-medium text-slate-900">West Side of Jorpukur Field</span>, Dhaka-1219, Bangladesh
+                  </p>
+                </div>
+              </li>
+
+              {/* Email */}
+              <li className="flex items-start gap-4">
+                <span className={ICON_TILE}>
+                  <Mail size={20} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-base font-medium text-slate-900">Email Address</p>
+                  <a
+                    href="mailto:chistiyanizamiyad@gmail.com"
+                    className="inline-flex min-h-10 items-center break-all text-sm text-[#1668AD] hover:underline"
+                  >
+                    chistiyanizamiyad@gmail.com
+                  </a>
+                </div>
+              </li>
+
+              {/* Hours */}
+              <li className="flex items-start gap-4">
+                <span className={ICON_TILE}>
+                  <Clock4 size={20} aria-hidden="true" />
+                </span>
+                <p className="pt-2.5 text-sm leading-relaxed text-slate-700">
+                  Direct communication with Senior Lab Technicians (Mon–Sat: 9:00 AM – 11:30 PM)
                 </p>
-              </div>
-            </div>
+              </li>
+            </ul>
 
-            {/* Email */}
-            <div className="flex items-start gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-full bg-[#65CD4C33] text-[#65CD4C] flex items-center justify-center">
-                <Mail size={18} />
-              </span>
-              <div>
-                <p className="text-xs md:text-sm lg:text-base xl:text-lg font-medium">Email Address</p>
+            <div>
+              <p className="mb-2 text-base font-medium text-slate-900">Social Media</p>
+              <div className="flex flex-wrap gap-2">
                 <a
-                  href="mailto:chistiyanizamiyad@gmail.com"
-                  className="text-xs md:text-xs lg:text-base text-(--text-secondary) hover:text-[#1977C5] transition-colors"
+                  href="https://www.facebook.com/cndentallab"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonClass('secondary', 'md')}
                 >
-                  chistiyanizamiyad@gmail.com
+                  <Facebook size={18} aria-hidden="true" /> facebook.com/cndentallab
                 </a>
-              </div>
-            </div>
-
-            {/* Fast response badge */}
-            <div className="flex items-center gap-3 rounded-[10px] md:rounded-[14px] border border-[#88C845]/30 bg-[#88C845]/10 px-4 py-3">
-              <Clock4 size={18} className="text-[#4d7220] shrink-0" />
-              <p className="text-xs md:text-xs lg:text-sm text-[#4d7220] font-semibold">
-                Direct communication with Senior Lab Technicians (Mon–Sat: 9:00 AM – 11:30 PM)
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-xs md:text-sm lg:text-base xl:text-lg font-medium">Social Media</p>
-              <div className="flex flex-col gap-3 text-xs md:text-xs lg:text-base text-(--text-secondary)">
-                <div className="flex items-center gap-2">
-                  <span className="w-10 h-10 rounded-full bg-[#65CD4C33] text-[#65CD4C] flex items-center justify-center">
-                    <Mail />
-                  </span>
-                  <span>@cndlglobal</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-10 h-10 rounded-full bg-[#2573D933] text-[#2573D9] flex items-center justify-center">
-                    <Facebook />
-                  </span>
-                  <span>facebook.com/cndentallab</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-10 h-10 rounded-full bg-[#E8865E33] text-[#E8865E] flex items-center justify-center">
-                    <Instagram />
-                  </span>
-                  <span>@cndlglobal</span>
-                </div>
+                <a
+                  href="https://instagram.com/cndlglobal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonClass('secondary', 'md')}
+                >
+                  <Instagram size={18} aria-hidden="true" /> @cndlglobal
+                </a>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <div id="contact-form" className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 md:gap-16 lg:gap-20 mt-8 sm:mt-12 md:mt-14 lg:mt-16 xl:mt-20 scroll-mt-[100px]">
-          <div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary">
-              Send us a Message
-            </h3>
+      <section id="contact-form" className="scroll-mt-28 border-t border-slate-200 bg-slate-50 py-12 md:py-16">
+        <div className="container grid grid-cols-1 items-start gap-8 lg:grid-cols-5 lg:gap-12">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 lg:col-span-3">
+            <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">Send us a Message</h2>
+            <p className="mt-3 text-base text-slate-600">Fill out the form and our team will get back to you shortly</p>
 
-            <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) mt-1 md:mt-2 lg:mt-3">
-              Fill out the form and our team will get back to you shortly
-            </p>
-
-            <form
-              className="mt-8 sm:mt-12 md:mt-14 lg:mt-16 xl:mt-20 space-y-6"
-              onSubmit={handleSubmit}
-            >
+            <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
               <Input
+                label="Full Name"
                 type="text"
                 placeholder="Full Name"
+                autoComplete="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Input
+                  label="Email Address"
                   type="email"
                   placeholder="Email Address"
+                  autoComplete="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
                 />
                 <Input
-                  type="text"
+                  label="Phone Number"
+                  type="tel"
+                  inputMode="tel"
                   placeholder="Phone Number"
+                  autoComplete="tel"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
 
               <Select
+                label="Subject"
                 value={form.subject}
                 onChange={(e) => setForm({ ...form, subject: e.target.value })}
                 options={['General Inquiry', 'Support', 'Sales', 'Get Pricing']}
@@ -312,6 +299,7 @@ function ContactPage() {
               />
 
               <Input
+                label="Message"
                 type="textarea"
                 placeholder="Message"
                 value={form.message}
@@ -319,62 +307,63 @@ function ContactPage() {
                 required
               />
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center justify-center rounded-full bg-(--bg-muted) px-6 py-3 text-xs md:text-xs lg:text-base text-(--text-tertiary) font-medium hover:bg-(--bg-muted)/90 cursor-pointer disabled:opacity-50"
-              >
+              <Button type="submit" size="lg" disabled={loading} className="w-full sm:w-auto">
+                {loading && <Loader2 size={18} className="animate-spin" aria-hidden="true" />}
                 {loading ? 'Sending...' : 'Send Message'}
-              </button>
+              </Button>
             </form>
           </div>
 
-          <div className="rounded-[10px] md:rounded-[18px] lg:rounded-[24px] bg-blue-50 p-4 sm:p-5 md:p-6 lg:p-8">
-            <h4 className="text-base md:text-lg lg:text-xl xl:text-2xl font-semibold mb-4 md:mb-6">
-              Schedule
-            </h4>
-
-            <ul className="text-xs md:text-sm lg:text-base xl:text-lg">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 lg:col-span-2">
+            <h2 className="secondary text-xl font-semibold text-slate-900">Schedule</h2>
+            <dl className="mt-4 divide-y divide-slate-100 text-sm">
               {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => (
-                <li key={day} className="flex justify-between py-2.5 sm:py-3 md:py-4 border-b border-(--border-primary)">
-                  <span className="text-(--text-secondary)">{day}</span>
-                  <span>09:00 AM – 11:30 PM</span>
-                </li>
+                <div key={day} className="flex justify-between gap-4 py-3">
+                  <dt className="text-slate-600">{day}</dt>
+                  <dd className="tabular-nums text-slate-900">09:00 AM – 11:30 PM</dd>
+                </div>
               ))}
-              <li className="flex justify-between py-2.5 sm:py-3 md:py-4 font-medium">
-                <span className="text-(--text-secondary)">Sunday</span>
-                <span>Closed</span>
-              </li>
-            </ul>
+              <div className="flex justify-between gap-4 py-3 font-medium">
+                <dt className="text-slate-600">Sunday</dt>
+                <dd className="text-slate-900">Closed</dd>
+              </div>
+            </dl>
           </div>
         </div>
       </section>
 
       {/* Confirmation Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-4">
-          <div className="bg-white rounded-2xl border border-slate-200 w-full max-w-md p-6 sm:p-8 relative shadow-2xl">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 px-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sent-title"
+            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
+              type="button"
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+              className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
               aria-label="Close modal"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle2 size={32} className="text-green-500" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-900">Message Sent!</h3>
-              <p className="text-gray-600">
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <span className="flex size-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <CheckCircle2 size={28} aria-hidden="true" />
+              </span>
+              <h3 id="sent-title" className="secondary text-2xl font-semibold text-slate-900">Message Sent!</h3>
+              <p className="text-slate-600">
                 Thank you for reaching out to us. We have received your message and our team will get back to you shortly.
               </p>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="mt-4 w-full rounded-full bg-(--bg-muted) px-6 py-3 text-base text-(--text-tertiary) font-medium hover:bg-(--bg-muted)/90 transition"
-              >
+              <Button size="lg" onClick={() => setIsModalOpen(false)} className="mt-2 w-full">
                 Done
-              </button>
+              </Button>
             </div>
           </div>
         </div>
