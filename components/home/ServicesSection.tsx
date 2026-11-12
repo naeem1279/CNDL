@@ -1,15 +1,15 @@
 'use client';
 import type { ServiceApiRow } from '@/lib/service-types';
 
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { ArrowRight, Truck, FileCheck2, Package } from 'lucide-react';
+import { ArrowRight, Truck } from 'lucide-react';
+import ProductCard from '@/components/products/ProductCard';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { ButtonLink } from '@/components/ui/Button';
 import Reveal from '@/components/ui/Reveal';
 import { useHomeCopy } from './HomeText';
 
-type ProductCard = {
+type HomeProduct = {
   id?: string;
   title: string;
   titleBn?: string | null;
@@ -17,6 +17,8 @@ type ProductCard = {
   category: string;
   image?: string | null;
   imageUrl?: string | null;
+  /** Material / spec line from the catalogue (first part shows in the card's meta line). */
+  tag?: string | null;
   turnaroundDays?: number;
   warrantyYears?: number;
   basePrice?: string | null;
@@ -26,7 +28,7 @@ type ProductCard = {
  * Initial fallback products — kept in sync with the canonical 1:1 database items
  * so initial server/client hydration is instantaneous and never flashes empty.
  */
-const INITIAL_PRODUCTS: ProductCard[] = [
+const INITIAL_PRODUCTS: HomeProduct[] = [
   {
     title: 'Zirconia Crown / Bridge',
     desc: 'Monolithic & Multilayer Aidite blanks, 5-axis Roland milling and authentic Shofu (Japan) glaze finish.',
@@ -66,7 +68,7 @@ const INITIAL_PRODUCTS: ProductCard[] = [
 ];
 
 export default function ServicesSection() {
-  const [products, setProducts] = useState<ProductCard[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<HomeProduct[]>(INITIAL_PRODUCTS);
   const c = useHomeCopy().services;
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function ServicesSection() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data.services) && data.services.length > 0) {
-          const mapped: ProductCard[] = data.services.map((s: ServiceApiRow, idx: number) => {
+          const mapped: HomeProduct[] = data.services.map((s: ServiceApiRow, idx: number) => {
             const fallback = INITIAL_PRODUCTS.find(
               (p) => p.title.toLowerCase() === s.name.toLowerCase()
             );
@@ -85,6 +87,7 @@ export default function ServicesSection() {
               desc: s.description || fallback?.desc || s.specs || 'Precision dental restoration engineered to international clinical standards.',
               category: s.category,
               imageUrl: s.imageUrl || null,
+              tag: s.specs || null,
               image: s.imageUrl || fallback?.image || `/images/Services${idx % 6 ? `_${idx % 6}` : ''}.webp`,
               turnaroundDays: s.turnaroundDays,
               warrantyYears: s.warrantyYears,
@@ -122,67 +125,8 @@ export default function ServicesSection() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
           {products.map((item, i) => (
-            <Reveal
-              key={item.id || item.title}
-              delay={(i % 3) * 80}
-              className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5"
-            >
-              <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                {item.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                  />
-                ) : item.image ? (
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    sizes="(min-width: 1024px) 400px, (min-width: 640px) 45vw, 90vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                  />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center text-slate-400">
-                    <Package size={40} aria-hidden="true" />
-                    <span className="mt-2 text-xs font-medium">CNDL Dental Restoration</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-1 flex-col p-6">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-xs font-medium uppercase tracking-wide text-[#1668AD]">
-                    {item.category}
-                  </span>
-                  {/* `> 0`, not truthiness: a 0 would render as a stray "0". */}
-                  {!!item.warrantyYears && item.warrantyYears > 0 && (
-                    <span className="shrink-0 text-xs text-slate-500">{c.warranty(item.warrantyYears)}</span>
-                  )}
-                </div>
-
-                <h3 className="secondary mt-2 text-xl font-semibold leading-snug text-slate-900">
-                  {item.title}
-                  {item.titleBn && (
-                    <span className="mt-0.5 block text-sm font-normal tracking-normal text-slate-500">{item.titleBn}</span>
-                  )}
-                </h3>
-
-                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">{item.desc}</p>
-
-                <div className="mt-auto pt-6">
-                  <ButtonLink
-                    href={`/order-create?product=${encodeURIComponent(item.title)}`}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    <FileCheck2 size={16} aria-hidden="true" />
-                    {c.order}
-                  </ButtonLink>
-                </div>
-              </div>
+            <Reveal key={item.id || item.title} delay={(i % 3) * 80} className="h-full">
+              <ProductCard item={item} />
             </Reveal>
           ))}
         </div>

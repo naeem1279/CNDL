@@ -1,11 +1,10 @@
 'use client';
 import type { ServiceApiRow } from '@/lib/service-types';
 
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Truck, FileCheck2, ShieldCheck } from 'lucide-react';
+import { Truck, ShieldCheck } from 'lucide-react';
+import ProductCard from './ProductCard';
 import SectionHeader from '@/components/ui/SectionHeader';
-import { ButtonLink } from '@/components/ui/Button';
 
 /**
  * Canonical catalogue — mirrors the official CNDL Physical Lab Prescription Slip exactly.
@@ -262,67 +261,7 @@ export default function ProductsComponent() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
           {visible.map((item) => (
-            <div
-              key={item.id ?? item.title}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-colors duration-150 hover:border-slate-300"
-            >
-              <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                {item.image.startsWith('/images/uploads') ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                  />
-                ) : (
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    sizes="(min-width: 1024px) 400px, (min-width: 640px) 45vw, 90vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                  />
-                )}
-              </div>
-
-              <div className="flex flex-1 flex-col p-6">
-                <span className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">{item.category}</span>
-                <h3 className="secondary mt-2 text-xl font-semibold leading-snug text-slate-900">
-                  {item.title}
-                  {item.titleBn && (
-                    <span className="mt-0.5 block text-sm font-normal tracking-normal text-slate-500">{item.titleBn}</span>
-                  )}
-                </h3>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-700">
-                    {item.tag}
-                  </span>
-                  {!!item.turnaroundDays && (
-                    <span className="inline-flex items-center rounded-full bg-[#1977C5]/10 px-2.5 py-0.5 text-xs font-medium text-[#1668AD]">
-                      {item.turnaroundDays}d Turnaround
-                    </span>
-                  )}
-                  {item.basePrice && (
-                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-900">
-                      From ৳{item.basePrice}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.desc}</p>
-
-                <div className="mt-auto pt-6">
-                  <ButtonLink
-                    href={`/order-create?product=${encodeURIComponent(item.title)}`}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    <FileCheck2 size={16} aria-hidden="true" />
-                    Submit Case for This Item
-                  </ButtonLink>
-                </div>
-              </div>
-            </div>
+            <ProductCard key={item.id ?? item.title} item={item} />
           ))}
         </div>
       </div>
