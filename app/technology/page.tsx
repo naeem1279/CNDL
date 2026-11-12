@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_IMAGE } from '@/lib/seo';
 import Link from 'next/link';
 import ShareHero from '@/components/share/ShareHero';
 import {
@@ -18,12 +19,13 @@ export const metadata: Metadata = {
     'Shining 3D DS EX Pro scanner',
     'digital dentistry laboratory Bangladesh',
   ],
+  alternates: { canonical: 'https://cndl-global.com/technology' },
   openGraph: {
     type: 'website',
     url: 'https://cndl-global.com/technology',
     title: 'Advanced Dental CAD/CAM Technology & Precision Hardware | CNDL Global',
     description: 'Sub-micron precision zirconia milling and digital restorative dentistry hardware in Bangladesh.',
-    images: [{ url: '/images/CTA.jpg', width: 1200, height: 630, alt: 'CNDL Digital Dental Machinery' }],
+    images: [OG_IMAGE],
   },
 };
 

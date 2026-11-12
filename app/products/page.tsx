@@ -3,6 +3,7 @@ import ShareHero from '@/components/share/ShareHero';
 import ProductsComponent from '@/components/products/productsComponent';
 import FAQSection from '@/components/home/FAQSection';
 import ProcessSection from '@/components/home/ProcessSection';
+import { OG_IMAGE } from '@/lib/seo';
 
 // G1 (2026-11-05): unique per-page metadata (was inheriting the homepage title).
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
     description:
       'Zirconia crowns & bridges, E-max veneers, PFM, flexible dentures and clear aligners — 15 canonical lab lines, 100% fabricated in-house in Dhaka.',
     url: 'https://cndl-global.com/products',
+    images: [OG_IMAGE],
   },
 };
 

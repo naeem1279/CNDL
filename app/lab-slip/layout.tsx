@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_IMAGE } from '@/lib/seo';
 
 // G1 (2026-11-05): route metadata — client pages cannot export metadata
 // themselves, so a server layout provides it per segment.
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
     description:
       'Official CNDL lab prescription slip with FDI tooth chart, 15 restoration lines, shade guide and margin/occlusion specifications — print-ready A4.',
     url: 'https://cndl-global.com/lab-slip',
+    images: [OG_IMAGE],
   },
 };
 

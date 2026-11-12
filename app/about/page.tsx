@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { OG_IMAGE } from '@/lib/seo';
 import ShareHero from '@/components/share/ShareHero';
 import LeadershipImage from '@/components/about/LeadershipImage';
 import {
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     description:
       'From its Khilgaon, Dhaka origins to a fully digital 5-axis CAD/CAM workflow — meet the team, milestones and in-house technology behind CNDL Global.',
     url: 'https://cndl-global.com/about',
+    images: [OG_IMAGE],
   },
 };
 

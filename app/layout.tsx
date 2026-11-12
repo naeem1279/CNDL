@@ -4,6 +4,7 @@ import { DM_Sans, Inter } from 'next/font/google';
 import '../style/globals.css';
 import { Toaster } from 'sonner';
 import SiteChrome from '@/components/layout/SiteChrome';
+import { OG_IMAGE } from '@/lib/seo';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -32,20 +33,13 @@ export const metadata: Metadata = {
     title: 'CNDL Global | Precision Dental Lab Solutions',
     description: 'High-quality Zirconia, E-max, PFM restorations, and flexible dentures. Precision dental lab services with guaranteed turnaround.',
     siteName: 'CNDL Global',
-    images: [
-      {
-        url: '/images/gallery-7.jpg', 
-        width: 1200,
-        height: 630,
-        alt: 'CNDL Global Dental Laboratory',
-      },
-    ],
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'CNDL Global | Precision Dental Lab Solutions',
     description: 'High-quality Zirconia, E-max, PFM restorations, and flexible dentures in Dhaka, Bangladesh.',
-    images: ['/images/gallery-7.jpg'],
+    images: [OG_IMAGE.url],
   },
   robots: {
     index: true,

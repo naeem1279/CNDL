@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_IMAGE } from '@/lib/seo';
 
 // G1 (2026-11-05): route metadata — client pages cannot export metadata
 // themselves, so a server layout provides it per segment.
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
     description:
       'Inside CNDL Global — Roland 5-axis milling, sintering furnaces, CAD stations and finished zirconia cases from our Khilgaon, Dhaka laboratory.',
     url: 'https://cndl-global.com/gallery',
+    images: [OG_IMAGE],
   },
 };
 

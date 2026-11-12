@@ -1,38 +1,29 @@
 import type { MetadataRoute } from 'next';
 
 const BASE = 'https://cndl-global.com';
-const SITEMAP = `${BASE}/sitemap.xml`;
 
-const PUBLIC_ROUTES = [
-  '/',
-  '/about',
-  '/products',
-  '/gallery',
-  '/order-create',
-  '/case-tracker',
-  '/contact',
-  '/blog',
-];
-
+/** Never crawled: the admin console, APIs and auth endpoints. */
 const PRIVATE = ['/admin-cndl', '/api/', '/auth'];
 
-/** AI knowledge-extraction crawlers explicitly welcomed for GEO/AEO. */
-const AI_BOTS = ['GPTBot', 'PerplexityBot', 'ClaudeBot', 'Google-Extended', 'Applebot-Extended'];
+/**
+ * AI search and answer-engine crawlers, named explicitly so the site's
+ * openness to them is unambiguous (GEO/AEO). Same rules as everyone else.
+ */
+const AI_BOTS = [
+  'GPTBot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'ClaudeBot',
+  'Claude-SearchBot',
+  'PerplexityBot',
+  'Google-Extended',
+  'Applebot-Extended',
+];
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: PUBLIC_ROUTES,
-        disallow: PRIVATE,
-      },
-      ...AI_BOTS.map((userAgent) => ({
-        userAgent,
-        allow: PUBLIC_ROUTES,
-        disallow: PRIVATE,
-      })),
-    ],
-    sitemap: SITEMAP,
+    rules: [{ userAgent: '*', allow: '/', disallow: PRIVATE }, ...AI_BOTS.map((userAgent) => ({ userAgent, allow: '/', disallow: PRIVATE }))],
+    sitemap: `${BASE}/sitemap.xml`,
+    host: BASE,
   };
 }
