@@ -186,12 +186,12 @@ export default function ProductsComponent() {
       <div className="container">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6 sm:mb-8 md:mb-10 lg:mb-12 xl:mb-14">
           <div className="space-y-3">
-            <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary max-w-2xl leading-tight">
+            <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary max-w-2xl leading-tight">
               Dental Products &amp; Restorations Catalogue
               <br />
               <span className="text-[#1977C5]">Precision Lab Engineering</span>
             </div>
-            <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) max-w-md">
+            <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) max-w-md">
               Single Source of Truth: Canonical catalogue driven directly by our dynamic laboratory database.
               Every product is 100% fabricated in-house across Zirconia &amp; All-Ceramic, Porcelain (PFM), and Dual-Workflow Dentures.
             </p>
@@ -204,13 +204,13 @@ export default function ProductsComponent() {
             <div className="flex flex-wrap items-center gap-2 w-full">
               <Link
                 href="/order-create"
-                className="inline-flex items-center justify-center rounded-full bg-(--bg-muted) px-5 py-2.5 text-[10px] md:text-xs lg:text-sm font-medium text-(--text-tertiary) hover:bg-(--bg-muted)/98 transition text-center shadow-xs"
+                className="inline-flex items-center justify-center rounded-full bg-(--bg-muted) px-5 py-2.5 text-xs md:text-xs lg:text-sm font-medium text-(--text-tertiary) hover:bg-(--bg-muted)/98 transition text-center shadow-xs"
               >
                 Order Online
               </Link>
               <Link
                 href="/prep-guide"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-emerald-600 bg-emerald-50 px-4 py-2 text-[10px] md:text-xs lg:text-sm font-bold text-emerald-700 hover:bg-emerald-600 hover:text-white transition text-center shadow-xs"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-emerald-600 bg-emerald-50 px-4 py-2 text-xs md:text-xs lg:text-sm font-semibold text-emerald-700 hover:bg-emerald-600 hover:text-white transition text-center shadow-xs"
               >
                 <BookOpen size={14} />
                 Clinical Prep Guide
@@ -218,7 +218,7 @@ export default function ProductsComponent() {
               <Link
                 href="/lab-slip"
                 target="_blank"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-[#1977C5] bg-white px-4 py-2 text-[10px] md:text-xs lg:text-sm font-bold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition text-center shadow-xs"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-[#1977C5] bg-white px-4 py-2 text-xs md:text-xs lg:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition text-center shadow-xs"
               >
                 <FileText size={14} />
                 Open Printable Lab Slip
@@ -232,21 +232,21 @@ export default function ProductsComponent() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="max-w-2xl space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 px-3 py-1 text-[10px] md:text-xs font-bold text-blue-300">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-blue-300">
                   <ShieldCheck size={13} />
                   Dual-Workflow Denture Wing · Since 2015
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-[10px] md:text-xs font-bold text-emerald-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-emerald-300">
                   Dual Digital &amp; Manual Workflows
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 px-3 py-1 text-[10px] md:text-xs font-bold text-cyan-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-cyan-300">
                   High Patient Adaptation Rate
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/20 border border-purple-400/30 px-3 py-1 text-[10px] md:text-xs font-bold text-purple-300">
+                <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/20 border border-purple-400/30 px-3 py-1 text-xs md:text-xs font-semibold text-purple-300">
                   Unbreakable Flexible Resin
                 </span>
               </div>
-              <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold leading-tight text-white">
+              <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold leading-tight text-white">
                 Digital CAD/CAM + Master Manual Denture Craftsmanship
               </h3>
               <p className="text-xs md:text-sm lg:text-base text-slate-300 leading-relaxed">
@@ -255,11 +255,11 @@ export default function ProductsComponent() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:w-[460px] shrink-0">
               <div className="rounded-[12px] bg-white/5 border border-white/10 p-4 backdrop-blur-sm">
-                <span className="text-[11px] font-bold text-blue-400 block mb-1">Full Dentures</span>
+                <span className="text-xs font-semibold text-blue-400 block mb-1">Full Dentures</span>
                 <p className="text-xs text-slate-300 leading-relaxed">High-impact heat-cure acrylic &amp; digital 3D-milled precision bases with bilateral balanced occlusion.</p>
               </div>
               <div className="rounded-[12px] bg-white/5 border border-white/10 p-4 backdrop-blur-sm">
-                <span className="text-[11px] font-bold text-emerald-400 block mb-1">Flexible Partial Dentures</span>
+                <span className="text-xs font-semibold text-emerald-400 block mb-1">Flexible Partial Dentures</span>
                 <p className="text-xs text-slate-300 leading-relaxed">Unbreakable Valplast-style nylon resin with anatomical gingival blending &amp; invisible clasps.</p>
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function ProductsComponent() {
           <span className="w-10 h-10 sm:w-12 sm:h-12 rounded-[14px] bg-white/20 flex items-center justify-center shrink-0">
             <Truck size={22} />
           </span>
-          <p className="text-[10px] md:text-xs lg:text-base font-semibold">
+          <p className="text-xs md:text-xs lg:text-base font-semibold">
             Fast 3-Day Turnaround across Dhaka via our Dedicated Lab Riders &amp; Pathao Logistics.
           </p>
         </div>
@@ -282,7 +282,7 @@ export default function ProductsComponent() {
               type="button"
               onClick={() => setActiveFilter(item)}
               aria-pressed={item === activeFilter}
-              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-[10px] md:text-xs lg:text-base font-medium ${
+              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-xs md:text-xs lg:text-base font-medium ${
                 item === activeFilter
                   ? 'bg-(--bg-tertiary) hover:bg-(--bg-tertiary)/98 border-(--border-tertiary) text-(--text-tertiary)'
                   : 'border-(--border-primary) hover:bg-(--bg-tertiary)/98 hover:border-(--border-tertiary) hover:text-(--text-tertiary)'
@@ -319,33 +319,33 @@ export default function ProductsComponent() {
               </div>
 
               <div className="p-8 pt-16 flex flex-col flex-1">
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#1977C5]">
+                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5]">
                   {item.category}
                 </span>
                 <div className="mt-1.5 text-base md:text-lg lg:text-xl xl:text-2xl">{item.title}</div>
                 <div className="mt-2 flex items-center flex-wrap gap-2">
-                  <span className="inline-flex items-center self-start rounded-full bg-(--bg-tertiary)/15 px-3 py-1 text-[10px] md:text-xs font-bold text-[#4d7220]">
+                  <span className="inline-flex items-center self-start rounded-full bg-(--bg-tertiary)/15 px-3 py-1 text-xs md:text-xs font-semibold text-[#4d7220]">
                     {item.tag}
                   </span>
                   {item.turnaroundDays && (
-                    <span className="inline-flex items-center rounded-full bg-blue-50 text-[#1977C5] px-2.5 py-0.5 text-[10px] font-bold">
+                    <span className="inline-flex items-center rounded-full bg-blue-50 text-[#1977C5] px-2.5 py-0.5 text-xs font-semibold">
                       {item.turnaroundDays}d Turnaround
                     </span>
                   )}
                   {item.basePrice && (
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-0.5 text-[10px] font-bold">
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-0.5 text-xs font-semibold">
                       From ৳{item.basePrice}
                     </span>
                   )}
                 </div>
-                <p className="mt-2 sm:mt-3 md:mt-4 text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
+                <p className="mt-2 sm:mt-3 md:mt-4 text-xs md:text-xs lg:text-base text-(--text-secondary)">
                   {item.desc}
                 </p>
 
                 <div className="mt-auto pt-5">
                   <Link
                     href={`/order-create?product=${encodeURIComponent(item.title)}`}
-                    className="inline-flex items-center justify-center gap-2 w-full rounded-full border-2 border-[#1977C5] px-5 py-2.5 text-[10px] md:text-xs lg:text-sm font-bold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition-colors duration-200"
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-full border-2 border-[#1977C5] px-5 py-2.5 text-xs md:text-xs lg:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition-colors duration-200"
                   >
                     <FileCheck2 size={15} />
                     Submit Case for This Item

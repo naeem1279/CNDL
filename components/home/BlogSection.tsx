@@ -17,7 +17,7 @@ export default async function BlogSection() {
   return (
     <section className="py-7 sm:py-10 md:py-20 container">
       <div className="flex items-end justify-between gap-10 mb-6 sm:mb-8 md:mb-14">
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary">
           Choosing the Right <br />
           Material for Your Case
         </h2>
@@ -45,7 +45,7 @@ export default async function BlogSection() {
 
             <div className="absolute inset-0 bg-linear-to-t from-(--bg-primary) via-(--bg-primary)/10 to-transparent" />
             <div className="absolute bottom-0 z-10 p-6">
-              <p className="text-[10px] md:text-xs lg:text-base mb-2 text-(--text-secondary)">
+              <p className="text-xs md:text-xs lg:text-base mb-2 text-(--text-secondary)">
                 {formatDate(featured.publishedAt)}
               </p>
               <h3 className="text-sm md:text-base lg:text-lg xl:text-xl font-semibold text-(--text-primary)">
@@ -73,7 +73,7 @@ export default async function BlogSection() {
                 <h4 className="text-xs sm:text-base lg:text-lg xl:text-xl font-medium text-(--text-primary) line-clamp-2">
                   {post.title}
                 </h4>
-                <p className="text-[10px] sm:text-sm lg:text-base xl:text-lg text-(--text-secondary)">
+                <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-(--text-secondary)">
                   {formatDate(post.publishedAt)}
                 </p>
               </div>

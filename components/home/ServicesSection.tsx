@@ -100,29 +100,29 @@ export default function ServicesSection() {
       <div className="container">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-14">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#1977C5]/10 border border-[#1977C5]/20 px-3.5 py-1 text-[11px] font-bold text-[#1977C5] uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#1977C5]/10 border border-[#1977C5]/20 px-3.5 py-1 text-xs font-semibold text-[#1977C5] uppercase tracking-wider mb-3">
               <Package size={13} />
               প্রোডাক্ট ক্যাটালগ · Product Catalogue
             </div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary max-w-2xl leading-tight">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary max-w-2xl leading-tight">
               Our Dental Products &amp; Restorations
             </h2>
           </div>
 
           <div className="flex flex-col items-start lg:items-end justify-end gap-4">
-            <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) w-full lg:max-w-md">
+            <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) w-full lg:max-w-md">
               Single Source of Truth: Directly synchronized with our active laboratory database — Zirconia &amp; All-Ceramic, Porcelain
               (PFM), and Dentures &amp; Orthodontics.
             </p>
 
-            <div className="inline-flex items-center gap-2 rounded-full bg-(--bg-tertiary)/15 px-4 py-2 text-[10px] md:text-xs font-bold text-[#4d7220]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-(--bg-tertiary)/15 px-4 py-2 text-xs md:text-xs font-semibold text-[#4d7220]">
               <Truck size={14} />
               3-Day Rider Delivery across Dhaka
             </div>
 
             <Link
               href="/products"
-              className="inline-flex items-center rounded-full bg-(--bg-tertiary) px-6 py-3 text-[10px] md:text-xs lg:text-base font-medium text-(--text-tertiary) hover:bg-(--bg-tertiary)/98 transition"
+              className="inline-flex items-center rounded-full bg-(--bg-tertiary) px-6 py-3 text-xs md:text-xs lg:text-base font-medium text-(--text-tertiary) hover:bg-(--bg-tertiary)/98 transition"
             >
               View Full Products Catalogue
             </Link>
@@ -153,7 +153,7 @@ export default function ServicesSection() {
                   ) : (
                     <div className="h-full w-full flex flex-col items-center justify-center bg-slate-100 text-slate-400">
                       <Package size={40} />
-                      <span className="text-xs font-bold mt-2">CNDL Dental Restoration</span>
+                      <span className="text-xs font-semibold mt-2">CNDL Dental Restoration</span>
                     </div>
                   )}
                 </div>
@@ -171,19 +171,19 @@ export default function ServicesSection() {
                         className="object-contain w-3.5 h-3.5"
                       />
                     </span>
-                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#1977C5] truncate">
+                    <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5] truncate">
                       {item.category}
                     </span>
                   </div>
                   {/* `> 0`, not truthiness: a 0 would render as a stray "0". */}
                   {!!item.warrantyYears && item.warrantyYears > 0 && (
-                    <span className="shrink-0 text-[10px] font-bold text-slate-400">
+                    <span className="shrink-0 text-xs font-semibold text-slate-400">
                       {item.warrantyYears}y Warranty
                     </span>
                   )}
                 </div>
 
-                <div className="mt-1.5 text-base md:text-lg lg:text-xl xl:text-2xl font-bold">
+                <div className="mt-1.5 text-base md:text-lg lg:text-xl xl:text-2xl font-semibold">
                   {item.title}
                   {item.titleBn && (
                     <span className="block text-xs font-normal text-(--text-secondary) mt-0.5">
@@ -192,14 +192,14 @@ export default function ServicesSection() {
                   )}
                 </div>
 
-                <p className="mt-1 sm:mt-2 md:mt-3 text-[10px] md:text-xs lg:text-base text-(--text-secondary) line-clamp-3">
+                <p className="mt-1 sm:mt-2 md:mt-3 text-xs md:text-xs lg:text-base text-(--text-secondary) line-clamp-3">
                   {item.desc}
                 </p>
 
                 <div className="mt-auto pt-5">
                   <Link
                     href={`/order-create?product=${encodeURIComponent(item.title)}`}
-                    className="inline-flex items-center justify-center gap-2 w-full rounded-full border-2 border-[#1977C5] px-5 py-2.5 text-[10px] md:text-xs lg:text-sm font-bold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition-colors duration-200"
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-full border-2 border-[#1977C5] px-5 py-2.5 text-xs md:text-xs lg:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition-colors duration-200"
                   >
                     <FileCheck2 size={15} />
                     Order / Submit Case

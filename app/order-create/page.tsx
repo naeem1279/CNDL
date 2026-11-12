@@ -173,7 +173,7 @@ export default function OrderCreatePage() {
   return (
     <section>
       <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
           Secure Online Dental Case
           <br />
           Submission
@@ -188,7 +188,7 @@ export default function OrderCreatePage() {
           <h2 className=" text-sm md:text-base lg:text-lg xl:text-xl text-center font-semibold secondary mb-1 md:mb-2 xl:mb-3">
             Step {step} of 4: Details
           </h2>
-          <p className="text-center text-[10px] md:text-xs lg:text-base text-(--text-secondary) mb-8">
+          <p className="text-center text-xs md:text-xs lg:text-base text-(--text-secondary) mb-8">
             {step === 1 ? 'Clinic, Patient & Service' : step === 2 ? 'Upload Files' : step === 3 ? 'Dates' : 'Review & Submit'}
           </p>
 
@@ -199,7 +199,7 @@ export default function OrderCreatePage() {
               return (
                 <div key={s} className="flex items-center flex-1 last:flex-none">
                   <div
-                    className={"flex items-center justify-center rounded-full font-medium w-8 h-8 md:w-10 md:h-10 lg:w-12.5 lg:h-12.5 text-[10px] md:text-xs lg:text-base " + (active ? 'bg-[#96CF5A] text-(--text-tertiary)' : 'bg-(--bg-secondary) text-(--text-primary)')}
+                    className={"flex items-center justify-center rounded-full font-medium w-8 h-8 md:w-10 md:h-10 lg:w-12.5 lg:h-12.5 text-xs md:text-xs lg:text-base " + (active ? 'bg-[#96CF5A] text-(--text-tertiary)' : 'bg-(--bg-secondary) text-(--text-primary)')}
                   >
                     {s}
                   </div>
@@ -273,7 +273,7 @@ export default function OrderCreatePage() {
               </div>
             )}
             {step === 2 && (
-              <div className="bg-(--bg-muted) text-(--text-tertiary) rounded-[10px] md:rounded-[16px] p-5 mb-5 text-[10px] md:text-xs lg:text-base">
+              <div className="bg-(--bg-muted) text-(--text-tertiary) rounded-[10px] md:rounded-[16px] p-5 mb-5 text-xs md:text-xs lg:text-base">
                 <p>
                   Have large intraoral scan files (STL/OBJ/DICOM)? You can also dispatch them directly
                   to our lab WhatsApp at <span className="font-semibold whitespace-nowrap">+880 1743-167963</span> for
@@ -304,7 +304,7 @@ export default function OrderCreatePage() {
                 <p className="text-sm md:text-base lg:text-lg xl:text-xl font-medium mb-2 md:mb-[17px]">
                   Upload Digital Files
                 </p>
-                <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) mb-2 md:mb-[18px]">
+                <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) mb-2 md:mb-[18px]">
                   RX / Scan / Photos (STL, OBJ, DCM, PDF, JPG, PNG)
                 </p>
 
@@ -316,7 +316,7 @@ export default function OrderCreatePage() {
                     className="hidden"
                     onChange={onFileChange}
                   />
-                  <span className="px-6 py-2.5 bg-[#96CF5A] text-(--text-tertiary) rounded-[8px] text-[10px] md:text-xs lg:text-base cursor-pointer">
+                  <span className="px-6 py-2.5 bg-[#96CF5A] text-(--text-tertiary) rounded-[8px] text-xs md:text-xs lg:text-base cursor-pointer">
                     Choose Files
                   </span>
                 </label>
@@ -331,7 +331,7 @@ export default function OrderCreatePage() {
                   value={form.trialDate}
                   onChange={(e) => setForm({ ...form, trialDate: e.target.value })}
                 />
-                <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
+                <p className="text-xs md:text-xs lg:text-base text-(--text-secondary)">
                   Standard turnaround: 3 working days in Dhaka, 3–4 working days nationwide. Plan your insertion date accordingly.
                 </p>
                 <Input
@@ -354,7 +354,7 @@ export default function OrderCreatePage() {
                   <Row label="Files" value={form.files.length + " uploaded"} />
                 </div>
 
-                <label className="flex items-center gap-2 text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
+                <label className="flex items-center gap-2 text-xs md:text-xs lg:text-base text-(--text-secondary)">
                   <input
                     type="checkbox"
                     checked={form.agreed}
@@ -371,7 +371,7 @@ export default function OrderCreatePage() {
             <button
               onClick={back}
               disabled={step === 1 || loading}
-              className="w-full border rounded-[8px] border-(--border-primary) py-2 text-[10px] md:text-xs lg:text-base font-semibold disabled:opacity-40 cursor-pointer hover:scale-105 transition-transform"
+              className="w-full border rounded-[8px] border-(--border-primary) py-2 text-xs md:text-xs lg:text-base font-semibold disabled:opacity-40 cursor-pointer hover:scale-105 transition-transform"
             >
               Back
             </button>
@@ -379,7 +379,7 @@ export default function OrderCreatePage() {
             {step < 4 ? (
               <button
                 onClick={next}
-                className="w-full bg-(--bg-muted) text-(--text-tertiary) border rounded-[8px] border-(--border-primary) py-2 text-[10px] md:text-xs lg:text-base font-semibold cursor-pointer hover:scale-105 transition-transform"
+                className="w-full bg-(--bg-muted) text-(--text-tertiary) border rounded-[8px] border-(--border-primary) py-2 text-xs md:text-xs lg:text-base font-semibold cursor-pointer hover:scale-105 transition-transform"
               >
                 Next
               </button>
@@ -387,7 +387,7 @@ export default function OrderCreatePage() {
               <button
                 disabled={!form.agreed || loading}
                 onClick={handleSubmit}
-                className="w-full bg-(--bg-muted) text-white border rounded-[8px] border-(--border-primary) py-2 text-[10px] md:text-xs lg:text-base font-semibold disabled:opacity-40 cursor-pointer hover:scale-105 transition-transform"
+                className="w-full bg-(--bg-muted) text-white border rounded-[8px] border-(--border-primary) py-2 text-xs md:text-xs lg:text-base font-semibold disabled:opacity-40 cursor-pointer hover:scale-105 transition-transform"
               >
                 {loading ? 'Submitting...' : 'Submit'}
               </button>
@@ -401,9 +401,9 @@ export default function OrderCreatePage() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between py-1 text-[10px] md:text-xs lg:text-base">
+    <div className="flex justify-between py-1 text-xs md:text-xs lg:text-base">
       <span className="text-(--text-secondary)">{label}</span>
       <span className="font-medium">{value}</span>
     </div>
   );
-}
+}

@@ -65,7 +65,7 @@ function renderContent(content: string) {
       elements.push(
         <h2
           key={i}
-          className="text-xl sm:text-2xl md:text-3xl font-extrabold secondary mt-10 mb-4 pb-2 border-b-2 border-teal-500/40 text-(--text-primary) tracking-tight"
+          className="text-xl sm:text-2xl md:text-3xl font-semibold secondary mt-10 mb-4 pb-2 border-b-2 border-teal-500/40 text-(--text-primary) tracking-tight"
         >
           {heading}
         </h2>
@@ -78,7 +78,7 @@ function renderContent(content: string) {
     if (line.startsWith('### ')) {
       const heading = line.replace(/^###\s+/, '');
       elements.push(
-        <h3 key={i} className="text-lg sm:text-xl font-bold mt-7 mb-3 text-(--text-primary)">
+        <h3 key={i} className="text-lg sm:text-xl font-semibold mt-7 mb-3 text-(--text-primary)">
           {heading}
         </h3>
       );
@@ -129,7 +129,7 @@ function renderContent(content: string) {
               <thead className="bg-slate-100 dark:bg-slate-800/60 text-(--text-primary) border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   {headers.map((h, hIdx) => (
-                    <th key={hIdx} className="py-3.5 px-4 font-bold uppercase tracking-wider text-[11px]">
+                    <th key={hIdx} className="py-3.5 px-4 font-semibold uppercase tracking-wider text-xs">
                       {h}
                     </th>
                   ))}
@@ -200,7 +200,7 @@ function renderContent(content: string) {
 
     // Standard paragraph
     elements.push(
-      <p key={i} className="text-[13px] sm:text-base md:text-lg text-(--text-secondary) leading-relaxed my-3.5">
+      <p key={i} className="text-sm sm:text-base md:text-lg text-(--text-secondary) leading-relaxed my-3.5">
         {line}
       </p>
     );
@@ -271,10 +271,10 @@ export default async function BlogPostPage({ params }: Props) {
       />
       <ShareHero>
         <div className="space-y-3 max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold uppercase tracking-wider">
             <Tag size={12} /> {post.category}
           </span>
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-[44px] font-bold leading-tight secondary text-(--text-tertiary)">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight secondary text-(--text-tertiary)">
             {post.title}
           </h1>
           <p className="text-xs md:text-sm text-(--text-tertiary)/90 line-clamp-2">
@@ -330,20 +330,20 @@ export default async function BlogPostPage({ params }: Props) {
 
           {/* Lab Director Authority Card */}
           <div className="mt-12 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-800 bg-(--bg-secondary) p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-sm">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#1977C5] text-white flex items-center justify-center font-black text-2xl shrink-0 shadow-md">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#1977C5] text-white flex items-center justify-center font-semibold text-2xl shrink-0 shadow-md">
               AK
             </div>
             <div className="space-y-2 text-center sm:text-left flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h4 className="text-lg font-bold secondary text-(--text-primary)">M. Abdul Kadir</h4>
+                  <h4 className="text-lg font-semibold secondary text-(--text-primary)">M. Abdul Kadir</h4>
                   <p className="text-xs font-semibold text-[#1977C5]">Chairman &amp; Managing Director · CN Dental Lab (CNDL)</p>
                 </div>
                 <a
                   href={`https://wa.me/8801743167963?text=${encodeURIComponent(`Hello CNDL, I am reading "${post.title}" and have a clinical question.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#25D366] text-white text-xs font-bold shadow hover:brightness-105 transition-all self-center sm:self-auto shrink-0"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#25D366] text-white text-xs font-semibold shadow hover:brightness-105 transition-all self-center sm:self-auto shrink-0"
                 >
                   <MessageCircle size={16} /> Clinical WhatsApp Inquiry
                 </a>
@@ -358,7 +358,7 @@ export default async function BlogPostPage({ params }: Props) {
           <div className="mt-10">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-xs md:text-sm font-bold secondary hover:text-[#1977C5] transition-colors"
+              className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold secondary hover:text-[#1977C5] transition-colors"
             >
               <ArrowLeft size={16} /> Back to all articles
             </Link>
@@ -368,7 +368,7 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Related Posts */}
         {related.length > 0 && (
           <div className="max-w-4xl mx-auto mt-14 pt-10 border-t border-(--border-primary)">
-            <h2 className="text-xl sm:text-2xl font-bold secondary mb-6">
+            <h2 className="text-xl sm:text-2xl font-semibold secondary mb-6">
               More Clinical Articles from CNDL
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -387,10 +387,10 @@ export default async function BlogPostPage({ params }: Props) {
                     />
                   </div>
                   <div className="p-4 flex flex-col flex-1">
-                    <span className="text-[10px] font-bold text-[#1977C5] uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-[#1977C5] uppercase tracking-wider">
                       {item.category}
                     </span>
-                    <h3 className="text-sm font-bold text-(--text-primary) mt-1.5 group-hover:text-[#1977C5] transition line-clamp-2">
+                    <h3 className="text-sm font-semibold text-(--text-primary) mt-1.5 group-hover:text-[#1977C5] transition line-clamp-2">
                       {item.title}
                     </h3>
                   </div>

@@ -97,7 +97,7 @@ export default function ProcessSection() {
   return (
     <section className="py-7 sm:py-10 md:py-20 bg-(--bg-primary)">
       <div className="container ">
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary mb-10">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary mb-10">
           How We Deliver Quality <br />
           Restorations
         </h2>
@@ -121,7 +121,7 @@ export default function ProcessSection() {
                     {step.id}
                   </span>
 
-                  <span className="font-bold secondary text-base md:text-lg lg:text-xl xl:text-2xl">
+                  <span className="font-semibold secondary text-base md:text-lg lg:text-xl xl:text-2xl">
                     {step.title}
                   </span>
                   <StepIcon
@@ -140,10 +140,10 @@ export default function ProcessSection() {
                 <ActiveIcon size={26} />
               </span>
               <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/70 block">
+                <span className="text-xs font-semibold uppercase tracking-widest text-white/70 block">
                   Step {activeStep.id}
                 </span>
-                <h3 className="text-lg md:text-2xl font-bold leading-tight">{activeStep.title}</h3>
+                <h3 className="text-lg md:text-2xl font-semibold leading-tight">{activeStep.title}</h3>
               </div>
             </div>
 
@@ -153,7 +153,7 @@ export default function ProcessSection() {
 
             <ul className="space-y-2 mb-7">
               {activeStep.standards.map((s) => (
-                <li key={s} className="flex items-start gap-2 text-[11px] md:text-sm text-white/85">
+                <li key={s} className="flex items-start gap-2 text-xs md:text-sm text-white/85">
                   <ShieldCheck size={15} className="mt-0.5 shrink-0 text-white" />
                   {s}
                 </li>
@@ -162,7 +162,7 @@ export default function ProcessSection() {
 
             <button
               onClick={() => setProtocolStep(activeStep)}
-              className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-xs md:text-sm font-bold text-[#1977C5] shadow-lg hover:shadow-xl transition-all group w-full sm:w-fit min-h-[48px]"
+              className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-xs md:text-sm font-semibold text-[#1977C5] shadow-lg hover:shadow-xl transition-all group w-full sm:w-fit min-h-[48px]"
             >
               <Microscope size={16} />
               Inspect Quality Protocol
@@ -187,10 +187,10 @@ export default function ProcessSection() {
                   <protocolStep.icon size={21} className="text-[#1977C5]" />
                 </span>
                 <div>
-                  <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#1977C5] block">
+                  <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5] block">
                     Quality Protocol · Step {protocolStep.id}
                   </span>
-                  <h3 className="text-base md:text-xl font-bold secondary leading-tight">
+                  <h3 className="text-base md:text-xl font-semibold secondary leading-tight">
                     {protocolStep.protocol}
                   </h3>
                 </div>
@@ -210,7 +210,7 @@ export default function ProcessSection() {
 
             <div className="space-y-5">
               <div>
-                <p className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                <p className="flex items-center gap-1.5 text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
                   <Boxes size={12} className="text-[#1977C5]" /> Equipment &amp; Materials
                 </p>
                 <ul className="space-y-1.5">
@@ -224,7 +224,7 @@ export default function ProcessSection() {
               </div>
 
               <div>
-                <p className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                <p className="flex items-center gap-1.5 text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
                   <ShieldCheck size={12} className="text-[#88C845]" /> Quality Standards
                 </p>
                 <ul className="space-y-1.5">

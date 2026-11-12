@@ -15,7 +15,7 @@ export default function TermsConditionsPage() {
   return (
     <section>
       <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
           Secure Online Dental Case
           <br />
           Submission
@@ -27,7 +27,7 @@ export default function TermsConditionsPage() {
       </ShareHero>
       <div className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
         <div className="flex flex-col items-center mb-6 md:mb-8 lg:mb-10">
-          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] text-center font-bold mb-2 md:mb-3 lg:mb-4">
+          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-center font-semibold mb-2 md:mb-3 lg:mb-4">
             Terms & Conditions and Lab Policies
           </div>
           <p className="text-xs md:text-sm lg:text-base xl:text-lg mt-2 md:mt-4 text-(--text-secondary) text-center">

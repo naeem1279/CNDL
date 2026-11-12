@@ -183,10 +183,10 @@ export default function TechnologyPage() {
       {/* Hero Banner */}
       <ShareHero>
         <div className="space-y-4 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1977C5]/10 border border-[#1977C5]/20 text-[#1977C5] text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1977C5]/10 border border-[#1977C5]/20 text-[#1977C5] text-xs font-semibold uppercase tracking-wider">
             <Cpu size={14} /> Certified Digital Hardware Architecture
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[50px] font-bold leading-tight secondary text-(--text-tertiary)">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight secondary text-(--text-tertiary)">
             Industrial CAD/CAM Machinery &amp; Sub-Micron Precision
           </h1>
           <p className="text-xs md:text-sm lg:text-base text-(--text-tertiary)/90 leading-relaxed">
@@ -200,23 +200,23 @@ export default function TechnologyPage() {
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
             <div className="p-3">
-              <div className="text-2xl md:text-4xl font-extrabold text-[#1977C5]">±5 µm</div>
+              <div className="text-2xl md:text-4xl font-semibold text-[#1977C5]">±5 µm</div>
               <div className="text-xs font-semibold text-(--text-secondary) mt-1">Marginal Adaptation</div>
             </div>
             <div className="p-3">
-              <div className="text-2xl md:text-4xl font-extrabold text-[#1977C5]">5-Axis</div>
+              <div className="text-2xl md:text-4xl font-semibold text-[#1977C5]">5-Axis</div>
               <div className="text-xs font-semibold text-(--text-secondary) mt-1">Simultaneous CNC Milling</div>
             </div>
             <div className="p-3">
-              <div className="text-2xl md:text-4xl font-extrabold text-[#E65100]">1530°C</div>
+              <div className="text-2xl md:text-4xl font-semibold text-[#E65100]">1530°C</div>
               <div className="text-xs font-semibold text-(--text-secondary) mt-1">Zirconia Sintering</div>
             </div>
             <div className="p-3">
-              <div className="text-2xl md:text-4xl font-extrabold text-[#00897B]">28 µm</div>
+              <div className="text-2xl md:text-4xl font-semibold text-[#00897B]">28 µm</div>
               <div className="text-xs font-semibold text-(--text-secondary) mt-1">3D Print Resolution</div>
             </div>
             <div className="col-span-2 md:col-span-1 p-3">
-              <div className="text-2xl md:text-4xl font-extrabold text-[#88C845]">3-4 Days</div>
+              <div className="text-2xl md:text-4xl font-semibold text-[#88C845]">3-4 Days</div>
               <div className="text-xs font-semibold text-(--text-secondary) mt-1">Guaranteed Delivery</div>
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function TechnologyPage() {
       <section className="py-14 md:py-20">
         <div className="container space-y-16">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold secondary">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold secondary">
               Our 5 Pillars of Manufacturing Excellence
             </h2>
             <p className="text-xs md:text-sm text-(--text-secondary)">
@@ -253,14 +253,14 @@ export default function TechnologyPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                          <span className="text-xs font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
                             {m.origin}
                           </span>
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1977C5]">
+                          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1977C5]">
                             {m.accuracy}
                           </span>
                         </div>
-                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold mt-1.5 secondary">
+                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold mt-1.5 secondary">
                           {m.name}
                         </h3>
                         <p className="text-xs sm:text-sm font-semibold text-[#1977C5] mt-0.5">
@@ -271,7 +271,7 @@ export default function TechnologyPage() {
 
                     <Link
                       href="/order-create"
-                      className="self-start lg:self-center inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1977C5] text-white text-xs font-bold hover:bg-[#1668ad] transition-colors shadow-sm"
+                      className="self-start lg:self-center inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1977C5] text-white text-xs font-semibold hover:bg-[#1668ad] transition-colors shadow-sm"
                     >
                       Send Case on this Tech <ArrowRight size={14} />
                     </Link>
@@ -284,7 +284,7 @@ export default function TechnologyPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
                     {/* Specifications List */}
                     <div className="space-y-3">
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                         <Gauge size={14} /> Technical Specifications
                       </h4>
                       <div className="space-y-2">
@@ -293,7 +293,7 @@ export default function TechnologyPage() {
                             key={sIdx}
                             className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-(--bg-muted)/40 text-xs gap-1 border border-(--border-primary)/50"
                           >
-                            <span className="font-bold text-(--text-secondary)">{s.label}</span>
+                            <span className="font-semibold text-(--text-secondary)">{s.label}</span>
                             <span className="font-semibold text-(--text-primary) sm:text-right">{s.val}</span>
                           </div>
                         ))}
@@ -302,7 +302,7 @@ export default function TechnologyPage() {
 
                     {/* Clinical Benefits */}
                     <div className="space-y-3">
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                         <ShieldCheck size={14} /> Clinical Benefits for Clinicians
                       </h4>
                       <div className="space-y-2.5">
@@ -329,10 +329,10 @@ export default function TechnologyPage() {
       <section className="py-14 md:py-20 bg-(--bg-secondary) border-t border-(--border-primary)">
         <div className="container space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#88C845]/15 text-[#4d7220] text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#88C845]/15 text-[#4d7220] text-xs font-semibold uppercase tracking-wider">
               Clinical Precision Comparison
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold secondary">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold secondary">
               Why Dentists Switch from Analog Casting to CNDL
             </h2>
             <p className="text-xs md:text-sm text-(--text-secondary)">
@@ -344,16 +344,16 @@ export default function TechnologyPage() {
             <table className="w-full text-left border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-(--border-primary) bg-(--bg-muted) text-(--text-tertiary)">
-                  <th className="py-4 px-5 font-bold uppercase text-[11px] tracking-wider">Restoration Parameter</th>
-                  <th className="py-4 px-5 font-bold uppercase text-[11px] tracking-wider text-[#1977C5]">CNDL 5-Axis Digital CAD/CAM</th>
-                  <th className="py-4 px-5 font-bold uppercase text-[11px] tracking-wider text-slate-400">Traditional Analog Lab</th>
-                  <th className="py-4 px-5 font-bold uppercase text-[11px] tracking-wider text-emerald-600">Chairside Clinical Impact</th>
+                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider">Restoration Parameter</th>
+                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider text-[#1977C5]">CNDL 5-Axis Digital CAD/CAM</th>
+                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider text-slate-400">Traditional Analog Lab</th>
+                  <th className="py-4 px-5 font-semibold uppercase text-xs tracking-wider text-emerald-600">Chairside Clinical Impact</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-(--border-primary)">
                 {comparisonData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-5 font-bold text-(--text-primary)">{row.metric}</td>
+                    <td className="py-4 px-5 font-semibold text-(--text-primary)">{row.metric}</td>
                     <td className="py-4 px-5 font-semibold text-[#1977C5] bg-blue-50/20">{row.cndl}</td>
                     <td className="py-4 px-5 text-(--text-secondary)">{row.analog}</td>
                     <td className="py-4 px-5 font-medium text-emerald-800">{row.impact}</td>
@@ -370,10 +370,10 @@ export default function TechnologyPage() {
         <div className="container">
           <div className="rounded-[24px] bg-[#0A2540] text-white p-8 sm:p-12 flex flex-col lg:flex-row lg:items-center justify-between gap-8 shadow-xl">
             <div className="space-y-3 max-w-xl">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#88C845] bg-[#88C845]/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#88C845] bg-[#88C845]/20 px-3 py-1 rounded-full">
                 Open Scan Protocol
               </span>
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold secondary leading-tight">
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold secondary leading-tight">
                 Direct Integration with Any Intraoral Scanner
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -383,7 +383,7 @@ export default function TechnologyPage() {
             <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
               <Link
                 href="/order-create"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#1977C5] text-white font-bold text-xs sm:text-sm hover:bg-[#1668ad] transition-all shadow-md"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#1977C5] text-white font-semibold text-xs sm:text-sm hover:bg-[#1668ad] transition-all shadow-md"
               >
                 <FileCheck2 size={16} /> Submit Digital Case
               </Link>
@@ -391,7 +391,7 @@ export default function TechnologyPage() {
                 href="https://wa.me/8801743167963"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full border-2 border-white/30 text-white font-bold text-xs sm:text-sm hover:bg-white/10 transition-all"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full border-2 border-white/30 text-white font-semibold text-xs sm:text-sm hover:bg-white/10 transition-all"
               >
                 Discuss Clinical Tech
               </a>

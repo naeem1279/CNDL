@@ -8,6 +8,8 @@ import {
   FileText, ScanSearch, Loader2, MessageCircle, Globe, Check,
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
 
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -158,6 +160,9 @@ export default function NavBer() {
 
   const looksLikeCaseId = /^[a-z0-9-]{4,}$/i.test(searchQ.trim()) && searchQ.trim().length >= 4;
 
+  const pathname = usePathname();
+  // Bengali nav labels are longer: keep the inline menu for 1280px and up only.
+  const wideLabels = lang === 'bn';
   const navMenu = [
     { key: 'home' as const, href: '/' },
     { key: 'about' as const, href: '/about' },
@@ -168,168 +173,172 @@ export default function NavBer() {
   ];
 
   return (
-    <header className="sticky top-0 z-50">
-      <div className="bg-[#E1ECF6] h-fit md:h-[50px] p-2 border border-[#E1ECF6] flex items-center justify-between">
-        <div className="container flex items-center justify-center sm:justify-between flex-wrap gap-2  text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
-          <div className="flex items-center gap-3">
-            <Link href="tel:+8801743167963" className="flex items-center gap-1.5">
-              <Phone size={24} />
+    <header className="sticky top-0 z-[60]">
+      {/* Info bar: contact details, quiet slate. Phones show the main number only. */}
+      <div className="border-b border-slate-200 bg-slate-50 text-xs text-slate-600">
+        <div className="container flex h-10 items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <a href="tel:+8801743167963" className="inline-flex h-10 items-center gap-1.5 hover:text-slate-900">
+              <Phone size={14} aria-hidden="true" />
               01743-167963
-            </Link>
-            <span className="hidden lg:inline">/</span>
-            <Link href="tel:+8801805976351" className="hidden lg:flex items-center gap-1.5">
-              <Phone size={24} />
+            </a>
+            <a href="tel:+8801805976351" className="hidden h-10 items-center gap-1.5 hover:text-slate-900 lg:inline-flex">
+              <Phone size={14} aria-hidden="true" />
               01805-976351
-            </Link>
-            <hr className="w-[1px] h-[10px] bg-(--border-tertiary)" />
-            <div className=" flex items-center gap-1.5">
-              <MapPin size={24} />
+            </a>
+            <span className="hidden items-center gap-1.5 truncate md:inline-flex">
+              <MapPin size={14} aria-hidden="true" />
               419/1/C Khilgaon, Dhaka-1219
-            </div>
+            </span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Clock4 size={24} />
+          <span className="hidden shrink-0 items-center gap-1.5 sm:inline-flex">
+            <Clock4 size={14} aria-hidden="true" />
             {t.topbarHours}
-          </div>
+          </span>
         </div>
       </div>
-      <div className="bg-(--bg-muted) text-(--text-tertiary)">
-        <nav className="container flex items-center justify-between py-4">
-          <Link href="/">
-            <Image
-              src="/icon/Logo.svg"
-              alt="Logo"
-              width={1000}
-              height={1000}
-              className="w-[120px] sm:w-[162px] h-[50px]"
-            />
+
+      <div className="border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+        <nav className="container flex h-16 items-center justify-between gap-4" aria-label="Main">
+          <Link href="/" className="inline-flex h-11 shrink-0 items-center" aria-label="CNDL Global home">
+            <Image src="/icon/Logo_footer.svg" alt="CNDL" width={162} height={52} priority className="h-9 w-auto sm:h-10" />
           </Link>
 
-          <div className="hidden lg:flex items-center gap-8">
-            {navMenu.map((item) => (
-              <div key={item.key} className="flex items-center gap-8">
+          <div className={`hidden items-center gap-0.5 xl:gap-1 ${wideLabels ? "xl:flex" : "lg:flex"}`}>
+            {navMenu.map((item) => {
+              const active = item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href);
+              return (
                 <Link
+                  key={item.key}
                   href={item.href}
-                  className="whitespace-nowrap text-[10px] md:text-xs lg:text-base"
+                  aria-current={active ? 'page' : undefined}
+                  className={`inline-flex h-10 items-center whitespace-nowrap rounded-full px-2.5 text-sm font-medium transition-colors xl:px-3.5 ${
+                    active ? 'bg-[#1977C5]/10 text-[#1668AD]' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
                 >
                   {t.nav[item.key]}
                 </Link>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="flex items-center gap-3 text-(--text-tertiary)">
+          <div className="flex items-center gap-1 text-slate-700">
             <button
               onClick={openSearch}
               aria-label="Search cases and articles"
               title="Search / খুঁজুন"
-              className="px-2 text-[10px] md:text-xs lg:text-base hover:text-[#1977C5] transition-colors"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-slate-100 hover:text-slate-900"
             >
-              <Search size={24} />
+              <Search size={20} />
             </button>
 
             <div className="relative">
               <button
                 onClick={() => setLangOpen((v) => !v)}
                 aria-label="Switch language"
+                aria-expanded={langOpen}
                 title="Switch language / ভাষা পরিবর্তন করুন"
-                className="px-2 text-[10px] md:text-xs lg:text-base flex items-center gap-1.5 hover:text-[#1977C5] transition-colors"
+                className="inline-flex h-11 items-center gap-1 rounded-full px-2 text-sm font-medium hover:bg-slate-100 hover:text-slate-900 xl:px-3"
               >
                 {lang === 'en' ? 'ENG' : 'বাংলা'}
-                <ChevronDown size={24} className={`transition-transform ${langOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={16} className={`transition-transform ${langOpen ? 'rotate-180' : ''}`} />
               </button>
               {langOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-[12px] shadow-xl border border-gray-100 py-2 z-20">
-                    <p className="px-4 pb-1.5 text-[9px] font-black uppercase tracking-widest text-gray-400">
-                      Language / ভাষা
-                    </p>
-                    <button
-                      onClick={() => switchLang('en')}
-                      className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-(--bg-muted) transition-colors"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Globe size={14} className="text-gray-400" />
-                        ENG <span className="text-gray-400 text-xs">English</span>
-                      </span>
-                      {lang === 'en' && <Check size={15} className="text-[#1977C5]" />}
-                    </button>
-                    <button
-                      onClick={() => switchLang('bn')}
-                      className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-(--bg-muted) transition-colors"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Globe size={14} className="text-gray-400" />
-                        বাংলা <span className="text-gray-400 text-xs">Bangla</span>
-                      </span>
-                      {lang === 'bn' && <Check size={15} className="text-[#1977C5]" />}
-                    </button>
+                  <div className="absolute right-0 top-full z-20 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/5">
+                    <p className="px-3 pb-1 pt-1.5 text-xs font-medium text-slate-500">Language / ভাষা</p>
+                    {(
+                      [
+                        ['en', 'ENG', 'English'],
+                        ['bn', 'বাংলা', 'Bangla'],
+                      ] as const
+                    ).map(([code, label, sub]) => (
+                      <button
+                        key={code}
+                        onClick={() => switchLang(code)}
+                        className="flex h-11 w-full items-center justify-between rounded-lg px-3 text-sm text-slate-800 hover:bg-slate-100"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Globe size={14} className="text-slate-400" />
+                          {label} <span className="text-xs text-slate-500">{sub}</span>
+                        </span>
+                        {lang === code && <Check size={15} className="text-[#1977C5]" />}
+                      </button>
+                    ))}
                   </div>
                 </>
               )}
             </div>
 
-            <button
-              onClick={() => setPricingOpen(true)}
-              className="hidden lg:flex p-3 border-[0.5px] border-(--border-primary) rounded-[64px] text-[10px] md:text-xs lg:text-base items-center gap-1.5 bg-(--bg-primary) text-(--text-primary) group hover:bg-(--bg-primary)/98 cursor-pointer"
-            >
+            <span className={`ml-1 hidden xl:ml-2 ${wideLabels ? "xl:block" : "lg:block"}`}>
+              <Button onClick={() => setPricingOpen(true)}>
               {t.pricing}
-              <ArrowRight size={24} className="group-hover:translate-x-2 transition" />
-            </button>
+              <ArrowRight size={16} aria-hidden="true" className="hidden xl:block" />
+            </Button>
+            </span>
 
-            <button className="lg:hidden" onClick={() => setIsOpen(true)} aria-label="Open menu">
-              <Menu size={24} />
+            <button
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-slate-100 ${wideLabels ? "xl:hidden" : "lg:hidden"}`}
+              onClick={() => setIsOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={isOpen}
+            >
+              <Menu size={22} />
             </button>
           </div>
         </nav>
+      </div>
 
-        <div
-          className={"fixed inset-0 bg-black/40 transition-opacity duration-300 " + (isOpen ? 'opacity-100 visible' : 'opacity-0 invisible')}
-          onClick={() => setIsOpen(false)}
-        />
-
-        <aside
-          className={"fixed top-0 right-0 h-full w-[280px] bg-(--bg-muted) border-l border-(--border-secondary) transform transition-transform duration-300 ease-in-out " + (isOpen ? 'translate-x-0' : 'translate-x-full')}
-        >
-          <div className="flex items-center justify-between p-4 border-b border-(--border-secondary)">
-            <Image
-              src="/icon/Logo.svg"
-              alt="Logo"
-              width={162}
-              height={50}
-              className="w-[162px] h-[50px]"
-            />
-            <button onClick={() => setIsOpen(false)} aria-label="Close menu">
-              <X size={24} />
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-4 p-4">
-            {navMenu.map((item) => (
+      {/* Phone menu: slide-in panel. */}
+      <div
+        className={`fixed inset-0 bg-slate-900/40 transition-opacity duration-300 ${wideLabels ? 'xl:hidden' : 'lg:hidden'} ` + (isOpen ? 'visible opacity-100' : 'invisible opacity-0')}
+        onClick={() => setIsOpen(false)}
+        aria-hidden="true"
+      />
+      <aside
+        className={
+          `fixed right-0 top-0 flex h-full w-[min(320px,85vw)] flex-col border-l border-slate-200 bg-white shadow-xl transition-transform duration-300 ease-out ${wideLabels ? 'xl:hidden' : 'lg:hidden'} ` +
+          (isOpen ? 'translate-x-0' : 'invisible translate-x-full')
+        }
+        aria-label="Menu"
+      >
+        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
+          <Image src="/icon/Logo_footer.svg" alt="CNDL" width={162} height={52} className="h-9 w-auto" />
+          <button onClick={() => setIsOpen(false)} aria-label="Close menu" className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-slate-100">
+            <X size={22} />
+          </button>
+        </div>
+        <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+          {navMenu.map((item) => {
+            const active = item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href);
+            return (
               <Link
                 key={item.key}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className="text-base"
+                aria-current={active ? 'page' : undefined}
+                className={`flex h-12 items-center rounded-lg px-3 text-base font-medium ${active ? 'bg-[#1977C5]/10 text-[#1668AD]' : 'text-slate-700 hover:bg-slate-100'}`}
               >
                 {t.nav[item.key]}
               </Link>
-            ))}
-
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setPricingOpen(true);
-              }}
-              className="flex p-3 border-[0.5px] border-(--border-primary) rounded-[64px] text-[10px] md:text-xs lg:text-base items-center justify-center gap-1.5 bg-(--bg-primary) text-(--text-primary) group hover:bg-(--bg-primary)/98 cursor-pointer"
-            >
-              {t.pricing}
-              <ArrowRight size={24} className="group-hover:translate-x-2 transition" />
-            </button>
-          </div>
-        </aside>
-      </div>
+            );
+          })}
+        </div>
+        <div className="border-t border-slate-200 p-4">
+          <Button
+            onClick={() => {
+              setIsOpen(false);
+              setPricingOpen(true);
+            }}
+            size="lg"
+            className="w-full"
+          >
+            {t.pricing}
+            <ArrowRight size={16} aria-hidden="true" />
+          </Button>
+        </div>
+      </aside>
 
       {/* ================= PRICING / SERVICE QUOTE MODAL ================= */}
       {pricingOpen && (
@@ -343,10 +352,10 @@ export default function NavBer() {
           >
             <div className="flex items-start justify-between gap-4 mb-1">
               <div>
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#1977C5]">
+                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5]">
                   Service Quote
                 </span>
-                <h3 className="text-lg md:text-2xl font-bold secondary leading-tight mt-1">
+                <h3 className="text-lg md:text-2xl font-semibold secondary leading-tight mt-1">
                   Get Service Pricing &amp; Quotation
                 </h3>
               </div>
@@ -361,7 +370,7 @@ export default function NavBer() {
 
             <div className="space-y-3.5">
               <label className="block">
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
+                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-slate-400 block mb-1.5">
                   Your Name <span className="normal-case font-medium text-slate-400">(ডাক্তার / ক্লিনিক / রোগীর নাম)</span>
                 </span>
                 <input
@@ -374,7 +383,7 @@ export default function NavBer() {
               </label>
 
               <label className="block">
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
+                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-slate-400 block mb-1.5">
                   Phone Number / WhatsApp
                 </span>
                 <input
@@ -387,7 +396,7 @@ export default function NavBer() {
               </label>
 
               <label className="block">
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
+                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-slate-400 block mb-1.5">
                   Service of Interest
                 </span>
                 <select
@@ -405,7 +414,7 @@ export default function NavBer() {
               </label>
 
               <label className="block">
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
+                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-slate-400 block mb-1.5">
                   Short Note / Requirements
                 </span>
                 <textarea
@@ -420,9 +429,8 @@ export default function NavBer() {
 
             <button
               onClick={priceWhatsApp}
-              className="mt-6 relative w-full inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-linear-to-b from-[#2EE073] to-[#1DA851] px-6 py-3.5 text-xs md:text-sm font-bold text-white shadow-[0_12px_28px_-8px_rgba(37,211,102,0.65)] ring-1 ring-[#25D366]/40 transition-all min-h-[48px] hover:brightness-105 hover:shadow-[0_14px_32px_-8px_rgba(37,211,102,0.75)] active:scale-[0.99]"
+              className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#128C7E] px-6 text-sm font-medium text-white transition-colors hover:bg-[#0F7A6D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#128C7E]/40 focus-visible:ring-offset-2"
             >
-              <span className="absolute inset-x-4 top-0 h-px bg-white/50" aria-hidden="true" />
               <MessageCircle size={16} />
               Inquire via WhatsApp
               <ArrowRight size={15} />
@@ -431,7 +439,7 @@ export default function NavBer() {
             <button
               onClick={requestCallBack}
               disabled={callbackState === 'sending' || callbackState === 'sent'}
-              className="mt-2.5 w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-200 px-6 py-3.5 text-xs md:text-sm font-bold text-slate-700 hover:border-[#1977C5]/50 hover:text-[#1977C5] transition-all min-h-[48px] disabled:opacity-60 cursor-pointer"
+              className="mt-2.5 w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-200 px-6 py-3.5 text-xs md:text-sm font-semibold text-slate-700 hover:border-[#1977C5]/50 hover:text-[#1977C5] transition-all min-h-[48px] disabled:opacity-60 cursor-pointer"
             >
               {callbackState === 'sending' ? (
                 <>
@@ -451,15 +459,15 @@ export default function NavBer() {
               )}
             </button>
 
-            <p className="mt-3.5 text-center text-[9px] md:text-[10px] text-slate-400">
+            <p className="mt-3.5 text-center text-xs md:text-xs text-slate-400">
               Your details go straight to our lab specialists — never shared or published.
             </p>
 
             <div className="mt-4 rounded-xl border border-[#1977C5]/20 bg-[#EAF2FA]/80 px-4 py-3 text-center">
-              <p className="text-[10px] md:text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs md:text-xs text-slate-600 leading-relaxed">
                 Are you a dental lab seeking B2B CAD/CAM milling outsourcing? Contact our Lab
                 Director directly at{' '}
-                <a href={LAB_PHONE_TEL} className="font-bold text-[#1977C5] whitespace-nowrap">
+                <a href={LAB_PHONE_TEL} className="font-semibold text-[#1977C5] whitespace-nowrap">
                   {LAB_PHONE_DISPLAY}
                 </a>
                 .
@@ -489,7 +497,7 @@ export default function NavBer() {
                 placeholder={t.search.placeholder}
                 className="w-full h-9 text-sm md:text-base focus:outline-none bg-transparent"
               />
-              <button onClick={() => setSearchOpen(false)} aria-label="Close search" className="p-1 rounded-full hover:bg-(--bg-muted) transition-colors">
+              <button onClick={() => setSearchOpen(false)} aria-label="Close search" className="p-1 rounded-full hover:bg-slate-100 transition-colors">
                 <X size={18} className="text-gray-400" />
               </button>
             </div>
@@ -506,10 +514,10 @@ export default function NavBer() {
                     <ScanSearch size={17} className="text-[#1977C5]" />
                   </span>
                   <span className="flex-1 min-w-0">
-                    <span className="block text-sm font-bold text-[#1977C5] truncate">
+                    <span className="block text-sm font-semibold text-[#1977C5] truncate">
                       {t.search.trackCase} &ldquo;{searchQ.trim()}&rdquo;
                     </span>
-                    <span className="block text-[10px] md:text-xs text-gray-400">
+                    <span className="block text-xs md:text-xs text-gray-400">
                       {t.search.openTimeline}
                     </span>
                   </span>
@@ -524,7 +532,7 @@ export default function NavBer() {
                 </div>
               ) : hits.length > 0 ? (
                 <>
-                  <p className="px-3 pt-2 pb-1 text-[9px] font-black uppercase tracking-widest text-gray-400">
+                  <p className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
                     {searchQ.trim() ? t.search.articles : t.search.popular}
                   </p>
                   {hits.map((hit) => (
@@ -532,14 +540,14 @@ export default function NavBer() {
                       key={hit.slug}
                       href={`/blog/${hit.slug}`}
                       onClick={() => setSearchOpen(false)}
-                      className="flex items-center gap-3 px-3 py-3 rounded-[12px] hover:bg-(--bg-muted) transition-colors group"
+                      className="flex items-center gap-3 px-3 py-3 rounded-[12px] hover:bg-slate-100 transition-colors group"
                     >
-                      <span className="w-9 h-9 rounded-[10px] bg-(--bg-muted) flex items-center justify-center shrink-0">
-                        <FileText size={17} className="text-(--text-muted)" />
+                      <span className="w-9 h-9 rounded-[10px] bg-[#1977C5]/10 flex items-center justify-center shrink-0">
+                        <FileText size={17} className="text-[#1977C5]" />
                       </span>
                       <span className="flex-1 min-w-0">
                         <span className="block text-sm font-semibold truncate">{hit.title}</span>
-                        <span className="block text-[10px] md:text-xs text-[#1977C5] font-bold uppercase tracking-widest">
+                        <span className="block text-xs md:text-xs text-[#1977C5] font-semibold uppercase tracking-widest">
                           {hit.category}
                         </span>
                       </span>

@@ -63,7 +63,7 @@ export default function FAQSection({ cta = true }: { cta?: boolean }) {
             </div>
 
             <div className="relative z-10 max-w-5xl mx-auto">
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold">
                 Ready to elevate your practice with precision CAD/CAM restorations?
               </h2>
 
@@ -96,7 +96,7 @@ export default function FAQSection({ cta = true }: { cta?: boolean }) {
         ) : null}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10 lg:gap-16 xl:gap-[86px] items-start">
           <div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-medium secondary pb-8 sm:pb-10 md:pb-12">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-medium secondary pb-8 sm:pb-10 md:pb-12">
               Clinical Questions from Dental Surgeons, Answered
             </h2>
             <p className="text-xs md:text-sm lg:text-base xl:text-lg text-(--text-secondary)">
@@ -137,7 +137,7 @@ export default function FAQSection({ cta = true }: { cta?: boolean }) {
                      : 'grid-rows-[0fr] opacity-0'
                  }`}
                   >
-                    <div className="overflow-hidden text-left text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
+                    <div className="overflow-hidden text-left text-xs md:text-xs lg:text-base text-(--text-secondary)">
                       {item.answer}
                     </div>
                   </div>

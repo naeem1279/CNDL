@@ -98,7 +98,7 @@ function ContactPage() {
   return (
     <section>
       <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
           Get in Touch with CNDL
           <br />
           Dental Laboratory.
@@ -121,14 +121,14 @@ function ContactPage() {
                 <span className="w-11 h-11 shrink-0 rounded-[13px] bg-linear-to-br from-[#1977C5] to-[#3387CB] text-white flex items-center justify-center shadow-[0_8px_18px_-6px_rgba(25,119,197,0.5)]">
                   <item.icon size={20} strokeWidth={1.9} />
                 </span>
-                <h3 className="text-sm md:text-base font-bold secondary">{item.title}</h3>
+                <h3 className="text-sm md:text-base font-semibold secondary">{item.title}</h3>
               </div>
-              <p className="text-[10px] md:text-xs lg:text-sm text-(--text-secondary) leading-relaxed flex-1">
+              <p className="text-xs md:text-xs lg:text-sm text-(--text-secondary) leading-relaxed flex-1">
                 {item.desc}
               </p>
               <Link
                 href={item.action.href}
-                className="mt-4 inline-flex items-center gap-1.5 text-[11px] md:text-xs font-bold text-[#1977C5] group-hover:gap-2.5 transition-all"
+                className="mt-4 inline-flex items-center gap-1.5 text-xs md:text-xs font-semibold text-[#1977C5] group-hover:gap-2.5 transition-all"
               >
                 {item.action.label}
                 <MoveRight size={14} />
@@ -163,10 +163,10 @@ function ContactPage() {
 
           <div className="space-y-6 col-span-1">
             <div>
-              <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary">
+              <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary">
                 Contact Information
               </h3>
-              <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) mt-1 md:mt-2 lg:mt-3">
+              <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) mt-1 md:mt-2 lg:mt-3">
                 One-tap call or WhatsApp — you speak directly with the lab, never a call center.
               </p>
             </div>
@@ -178,16 +178,16 @@ function ContactPage() {
                   key={card.display}
                   className="rounded-[10px] md:rounded-[16px] border border-[#1977C5]/15 bg-[#EAF2FA]/60 p-4"
                 >
-                  <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#1977C5]">
+                  <p className="text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5]">
                     {card.label}
                   </p>
-                  <p className="mt-1 text-base md:text-lg font-bold secondary whitespace-nowrap">
+                  <p className="mt-1 text-base md:text-lg font-semibold secondary whitespace-nowrap">
                     {card.display}
                   </p>
                   <div className="mt-3 flex items-center gap-2">
                     <a
                       href={card.tel}
-                      className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#1977C5] text-white text-[10px] md:text-xs font-bold px-3 hover:bg-[#1668ad] transition-colors"
+                      className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#1977C5] text-white text-xs md:text-xs font-semibold px-3 hover:bg-[#1668ad] transition-colors"
                     >
                       <Phone size={13} /> Call
                     </a>
@@ -195,7 +195,7 @@ function ContactPage() {
                       href={WHATSAPP_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] text-white text-[10px] md:text-xs font-bold px-3 hover:brightness-105 transition-all"
+                      className="min-h-[40px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] text-white text-xs md:text-xs font-semibold px-3 hover:brightness-105 transition-all"
                     >
                       <WhatsAppIcon className="w-3.5 h-3.5" /> WhatsApp
                     </a>
@@ -211,7 +211,7 @@ function ContactPage() {
               </span>
               <div>
                 <p className="text-xs md:text-sm lg:text-base xl:text-lg font-medium">Lab Address</p>
-                <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
+                <p className="text-xs md:text-xs lg:text-base text-(--text-secondary)">
                   419/1/C Khilgaon — <span className="font-semibold text-(--text-primary)">West Side of Jorpukur Field</span>, Dhaka-1219, Bangladesh
                 </p>
               </div>
@@ -226,7 +226,7 @@ function ContactPage() {
                 <p className="text-xs md:text-sm lg:text-base xl:text-lg font-medium">Email Address</p>
                 <a
                   href="mailto:chistiyanizamiyad@gmail.com"
-                  className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) hover:text-[#1977C5] transition-colors"
+                  className="text-xs md:text-xs lg:text-base text-(--text-secondary) hover:text-[#1977C5] transition-colors"
                 >
                   chistiyanizamiyad@gmail.com
                 </a>
@@ -236,14 +236,14 @@ function ContactPage() {
             {/* Fast response badge */}
             <div className="flex items-center gap-3 rounded-[10px] md:rounded-[14px] border border-[#88C845]/30 bg-[#88C845]/10 px-4 py-3">
               <Clock4 size={18} className="text-[#4d7220] shrink-0" />
-              <p className="text-[10px] md:text-xs lg:text-sm text-[#4d7220] font-semibold">
+              <p className="text-xs md:text-xs lg:text-sm text-[#4d7220] font-semibold">
                 Direct communication with Senior Lab Technicians (Mon–Sat: 9:00 AM – 11:30 PM)
               </p>
             </div>
 
             <div className="space-y-3">
               <p className="text-xs md:text-sm lg:text-base xl:text-lg font-medium">Social Media</p>
-              <div className="flex flex-col gap-3 text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
+              <div className="flex flex-col gap-3 text-xs md:text-xs lg:text-base text-(--text-secondary)">
                 <div className="flex items-center gap-2">
                   <span className="w-10 h-10 rounded-full bg-[#65CD4C33] text-[#65CD4C] flex items-center justify-center">
                     <Mail />
@@ -269,11 +269,11 @@ function ContactPage() {
 
         <div id="contact-form" className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 md:gap-16 lg:gap-20 mt-8 sm:mt-12 md:mt-14 lg:mt-16 xl:mt-20 scroll-mt-[100px]">
           <div>
-            <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary">
+            <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary">
               Send us a Message
             </h3>
 
-            <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) mt-1 md:mt-2 lg:mt-3">
+            <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) mt-1 md:mt-2 lg:mt-3">
               Fill out the form and our team will get back to you shortly
             </p>
 
@@ -322,7 +322,7 @@ function ContactPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center justify-center rounded-full bg-(--bg-muted) px-6 py-3 text-[10px] md:text-xs lg:text-base text-(--text-tertiary) font-medium hover:bg-(--bg-muted)/90 cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-full bg-(--bg-muted) px-6 py-3 text-xs md:text-xs lg:text-base text-(--text-tertiary) font-medium hover:bg-(--bg-muted)/90 cursor-pointer disabled:opacity-50"
               >
                 {loading ? 'Sending...' : 'Send Message'}
               </button>

@@ -44,14 +44,14 @@ export default function WhyChooseSection() {
       <div className="container">
         {/* Section header — always above the cards */}
         <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8 md:mb-14">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#1977C5]/25 bg-[#EAF2FA]/80 px-4 py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#1977C5]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#1977C5]/25 bg-[#EAF2FA]/80 px-4 py-1.5 text-xs md:text-xs font-semibold uppercase tracking-widest text-[#1977C5]">
             Why CNDL
           </span>
-          <h2 className="mt-3 md:mt-4 text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[48px] font-semibold secondary leading-tight">
+          <h2 className="mt-3 md:mt-4 text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-5xl font-semibold secondary leading-tight">
             Why Choose CNDL for Your <br className="hidden sm:block" />
             Restorations?
           </h2>
-          <p className="mt-2 md:mt-4 text-[10px] sm:text-xs md:text-sm lg:text-base text-(--text-secondary)">
+          <p className="mt-2 md:mt-4 text-xs sm:text-xs md:text-sm lg:text-base text-(--text-secondary)">
             Four reasons dental surgeons across Dhaka and nationwide trust our fully digital
             workflow — from scan intake to chamber delivery.
           </p>
@@ -72,20 +72,20 @@ export default function WhyChooseSection() {
                   <span className="w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 shrink-0 rounded-[11px] md:rounded-[16px] bg-linear-to-br from-[#1977C5] to-[#3387CB] text-white flex items-center justify-center shadow-[0_8px_20px_-6px_rgba(25,119,197,0.5)] transition-transform duration-300 group-hover:scale-105">
                     <Icon className="w-[18px] h-[18px] sm:w-6 sm:h-6 md:w-[26px] md:h-[26px]" strokeWidth={1.8} />
                   </span>
-                  <span className="mt-0.5 rounded-full border border-[#1977C5]/20 bg-[#EAF2FA]/80 px-2 sm:px-3 py-1 text-[7px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#1977C5] text-right">
+                  <span className="mt-0.5 rounded-full border border-[#1977C5]/20 bg-[#EAF2FA]/80 min-w-0 px-2 sm:px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#1977C5] text-right">
                     {item.eyebrow}
                   </span>
                 </div>
 
-                <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold secondary leading-snug">
+                <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold secondary leading-snug">
                   {item.title}
                 </h3>
 
-                <p className="mt-1.5 md:mt-3 text-[9px] sm:text-[11px] md:text-xs lg:text-sm text-(--text-secondary) leading-relaxed flex-1">
+                <p className="mt-1.5 md:mt-3 text-xs sm:text-xs md:text-xs lg:text-sm text-(--text-secondary) leading-relaxed flex-1">
                   {item.desc}
                 </p>
 
-                <p className="mt-2.5 md:mt-5 pt-2.5 md:pt-4 border-t border-[#1977C5]/10 text-[8px] sm:text-[10px] md:text-xs font-bold tracking-wide text-[#1977C5]">
+                <p className="mt-2.5 md:mt-5 pt-2.5 md:pt-4 border-t border-[#1977C5]/10 text-xs sm:text-xs md:text-xs font-semibold tracking-wide text-[#1977C5]">
                   {item.stat}
                 </p>
               </div>

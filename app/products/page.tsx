@@ -24,7 +24,7 @@ function ProductsPage() {
   return (
     <section>
       <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
           Comprehensive Dental
           <br />
           Lab Services for Dentists

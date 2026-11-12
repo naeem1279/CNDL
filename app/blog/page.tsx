@@ -45,7 +45,7 @@ export default async function BlogPage() {
   return (
     <section>
       <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
           CNDL Blog
         </h1>
 
@@ -70,7 +70,7 @@ export default async function BlogPage() {
               />
               <div className="absolute inset-0 bg-linear-to-t from-(--bg-primary) via-(--bg-primary)/10 to-transparent" />
               <div className="absolute bottom-0 z-10 p-6 md:p-8 max-w-3xl">
-                <span className="inline-block text-[10px] md:text-xs font-medium text-white bg-(--background-muted) rounded-full px-3 py-1 mb-3">
+                <span className="inline-block text-xs md:text-xs font-medium text-white bg-(--background-muted) rounded-full px-3 py-1 mb-3">
                   {featured.category}
                 </span>
                 <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-(--text-primary) mb-2">
@@ -101,10 +101,10 @@ export default async function BlogPage() {
               </div>
               <div className="p-5 md:p-6 flex flex-col flex-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-[10px] md:text-xs font-medium secondary rounded-full px-3 py-1 bg-(--bg-secondary)">
+                  <span className="text-xs md:text-xs font-medium secondary rounded-full px-3 py-1 bg-(--bg-secondary)">
                     {post.category}
                   </span>
-                  <span className="text-[10px] md:text-xs text-(--text-secondary)">
+                  <span className="text-xs md:text-xs text-(--text-secondary)">
                     {formatDate(post.publishedAt)}
                   </span>
                 </div>

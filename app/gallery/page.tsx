@@ -61,7 +61,7 @@ export default function GalleryPage() {
   return (
     <section>
       <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
           CNDL Work Gallery
         </h1>
 
@@ -79,7 +79,7 @@ export default function GalleryPage() {
             <div
               key={index}
               onClick={() => setActiveFilter(item)}
-              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-[10px] md:text-xs lg:text-base font-medium ${
+              className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-xs md:text-xs lg:text-base font-medium ${
                 item === activeFilter
                   ? 'bg-(--bg-tertiary) hover:bg-(--bg-tertiary)/98 border-(--border-tertiary) text-(--text-tertiary)'
                   : 'border-(--border-primary) hover:bg-(--bg-tertiary)/98 hover:border-(--border-tertiary) hover:text-(--text-tertiary)'

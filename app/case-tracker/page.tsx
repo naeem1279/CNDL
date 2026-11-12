@@ -145,7 +145,7 @@ function CaseTrackerPage() {
   return (
     <section className="text-black bg-(--bg-muted)">
       <ShareHero>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary text-(--text-tertiary)">
           Track Your Dental Case<br />Status
         </h1>
         <p className="text-xs md:text-sm lg:text-base xl:text-lg mt-2 md:mt-4 max-w-3xl text-(--text-tertiary)">
@@ -171,7 +171,7 @@ function CaseTrackerPage() {
             <button
               onClick={() => track(query)}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-[12px] md:rounded-[16px] px-8 h-14 font-bold bg-[#1977C5] text-white hover:brightness-110 transition-all disabled:opacity-50 text-sm md:text-base"
+              className="inline-flex items-center justify-center gap-2 rounded-[12px] md:rounded-[16px] px-8 h-14 font-semibold bg-[#1977C5] text-white hover:brightness-110 transition-all disabled:opacity-50 text-sm md:text-base"
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <ScanSearch size={18} />}
               {loading ? 'Searching…' : 'Track Case'}
@@ -181,10 +181,10 @@ function CaseTrackerPage() {
           {/* ============ MULTI-CASE PICKER (phone search) ============ */}
           {cases.length > 1 && !caseData && (
             <div className="reveal mt-10 bg-white p-6 sm:p-8 rounded-[16px] md:rounded-[24px] shadow-lg border border-gray-100">
-              <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-1">
+              <p className="text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
                 Found {cases.length} cases for this number
               </p>
-              <h2 className="text-xl md:text-2xl font-black text-[#1977C5]">Your Active Cases</h2>
+              <h2 className="text-xl md:text-2xl font-semibold text-[#1977C5]">Your Active Cases</h2>
               <p className="text-xs md:text-sm text-gray-500 mt-1">Select a case to view its live production timeline.</p>
               <div className="grid sm:grid-cols-2 gap-3 mt-5">
                 {cases.map((c) => {
@@ -197,14 +197,14 @@ function CaseTrackerPage() {
                       className="text-left rounded-2xl border-2 border-gray-100 hover:border-[#1977C5]/50 hover:shadow-md p-4 transition-all"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono font-black text-sm text-[#1977C5]">{c.caseId}</span>
-                        <span className="inline-flex items-center rounded-full bg-[#88C845]/15 text-[#5a9424] border border-[#88C845]/30 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest whitespace-nowrap">
+                        <span className="font-mono font-semibold text-sm text-[#1977C5]">{c.caseId}</span>
+                        <span className="inline-flex items-center rounded-full bg-[#88C845]/15 text-[#5a9424] border border-[#88C845]/30 px-2.5 py-1 text-xs font-semibold uppercase tracking-widest whitespace-nowrap">
                           {stage}
                         </span>
                       </div>
-                      <div className="text-sm font-bold mt-2 truncate">Chamber: {c.customerName}</div>
+                      <div className="text-sm font-semibold mt-2 truncate">Chamber: {c.customerName}</div>
                       <div className="text-xs text-gray-500 mt-1 truncate">{mainProduct(c.productType)}</div>
-                      <div className="text-[11px] text-gray-400 mt-2 font-semibold">
+                      <div className="text-xs text-gray-400 mt-2 font-semibold">
                         Promised delivery: {c.deliveryDate
                           ? new Date(c.deliveryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                           : '—'}
@@ -222,7 +222,7 @@ function CaseTrackerPage() {
               {cases.length > 1 && (
                 <button
                   onClick={() => setCaseData(null)}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1977C5] hover:underline min-h-[36px]"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1977C5] hover:underline min-h-[36px]"
                 >
                   ← All {cases.length} cases
                 </button>
@@ -230,18 +230,18 @@ function CaseTrackerPage() {
               {/* header */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-6">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Case ID</p>
-                  <h2 className="text-2xl md:text-3xl font-black text-[#1977C5]">{caseData.caseId}</h2>
-                  <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px] md:text-xs mt-1">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">Case ID</p>
+                  <h2 className="text-2xl md:text-3xl font-semibold text-[#1977C5]">{caseData.caseId}</h2>
+                  <p className="text-gray-500 font-semibold uppercase tracking-widest text-xs md:text-xs mt-1">
                     Chamber: {caseData.customerName}
                   </p>
                 </div>
                 <div className="md:text-right">
-                  <span className="inline-flex items-center gap-2 bg-[#88C845]/15 text-[#5a9424] px-4 py-2 rounded-full font-black text-[10px] md:text-xs tracking-widest border border-[#88C845]/30 uppercase">
+                  <span className="inline-flex items-center gap-2 bg-[#88C845]/15 text-[#5a9424] px-4 py-2 rounded-full font-semibold text-xs md:text-xs tracking-widest border border-[#88C845]/30 uppercase">
                     <Sparkles size={13} />
                     {caseData.status === 'PENDING' ? STEPS[activeIdx].label : caseData.status}
                   </span>
-                  <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">
+                  <p className="text-xs text-gray-400 mt-2 font-semibold uppercase">
                     Last update: {new Date(caseData.updatedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
@@ -249,7 +249,7 @@ function CaseTrackerPage() {
 
               {/* clinical summary */}
               <div>
-                <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Clinical Summary</p>
+                <p className="text-xs md:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Clinical Summary</p>
                 <div className="flex flex-wrap gap-2">
                   {chips.length > 0 ? (
                     chips.map((chip, i) => (
@@ -257,7 +257,7 @@ function CaseTrackerPage() {
                         key={i}
                         className="inline-flex items-center gap-1.5 bg-(--bg-muted) border border-gray-200 rounded-full px-3.5 py-1.5 text-xs md:text-sm"
                       >
-                        <span className="font-black text-[#1977C5] uppercase text-[9px] md:text-[10px] tracking-widest">{chip.label}</span>
+                        <span className="font-semibold text-[#1977C5] uppercase text-xs md:text-xs tracking-widest">{chip.label}</span>
                         <span className="font-semibold">{chip.value}</span>
                       </span>
                     ))
@@ -266,14 +266,14 @@ function CaseTrackerPage() {
                   )}
                   {typeof caseData.quantity === 'number' && caseData.quantity > 1 && (
                     <span className="inline-flex items-center gap-1.5 bg-(--bg-muted) border border-gray-200 rounded-full px-3.5 py-1.5 text-xs md:text-sm">
-                      <span className="font-black text-[#1977C5] uppercase text-[9px] md:text-[10px] tracking-widest">Units</span>
+                      <span className="font-semibold text-[#1977C5] uppercase text-xs md:text-xs tracking-widest">Units</span>
                       <span className="font-semibold">{caseData.quantity}</span>
                     </span>
                   )}
                 </div>
 
                 <div className="mt-5">
-                  <div className="flex items-center justify-between text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
+                  <div className="flex items-center justify-between text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2">
                     <span>Production Progress</span>
                     <span className="text-[#1977C5] text-sm md:text-base">{caseData.progress}%</span>
                   </div>
@@ -289,7 +289,7 @@ function CaseTrackerPage() {
                   href={inquireUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-xs md:text-sm font-bold text-white shadow-md hover:brightness-105 transition-all min-h-[44px] w-full sm:w-auto"
+                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-xs md:text-sm font-semibold text-white shadow-md hover:brightness-105 transition-all min-h-[44px] w-full sm:w-auto"
                 >
                   <MessageCircle size={16} />
                   Inquire About This Case on WhatsApp
@@ -299,7 +299,7 @@ function CaseTrackerPage() {
 
               {/* ============ 5-STEP TIMELINE ============ */}
               <div className="pt-2">
-                <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">Delivery Timeline</p>
+                <p className="text-xs md:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">Delivery Timeline</p>
                 <div className="relative">
                   {STEPS.map((step, index) => {
                     const isCompleted = index < activeIdx || (index === activeIdx && (caseData.progress ?? 0) >= 100);
@@ -327,7 +327,7 @@ function CaseTrackerPage() {
                           {isCompleted ? (
                             <Check size={20} strokeWidth={3} />
                           ) : (
-                            <span className={`font-black text-[10px] md:text-xs ${showActive ? 'text-[#1977C5]' : 'text-gray-300'}`}>
+                            <span className={`font-semibold text-xs md:text-xs ${showActive ? 'text-[#1977C5]' : 'text-gray-300'}`}>
                               {index + 1}
                             </span>
                           )}
@@ -339,11 +339,11 @@ function CaseTrackerPage() {
                         {/* copy */}
                         <div className="pt-1 md:pt-1.5">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className={`text-sm md:text-base lg:text-lg font-bold ${isCompleted || showActive ? 'text-(--text-primary)' : 'text-gray-400'}`}>
+                            <h3 className={`text-sm md:text-base lg:text-lg font-semibold ${isCompleted || showActive ? 'text-(--text-primary)' : 'text-gray-400'}`}>
                               {step.label}
                             </h3>
                             {showActive && (
-                              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest bg-[#1977C5] text-white rounded-full px-2.5 py-1">
+                              <span className="text-xs md:text-xs font-semibold uppercase tracking-widest bg-[#1977C5] text-white rounded-full px-2.5 py-1">
                                 In Progress
                               </span>
                             )}
@@ -366,7 +366,7 @@ function CaseTrackerPage() {
               <div className="w-14 h-14 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-4">
                 <Search size={24} className="text-red-400" />
               </div>
-              <h3 className="text-base md:text-lg font-bold mb-2">No case found for &ldquo;{query}&rdquo;</h3>
+              <h3 className="text-base md:text-lg font-semibold mb-2">No case found for &ldquo;{query}&rdquo;</h3>
               <p className="text-xs md:text-sm text-(--text-secondary) max-w-md mx-auto">
                 Double-check the Case ID from your confirmation SMS, or search with the phone number used on the order form.
               </p>
@@ -379,26 +379,26 @@ function CaseTrackerPage() {
               <div className="w-16 h-16 mx-auto rounded-[20px] bg-(--bg-muted) flex items-center justify-center mb-5">
                 <PackageCheck size={30} className="text-[#1977C5]" />
               </div>
-              <h3 className="text-lg md:text-xl lg:text-2xl font-bold secondary mb-3">Live Case Visibility, Zero Guesswork</h3>
+              <h3 className="text-lg md:text-xl lg:text-2xl font-semibold secondary mb-3">Live Case Visibility, Zero Guesswork</h3>
               <p className="text-xs md:text-sm lg:text-base text-(--text-secondary) leading-relaxed max-w-xl mx-auto">
                 Every CNDL case is tracked through five verifiable production stages and dispatched within
-                <span className="font-bold text-[#1977C5]"> 3 working days</span>. Enter the Case ID from your confirmation SMS
+                <span className="font-semibold text-[#1977C5]"> 3 working days</span>. Enter the Case ID from your confirmation SMS
                 (or the phone number on your order) to see exactly where your restoration is right now.
               </p>
               <div className="mt-6 inline-flex flex-col sm:flex-row items-center gap-3">
-                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400">Try a sample ID</span>
+                <span className="text-xs md:text-xs font-semibold uppercase tracking-widest text-gray-400">Try a sample ID</span>
                 <button
                   onClick={() => {
                     setQuery('CNDL-LEGACY-001');
                     track('CNDL-LEGACY-001');
                   }}
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-[#1977C5]/30 bg-[#1977C5]/5 px-5 py-2.5 font-mono text-xs md:text-sm font-bold text-[#1977C5] hover:bg-[#1977C5]/10 transition-all"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-[#1977C5]/30 bg-[#1977C5]/5 px-5 py-2.5 font-mono text-xs md:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5]/10 transition-all"
                 >
                   CNDL-LEGACY-001
                   <ArrowRight size={14} />
                 </button>
               </div>
-              <div className="mt-7 flex items-center justify-center gap-2 text-[10px] md:text-xs text-gray-400">
+              <div className="mt-7 flex items-center justify-center gap-2 text-xs md:text-xs text-gray-400">
                 <ShieldCheck size={14} className="text-[#88C845]" />
                 Patient-identifiable data is never displayed publicly — only clinical essentials.
               </div>
