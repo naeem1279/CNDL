@@ -1,5 +1,5 @@
 /* Console-wide constants: labels, badge styles, page sizes, empty forms and role access. */
-import type { TabKey, UserGroupKey } from './types';
+import type { TabKey } from './types';
 
 export const MESSAGES_PER_PAGE = 12;
 export const ACCOUNTS_PER_PAGE = 10;
@@ -7,8 +7,6 @@ export const EXPENSES_PER_PAGE = 15;
 export const LEADS_PER_PAGE = 20;
 
 
-export const EMPTY_USER_FORM = { name: '', phone: '', email: '', address: '', role: 'AGENT', status: 'ACTIVE', password: '' };
-export const EMPTY_PAYOUT_FORM = { amountPaid: '', paymentMethod: 'Cash', payoutDate: '', notes: '' };
 
 /** Case intake channels. */
 export const ORDER_SOURCE_META: Record<string, { label: string; cls: string }> = {
@@ -75,11 +73,6 @@ export const ROLE_META: Record<string, { label: string; cls: string }> = {
   PARTNER_LAB: { label: 'Partner Lab', cls: 'bg-slate-100 text-slate-700 border border-slate-200' },
   DOCTOR: { label: 'Doctor', cls: 'bg-teal-700/10 text-teal-700 border border-teal-700/20' },
 };
-export const USER_GROUPS: { key: Exclude<UserGroupKey, 'all'>; label: string; roles: string[] }[] = [
-  { key: 'leadership', label: 'Leadership', roles: ['SUPERADMIN', 'CHAIRMAN'] },
-  { key: 'accounts', label: 'Accounts', roles: ['ACCOUNTS'] },
-  { key: 'agents', label: 'Field Agents', roles: ['AGENT'] },
-];
 
 /** Best human-readable message from an API error body: the first zod issue
     (ERP routes answer { error: 'Validation failed', issues: [...] }), then

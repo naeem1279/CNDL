@@ -170,8 +170,6 @@ export type ErpShareholder = {
   updatedAt: string;
 };
 
-/** Role-grouped segmented filter for the User Management table. */
-export type UserGroupKey = 'all' | 'leadership' | 'accounts' | 'agents';
 
 export type TabKey =
   | 'overview'
