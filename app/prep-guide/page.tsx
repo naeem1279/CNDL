@@ -167,12 +167,12 @@ export default function PrepGuidePage() {
         <div className="bg-(--bg-secondary) border border-(--border-muted) rounded-[20px] md:rounded-[32px] p-6 sm:p-10 md:p-12 mb-10 md:mb-14 shadow-sm">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-4 max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 text-[11px] font-bold text-[#1977C5] uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 text-xs font-semibold text-[#1977C5] uppercase tracking-wider">
                 <ShieldCheck size={14} />
                 ESTD. 2015 · CNDL CLINICAL PROTOCOLS
               </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black secondary leading-tight tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold secondary leading-tight tracking-tight">
                 Clinical Tooth Preparation &amp; Margin Protocols for CAD/CAM Restorations
               </h1>
 
@@ -186,7 +186,7 @@ export default function PrepGuidePage() {
               <Link
                 href="/lab-slip"
                 target="_blank"
-                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#1977C5] bg-white px-6 py-3 text-xs md:text-sm font-bold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition-all text-center shadow-xs"
+                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#1977C5] bg-white px-6 py-3 text-xs md:text-sm font-semibold text-[#1977C5] hover:bg-[#1977C5] hover:text-white transition-all text-center shadow-xs"
               >
                 <FileText size={16} />
                 Download Lab Slip (PDF)
@@ -198,10 +198,10 @@ export default function PrepGuidePage() {
         {/* ================= SECTION 1: REDUCTION MATRIX TABLE ================= */}
         <section className="mb-12 md:mb-16">
           <div className="mb-6">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#1977C5] block mb-1">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#1977C5] block mb-1">
               Standardized Guidelines
             </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black secondary">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold secondary">
               1. Core Reduction Matrix by Material
             </h2>
             <p className="text-xs sm:text-sm text-(--text-secondary) mt-1">
@@ -212,7 +212,7 @@ export default function PrepGuidePage() {
           <div className="overflow-x-auto rounded-[16px] md:rounded-[20px] border border-slate-200 bg-white shadow-xs">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
-                <tr className="bg-slate-900 text-white text-[11px] font-black uppercase tracking-wider">
+                <tr className="bg-slate-900 text-white text-xs font-semibold uppercase tracking-wider">
                   <th className="py-4 px-4 sm:px-6">Material &amp; Restoration</th>
                   <th className="py-4 px-4">Occlusal / Incisal</th>
                   <th className="py-4 px-4">Axial Reduction</th>
@@ -224,11 +224,11 @@ export default function PrepGuidePage() {
                 {REDUCTION_MATRIX.map((row) => (
                   <tr key={row.material} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-4 px-4 sm:px-6 align-top">
-                      <div className="font-bold text-slate-900">{row.material}</div>
-                      <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-sm border ${row.badgeColor}`}>
+                      <div className="font-semibold text-slate-900">{row.material}</div>
+                      <span className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-sm border ${row.badgeColor}`}>
                         {row.badge}
                       </span>
-                      <p className="text-[11px] text-slate-500 mt-1">{row.idealFor}</p>
+                      <p className="text-xs text-slate-500 mt-1">{row.idealFor}</p>
                     </td>
                     <td className="py-4 px-4 align-top font-semibold text-slate-800">
                       {row.occlusal}
@@ -237,7 +237,7 @@ export default function PrepGuidePage() {
                       {row.axial}
                     </td>
                     <td className="py-4 px-4 align-top text-slate-700">
-                      <span className="font-bold text-[#1977C5] block">{row.margin}</span>
+                      <span className="font-semibold text-[#1977C5] block">{row.margin}</span>
                     </td>
                     <td className="py-4 px-4 sm:px-6 align-top text-slate-600 font-mono text-xs">
                       {row.taper}
@@ -252,10 +252,10 @@ export default function PrepGuidePage() {
         {/* ================= SECTION 2: 5 REMAKE PREVENTION RULES ================= */}
         <section className="mb-12 md:mb-16">
           <div className="mb-8">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#1977C5] block mb-1">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#1977C5] block mb-1">
               Zero-Remake Protocol
             </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black secondary">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold secondary">
               2. Five Critical Remake Prevention Rules
             </h2>
             <p className="text-xs sm:text-sm text-(--text-secondary) mt-1">
@@ -273,7 +273,7 @@ export default function PrepGuidePage() {
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-black font-mono text-slate-300 group-hover:text-[#1977C5] transition-colors">
+                      <span className="text-2xl font-semibold font-mono text-slate-300 group-hover:text-[#1977C5] transition-colors">
                         RULE {rule.num}
                       </span>
                       <span className={`w-10 h-10 rounded-xl flex items-center justify-center border ${rule.color}`}>
@@ -281,7 +281,7 @@ export default function PrepGuidePage() {
                       </span>
                     </div>
 
-                    <h3 className="text-base sm:text-lg font-bold secondary leading-snug">
+                    <h3 className="text-base sm:text-lg font-semibold secondary leading-snug">
                       {rule.title}
                     </h3>
 
@@ -290,7 +290,7 @@ export default function PrepGuidePage() {
                         <strong className="text-slate-800">The Mechanical Science:</strong> {rule.science}
                       </p>
                       <p className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-700">
-                        <strong className="text-emerald-700 block text-[11px] uppercase tracking-wider mb-0.5 font-black">
+                        <strong className="text-emerald-700 block text-xs uppercase tracking-wider mb-0.5 font-semibold">
                           ✓ Recommended Clinical Action:
                         </strong>
                         {rule.action}
@@ -298,7 +298,7 @@ export default function PrepGuidePage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500 font-medium">
                     <CheckCircle2 size={13} className="text-[#1977C5] shrink-0" />
                     <span>{rule.check}</span>
                   </div>
@@ -315,7 +315,7 @@ export default function PrepGuidePage() {
               <Microscope size={24} />
             </span>
             <div>
-              <h3 className="text-lg sm:text-xl font-bold secondary">
+              <h3 className="text-lg sm:text-xl font-semibold secondary">
                 Impression &amp; Intraoral Scan (IOS) Best Practices
               </h3>
               <p className="text-xs sm:text-sm text-(--text-secondary) mt-1">
@@ -326,19 +326,19 @@ export default function PrepGuidePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs sm:text-sm text-(--text-secondary)">
             <div className="space-y-1.5 p-4 rounded-xl bg-white border border-slate-200">
-              <strong className="text-slate-900 block font-bold">1. Digital Scanners (STL/OBJ):</strong>
+              <strong className="text-slate-900 block font-semibold">1. Digital Scanners (STL/OBJ):</strong>
               <p className="leading-relaxed">
                 Disable AI teeth-cleaner before margin capture. Verify there are zero mesh holes along the finish line before patient dismissal.
               </p>
             </div>
             <div className="space-y-1.5 p-4 rounded-xl bg-white border border-slate-200">
-              <strong className="text-slate-900 block font-bold">2. Conventional PVS / Polyether:</strong>
+              <strong className="text-slate-900 block font-semibold">2. Conventional PVS / Polyether:</strong>
               <p className="leading-relaxed">
                 Always use a rigid metal or custom tray. Use double-mix one-step technique; inspect margins for zero drags, bubbles or tray impingement.
               </p>
             </div>
             <div className="space-y-1.5 p-4 rounded-xl bg-white border border-slate-200">
-              <strong className="text-slate-900 block font-bold">3. Stump / Prep Shade Photography:</strong>
+              <strong className="text-slate-900 block font-semibold">3. Stump / Prep Shade Photography:</strong>
               <p className="leading-relaxed">
                 For anterior E-max or multilayer zirconia, photograph the prepared stump with a shade tab (ND1–ND9) in the same focal plane under 5500K daylight.
               </p>
@@ -349,11 +349,11 @@ export default function PrepGuidePage() {
         {/* ================= SECTION 4: DOCTOR CTA CARD ================= */}
         <div className="rounded-[24px] md:rounded-[32px] bg-linear-to-r from-slate-900 via-[#13324d] to-slate-900 border border-blue-500/20 p-8 sm:p-10 md:p-12 text-white shadow-xl text-center md:text-left flex flex-col md:flex-row md:items-center md:justify-between gap-6 print:hidden">
           <div className="max-w-xl space-y-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 px-3 py-1 text-[11px] font-bold text-blue-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 px-3 py-1 text-xs font-semibold text-blue-300">
               <ShieldCheck size={13} />
               Partner with Bangladesh&apos;s #1 CAD/CAM Laboratory
             </span>
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white">
               Ready to Send Your Case with Guaranteed Precision?
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -364,7 +364,7 @@ export default function PrepGuidePage() {
           <div className="flex flex-col sm:flex-row gap-3 shrink-0 justify-center">
             <Link
               href="/order-create"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1977C5] hover:bg-[#1668ad] text-white px-6 py-3.5 text-xs sm:text-sm font-bold transition-all shadow-lg text-center"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1977C5] hover:bg-[#1668ad] text-white px-6 py-3.5 text-xs sm:text-sm font-semibold transition-all shadow-lg text-center"
             >
               Submit Case Online
               <ArrowRight size={15} />
@@ -372,7 +372,7 @@ export default function PrepGuidePage() {
             <Link
               href="/lab-slip"
               target="_blank"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white px-6 py-3.5 text-xs sm:text-sm font-bold transition-all text-center backdrop-blur-sm"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 hover:bg-white/20 text-white px-6 py-3.5 text-xs sm:text-sm font-semibold transition-all text-center backdrop-blur-sm"
             >
               <FileText size={15} />
               Download Lab Slip (PDF)

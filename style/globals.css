@@ -55,16 +55,16 @@
 
 :root {
   --background-primary: #ffffff;
-  --background-secondary: #F7F8F8;
+  --background-secondary: #F8FAFC; /* slate-50 */
   --background-tertiary: #88C845;
   --background-muted: #1977C5;
 
-  --text-primary: #25272C;
-  --text-secondary: #5B616E;
+  --text-primary: #0F172A; /* slate-900 */
+  --text-secondary: #475569; /* slate-600, 7.6:1 on white */
   --text-tertiary: #FFFFFF;
   --text-muted: #1977C5;
 
-  --border-primary: #B6BAC3;
+  --border-primary: #E2E8F0; /* slate-200 */
   --border-secondary: #3387CB;
   --border-tertiary: #88C845;
   --border-muted: #FFFFFF;
@@ -90,6 +90,9 @@
 body {
   font-family: var(--font-inter), sans-serif;
   font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-primary);
   color: var(--text-primary);
   margin: 0;
@@ -101,8 +104,10 @@ body {
   margin-inline: auto;
 }
 @layer utilities {
+  /* Headings: Inter (the site's only typeface) with tighter tracking than body text. */
   .secondary {
-    font-family: var(--font-dm-sans), sans-serif;
+    font-family: var(--font-inter), sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 @keyframes fadeInUp {

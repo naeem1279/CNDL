@@ -84,7 +84,7 @@ export default async function ReviewComponent() {
         <div className="font-semibold text-sm md:text-base lg:text-lg xl:text-xl pb-2">
           {review.name}
         </div>
-        <div className="text-[10px] md:text-xs text-(--text-secondary) pb-2">{review.role}</div>
+        <div className="text-xs md:text-xs text-(--text-secondary) pb-2">{review.role}</div>
         <div className="flex gap-1 mb-6">
           {[...Array(5)].map((_, i) => (
             <Star
@@ -113,10 +113,10 @@ export default async function ReviewComponent() {
       />
       <div className="container">
         <div className="text-center gap-6 mb-14">
-          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary">
+          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary">
             Trusted by Top Dental Practitioners.
           </div>
-          <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) mt-2 md:mt-4">
+          <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) mt-2 md:mt-4">
             Real stories from dentists across Bangladesh who trust CNDL with their cases
           </p>
         </div>

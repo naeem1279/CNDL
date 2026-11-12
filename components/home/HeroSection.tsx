@@ -25,7 +25,7 @@ export default function HeroSection() {
         </div>
         <div className="absolute inset-0 h-full w-full grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-10 xl:gap-14 items-center">
           <div className="order-2 lg:order-1 text-(--text-tertiary) w-full">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[52px] xl:text-6xl font-semibold leading-tight secondary">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary">
               {t.hero.titleLine1}
               <br />
               {t.hero.titleLine2} <br />

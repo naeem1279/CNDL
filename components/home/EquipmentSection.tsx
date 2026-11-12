@@ -86,13 +86,13 @@ export default function EquipmentSection() {
     <section className="py-7 sm:py-10 md:py-20 bg-(--bg-primary)">
       <div className="container">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-14">
-          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-[48px] font-semibold secondary max-w-2xl">
+          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary max-w-2xl">
             Advanced Equipment,
             <br />
             Certified Quality
           </div>
 
-          <p className="text-[10px] md:text-xs lg:text-base text-(--text-secondary) w-full lg:max-w-md">
+          <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) w-full lg:max-w-md">
             We invest in authentic Japanese and global digital dentistry hardware so every case is
             designed, milled and finished in-house with sub-micron precision.
           </p>
@@ -113,8 +113,8 @@ export default function EquipmentSection() {
               )}
 
               <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl secondary leading-snug">{item.title}</div>
-              <div className="mt-1 text-[8px] sm:text-[10px] md:text-xs text-(--text-muted) font-medium">{item.tag}</div>
-              <p className="mt-1 sm:mt-2 md:mt-3 text-[9px] sm:text-[10px] md:text-xs lg:text-base text-(--text-secondary)">
+              <div className="mt-1 text-xs sm:text-xs md:text-xs text-(--text-muted) font-medium">{item.tag}</div>
+              <p className="mt-1 sm:mt-2 md:mt-3 text-xs sm:text-xs md:text-xs lg:text-base text-(--text-secondary)">
                 {item.desc}
               </p>
             </div>
@@ -130,7 +130,7 @@ export default function EquipmentSection() {
               </div>
 
               <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl secondary leading-snug">{item.title}</div>
-              <p className="mt-1 sm:mt-2 md:mt-3 text-[9px] sm:text-[10px] md:text-xs lg:text-base text-white/80">
+              <p className="mt-1 sm:mt-2 md:mt-3 text-xs sm:text-xs md:text-xs lg:text-base text-white/80">
                 {item.desc}
               </p>
             </div>

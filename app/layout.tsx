@@ -1,6 +1,6 @@
 import { LanguageProvider } from '@/context/LanguageContext';
 import type { Metadata } from 'next';
-import { DM_Sans, Inter } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import '../style/globals.css';
 import { Toaster } from 'sonner';
 import SiteChrome from '@/components/layout/SiteChrome';
@@ -8,12 +8,6 @@ import { OG_IMAGE } from '@/lib/seo';
 
 const inter = Inter({
   variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-});
-
-const dmSans = DM_Sans({
-  variable: '--font-dm-sans',
   subsets: ['latin'],
   display: 'swap',
 });
@@ -152,7 +146,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.variable} ${dmSans.variable}`}>
+      <body className={inter.variable}>
         <LanguageProvider>
           <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>

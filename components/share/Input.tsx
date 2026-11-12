@@ -36,7 +36,7 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
   return (
     <div>
       {label && (
-        <label htmlFor={inputId} className="block text-[10px] md:text-xs lg:text-base mb-2.5">
+        <label htmlFor={inputId} className="block text-xs md:text-xs lg:text-base mb-2.5">
           {label}
         </label>
       )}
@@ -46,7 +46,7 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
           id={inputId}
           rows={6}
           placeholder={placeholder}
-          className="w-full border border-(--border-primary) rounded-[8px] p-2.5 text-[10px] md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary)"
+          className="w-full border border-(--border-primary) rounded-[8px] p-2.5 text-xs md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary)"
         />
       ) : (
         <input
@@ -56,7 +56,7 @@ function Input({ label, type, placeholder, ...props }: InputProps) {
           onClick={handleClick}
           onFocus={handleFocus}
           placeholder={placeholder}
-          className={`w-full border border-(--border-primary) rounded-[8px] p-2.5 text-[10px] md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary)${
+          className={`w-full border border-(--border-primary) rounded-[8px] p-2.5 text-xs md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary)${
             type === 'date' ? ' cursor-pointer' : ''
           }`}
         />

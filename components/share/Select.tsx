@@ -17,7 +17,7 @@ function Select({ label, options, placeholder, ...props }: SelectProps) {
   return (
     <div>
       {label && (
-        <label htmlFor={selectId} className="block text-[10px] md:text-xs lg:text-base mb-2.5">
+        <label htmlFor={selectId} className="block text-xs md:text-xs lg:text-base mb-2.5">
           {label}
         </label>
       )}
@@ -26,7 +26,7 @@ function Select({ label, options, placeholder, ...props }: SelectProps) {
         <select
           {...props}
           id={selectId}
-          className="w-full appearance-none border border-(--border-primary) rounded-[8px] p-2.5 pr-12 text-[10px] md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary) cursor-pointer peer"
+          className="w-full appearance-none border border-(--border-primary) rounded-[8px] p-2.5 pr-12 text-xs md:text-xs lg:text-base focus:outline-none focus:ring-1 focus:ring-(--border-secondary) cursor-pointer peer"
         >
           <option value="">{placeholder}</option>
           {options.map((option) => (
