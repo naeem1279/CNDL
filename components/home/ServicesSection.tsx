@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { ArrowRight, Truck, FileCheck2, Package } from 'lucide-react';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { ButtonLink } from '@/components/ui/Button';
+import Reveal from '@/components/ui/Reveal';
+import { useHomeCopy } from './HomeText';
 
 type ProductCard = {
   id?: string;
@@ -65,6 +67,7 @@ const INITIAL_PRODUCTS: ProductCard[] = [
 
 export default function ServicesSection() {
   const [products, setProducts] = useState<ProductCard[]>(INITIAL_PRODUCTS);
+  const c = useHomeCopy().services;
 
   useEffect(() => {
     fetch('/api/services')
@@ -97,20 +100,20 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <section className="border-y border-slate-200 bg-slate-50 py-16 md:py-24">
+    <section className="border-y border-slate-200 bg-slate-50 py-20 md:py-28">
       <div className="container">
         <SectionHeader
-          eyebrow="প্রোডাক্ট ক্যাটালগ · Product Catalogue"
-          title="Our Dental Products & Restorations"
-          lead="Single Source of Truth: Directly synchronized with our active laboratory database — Zirconia & All-Ceramic, Porcelain (PFM), and Dentures & Orthodontics."
+          eyebrow={c.eyebrow}
+          title={c.title}
+          lead={c.lead}
           action={
             <div className="flex flex-col items-start gap-3 lg:items-end">
               <p className="inline-flex items-center gap-2 text-sm text-slate-600">
                 <Truck size={16} className="text-[#1977C5]" aria-hidden="true" />
-                3-Day Rider Delivery across Dhaka
+                {c.delivery}
               </p>
               <ButtonLink href="/products">
-                View Full Products Catalogue
+                {c.viewAll}
                 <ArrowRight size={16} aria-hidden="true" />
               </ButtonLink>
             </div>
@@ -118,10 +121,11 @@ export default function ServicesSection() {
         />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-          {products.map((item) => (
-            <div
+          {products.map((item, i) => (
+            <Reveal
               key={item.id || item.title}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-colors duration-150 hover:border-slate-300"
+              delay={(i % 3) * 80}
+              className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-900/5"
             >
               <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                 {item.imageUrl ? (
@@ -155,7 +159,7 @@ export default function ServicesSection() {
                   </span>
                   {/* `> 0`, not truthiness: a 0 would render as a stray "0". */}
                   {!!item.warrantyYears && item.warrantyYears > 0 && (
-                    <span className="shrink-0 text-xs text-slate-500">{item.warrantyYears}y Warranty</span>
+                    <span className="shrink-0 text-xs text-slate-500">{c.warranty(item.warrantyYears)}</span>
                   )}
                 </div>
 
@@ -175,11 +179,11 @@ export default function ServicesSection() {
                     className="w-full"
                   >
                     <FileCheck2 size={16} aria-hidden="true" />
-                    Order / Submit Case
+                    {c.order}
                   </ButtonLink>
                 </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

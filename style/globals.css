@@ -88,7 +88,7 @@
 }
 
 body {
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-inter), var(--font-bengali), sans-serif;
   font-weight: 400;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -106,7 +106,7 @@ body {
 @layer utilities {
   /* Headings: Inter (the site's only typeface) with tighter tracking than body text. */
   .secondary {
-    font-family: var(--font-inter), sans-serif;
+    font-family: var(--font-inter), var(--font-bengali), sans-serif;
     letter-spacing: -0.02em;
   }
 }
@@ -149,11 +149,116 @@ body {
   animation-play-state: paused;
 }
 
+/* ---------------------------------------------------------------------------
+   Language boot (lib/lang-detect.ts): while a Bengali default is being applied,
+   hide translated text for an instant instead of flashing English.
+   --------------------------------------------------------------------------- */
+.i18n-pending main,
+.i18n-pending header nav,
+.i18n-pending footer {
+  visibility: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Home page surfaces
+   --------------------------------------------------------------------------- */
+/* Soft mesh gradient: brand blue + sky, very low contrast, on white. */
+.bg-mesh-light {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(48rem 32rem at 85% -10%, rgb(25 119 197 / 0.14), transparent 60%),
+    radial-gradient(40rem 28rem at -10% 10%, rgb(56 189 248 / 0.12), transparent 60%),
+    radial-gradient(36rem 24rem at 60% 110%, rgb(136 200 69 / 0.08), transparent 60%);
+}
+/* Deep navy mesh for dark bands. */
+.bg-mesh-dark {
+  background-color: #0b1220;
+  background-image:
+    radial-gradient(50rem 30rem at 80% 0%, rgb(25 119 197 / 0.35), transparent 60%),
+    radial-gradient(40rem 26rem at 0% 100%, rgb(56 189 248 / 0.18), transparent 60%);
+}
+/* Brand-blue mesh for the closing call to action. */
+.bg-mesh-brand {
+  background-color: #1668ad;
+  background-image:
+    radial-gradient(40rem 24rem at 100% 0%, rgb(56 189 248 / 0.45), transparent 60%),
+    radial-gradient(36rem 24rem at 0% 100%, rgb(15 76 129 / 0.9), transparent 60%);
+}
+/* Faint 32px grid, faded out towards the edges. */
+.bg-grid-fade {
+  background-image:
+    linear-gradient(to right, rgb(15 23 42 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(15 23 42 / 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 40%, transparent 100%);
+}
+.bg-grid-fade-dark {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 0%, #000 30%, transparent 100%);
+}
+
+/* Scroll reveal (components/ui/Reveal.tsx toggles data-visible). */
+/* Only hide once JS is running (boot script adds .js; old browsers without IntersectionObserver skip it). */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal][data-visible='true'],
+.no-io [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Gentle float for the hero's glass cards. */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float {
+  animation: floatY 6s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: floatY 6s ease-in-out 1.5s infinite;
+}
+
+/* Endless logo/tech strip. Content is duplicated once; -50% loops seamlessly. */
+@keyframes marqueeX {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marqueeX 40s linear infinite;
+}
+.marquee-mask {
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+}
+
+/* Cursor spotlight on cards (components/ui/SpotlightCard.tsx sets --mx / --my). */
+.spotlight {
+  background-image: radial-gradient(28rem circle at var(--mx, 50%) var(--my, -20%), rgb(25 119 197 / 0.08), transparent 45%);
+}
+.spotlight-dark {
+  background-image: radial-gradient(28rem circle at var(--mx, 50%) var(--my, -20%), rgb(56 189 248 / 0.12), transparent 45%);
+}
+
 /* Respect the OS "reduce motion" setting for every decorative animation. */
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .review-scroll-up,
-  .review-scroll-down {
+  .review-scroll-down,
+  .animate-float,
+  .animate-float-delayed,
+  .animate-marquee {
     animation: none;
+  }
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

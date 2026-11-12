@@ -1,173 +1,99 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ScanLine, PenTool, Cog, Sparkles, X, ShieldCheck, Microscope, MonitorCheck, Boxes } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 import SectionHeader from '@/components/ui/SectionHeader';
+import Reveal from '@/components/ui/Reveal';
 import { Button } from '@/components/ui/Button';
-import {
-  ScanLine, PenTool, Cog, Sparkles, X, ShieldCheck, Microscope,
-  MonitorCheck, Boxes,
-} from 'lucide-react';
+import { useHomeCopy } from './HomeText';
 
-const steps = [
-  {
-    id: '01',
-    title: 'Automatic Case Identification',
-    icon: ScanLine,
-    protocol: 'Automatic Case ID & Digital Intake',
-    summary:
-      'The moment a case arrives it is registered, sanitized and issued a unique CNDL Case ID — the same ID your patient can track live on our Case Tracker.',
-    clinical:
-      'Every prescription, impression or intraoral scan is logged against the issuing clinician and restoration type before touching the production floor. STL files from Medit, 3Shape and iTero are ingested directly; physical impressions are photographed and disinfected at the intake bench.',
-    equipment: [
-      'Digital case intake form with scan upload (open STL architecture)',
-      'Intake-bench disinfection & impression sanitization',
-      'Automatic CNDL Case ID generation + SMS acknowledgement',
-    ],
-    standards: [
-      'Zero paper-tag mixing — every case is digitally tracked end-to-end',
-      'Same-day digital registration of all incoming cases',
-      'Prescription completeness verified before design begins',
-    ],
-  },
-  {
-    id: '02',
-    title: 'Digital Design & Planning',
-    icon: PenTool,
-    protocol: '3D CAD Design & Digital Preparation Check',
-    summary:
-      'Margins are traced under magnification and full anatomy is engineered in Exocad — with a digital preparation check that flags undercuts, blockers and insufficient reduction before anything is milled.',
-    clinical:
-      'Our designers mark margins on scanned geography, verify cement gap parameters per material, and simulate occlusion against opposing anatomy. Insertion axis, contact tightness and emergence profile are all locked digitally and archived with the case.',
-    equipment: [
-      'Exocad CAD platform with margin-mapping toolset',
-      'High-accuracy lab scan workstations',
-      'Digital preparation-check reports shared with the clinician when needed',
-    ],
-    standards: [
-      'Material-specific cement gap (zirconia / E-Max) enforced in software',
-      'Margin integrity re-verified at 100% of cases before release to milling',
-      'Design archive retained for every case for reproducibility',
-    ],
-  },
-  {
-    id: '03',
-    title: 'Precision Manufacturing',
-    icon: Cog,
-    protocol: '5-Axis Roland Sub-Micron Dry Milling',
-    summary:
-      'Restorations are milled in-house on Roland DGSHAPE 5-axis dry milling from authentic Aidite multilayer zirconia discs — never outsourced, never substituted.',
-    clinical:
-      'Multilayer discs are nested to preserve shade gradation from cervical to incisal. Dry milling eliminates cooling-related micro-fractures, and sprue placement is planned away from functional cusps to protect anatomy during finishing.',
-    equipment: [
-      'Roland DGSHAPE 5-axis dry milling unit',
-      'Genuine Aidite Multilayer Zirconia discs (certified blanks only)',
-      'UP3D high-temperature sintering furnaces',
-    ],
-    standards: [
-      'Sub-micron marginal accuracy verified at every production stage',
-      'Authentic blank traceability — certificate on request',
-      'Sintering cycles logged per batch for full zirconia crystal integrity',
-    ],
-  },
-  {
-    id: '04',
-    title: 'Quality Control & Finishing',
-    icon: Sparkles,
-    protocol: 'Shofu Natural Glazing & Microscopic Inspection',
-    summary:
-      'Each restoration receives authentic Shofu (Japan) glaze and a final microscopic marginal inspection before it is disinfected, packed and dispatched to your chamber within 3 working days.',
-    clinical:
-      'Glaze firing is calibrated for natural light dynamics and wear-friendliness against opposing enamel. Under the microscope we verify marginal fit, interproximal contacts and occlusal maps — a restoration that fails any check returns to finishing, never to the clinician.',
-    equipment: [
-      'Authentic Shofu (Japan) glaze & staining system',
-      'Stereo-microscopic inspection stations',
-      'Articulator-based occlusal verification',
-    ],
-    standards: [
-      '100% microscopic marginal inspection — no batch sampling',
-      'Disinfectant packing before dispatch',
-      '3-day dedicated chamber rider delivery across Dhaka',
-    ],
-  },
-];
+const ICONS = [ScanLine, PenTool, Cog, Sparkles];
+const IDS = ['01', '02', '03', '04'];
 
+/** Production process (home page and /products). Copy lives in data/home-i18n.ts. */
 export default function ProcessSection() {
-  const [activeStep, setActiveStep] = useState(steps[1]);
-  const [protocolStep, setProtocolStep] = useState<(typeof steps)[number] | null>(null);
-  const ActiveIcon = activeStep.icon;
+  const c = useHomeCopy().process;
+  const { lang } = useLanguage();
+  const [active, setActive] = useState(1);
+  const [protocolIdx, setProtocolIdx] = useState<number | null>(null);
+
+  const step = c.steps[active];
+  const ActiveIcon = ICONS[active];
+  const id = (i: number) => (lang === 'bn' ? (i + 1).toLocaleString('bn-BD').padStart(2, '০') : IDS[i]);
 
   // Escape closes the protocol window.
   useEffect(() => {
-    if (!protocolStep) return;
+    if (protocolIdx === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setProtocolStep(null);
+      if (e.key === 'Escape') setProtocolIdx(null);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [protocolStep]);
+  }, [protocolIdx]);
+
+  const protocol = protocolIdx === null ? null : c.steps[protocolIdx];
+  const ProtocolIcon = protocolIdx === null ? null : ICONS[protocolIdx];
 
   return (
-    <section className="border-y border-slate-200 bg-slate-50 py-16 md:py-24">
+    <section className="border-y border-slate-200 bg-slate-50 py-20 md:py-28">
       <div className="container">
-        <SectionHeader
-          title={
-            <>
-              How We Deliver Quality <br />
-              Restorations
-            </>
-          }
-        />
+        <Reveal>
+          <SectionHeader eyebrow={c.eyebrow} title={c.title} />
+        </Reveal>
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-12">
-          <div className="flex flex-col gap-2" role="tablist" aria-label="Production steps">
-            {steps.map((step) => {
-              const isActive = activeStep.id === step.id;
-              const StepIcon = step.icon;
-
+          <div className="flex flex-col gap-2" role="tablist" aria-label={c.tablist}>
+            {c.steps.map((s, i) => {
+              const isActive = active === i;
+              const StepIcon = ICONS[i];
               return (
                 <button
-                  key={step.id}
+                  key={IDS[i]}
                   type="button"
                   role="tab"
                   aria-selected={isActive}
-                  onClick={() => setActiveStep(step)}
-                  className={`flex min-h-14 w-full cursor-pointer items-center gap-4 rounded-xl border px-4 py-3 text-left transition-colors duration-150 md:px-5 md:py-4 ${
+                  onClick={() => setActive(i)}
+                  className={`group flex min-h-14 w-full cursor-pointer items-center gap-4 rounded-2xl border px-4 py-3 text-left transition-[background-color,border-color,box-shadow] duration-200 md:px-5 md:py-4 ${
                     isActive
-                      ? 'border-[#1977C5] bg-white'
+                      ? 'border-[#1977C5]/60 bg-white shadow-lg shadow-[#1977C5]/10'
                       : 'border-slate-200 bg-white/60 hover:border-slate-300 hover:bg-white'
                   }`}
                 >
-                  <span className={`text-sm font-medium tabular-nums ${isActive ? 'text-[#1977C5]' : 'text-slate-400'}`}>
-                    {step.id}
+                  <span
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-sm font-medium tabular-nums transition-colors ${
+                      isActive ? 'bg-[#1977C5] text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+                    }`}
+                  >
+                    {id(i)}
                   </span>
-                  <span className="secondary flex-1 text-base font-semibold text-slate-900 md:text-lg">{step.title}</span>
-                  <StepIcon
-                    size={20}
-                    className={`shrink-0 ${isActive ? 'text-[#1977C5]' : 'text-slate-400'}`}
-                    aria-hidden="true"
-                  />
+                  <span className="secondary flex-1 text-base font-semibold text-slate-900 md:text-lg">{s.title}</span>
+                  <StepIcon size={20} className={`shrink-0 ${isActive ? 'text-[#1977C5]' : 'text-slate-400'}`} aria-hidden="true" />
                 </button>
               );
             })}
           </div>
 
-          {/* Active step detail panel */}
-          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 md:p-8" role="tabpanel">
+          {/* Active step detail panel (re-keyed so each step fades in) */}
+          <div key={active} className="reveal flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-900/5 md:p-8" role="tabpanel">
+            <div className="mb-6 h-1 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+              <div className="h-full rounded-full bg-linear-to-r from-[#1977C5] to-sky-400 transition-[width] duration-700" style={{ width: `${((active + 1) / c.steps.length) * 100}%` }} />
+            </div>
             <div className="flex items-center gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#1977C5]/10 text-[#1668AD]">
                 <ActiveIcon size={24} aria-hidden="true" />
               </span>
               <div>
-                <span className="block text-sm font-medium text-[#1668AD]">Step {activeStep.id}</span>
-                <h3 className="secondary text-xl font-semibold leading-tight text-slate-900 md:text-2xl">
-                  {activeStep.title}
-                </h3>
+                <span className="block text-sm font-medium text-[#1668AD]">
+                  {c.step} {id(active)}
+                </span>
+                <h3 className="secondary text-xl font-semibold leading-tight text-slate-900 md:text-2xl">{step.title}</h3>
               </div>
             </div>
 
-            <p className="mt-5 text-base leading-relaxed text-slate-600">{activeStep.summary}</p>
+            <p className="mt-5 text-base leading-relaxed text-slate-600">{step.summary}</p>
 
             <ul className="mt-5 space-y-3">
-              {activeStep.standards.map((s) => (
+              {step.standards.map((s) => (
                 <li key={s} className="flex items-start gap-3 text-sm text-slate-700">
                   <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#1977C5]" aria-hidden="true" />
                   {s}
@@ -175,60 +101,57 @@ export default function ProcessSection() {
               ))}
             </ul>
 
-            <Button onClick={() => setProtocolStep(activeStep)} className="mt-8 w-full sm:w-fit">
+            <Button onClick={() => setProtocolIdx(active)} className="mt-8 w-full sm:w-fit">
               <Microscope size={16} aria-hidden="true" />
-              Inspect Quality Protocol
+              {c.inspect}
             </Button>
           </div>
         </div>
       </div>
 
       {/* ================= QUALITY PROTOCOL MODAL ================= */}
-      {protocolStep && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4"
-          onClick={() => setProtocolStep(null)}
-        >
+      {protocol && ProtocolIcon && protocolIdx !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" onClick={() => setProtocolIdx(null)}>
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="protocol-title"
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl md:p-8"
+            className="reveal max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl md:p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
-                  <protocolStep.icon size={20} aria-hidden="true" />
+                  <ProtocolIcon size={20} aria-hidden="true" />
                 </span>
                 <div>
                   <span className="block text-xs font-medium uppercase tracking-wide text-[#1668AD]">
-                    Quality Protocol · Step {protocolStep.id}
+                    {c.protocol} · {c.step} {id(protocolIdx)}
                   </span>
                   <h3 id="protocol-title" className="secondary text-lg font-semibold leading-tight text-slate-900 md:text-xl">
-                    {protocolStep.protocol}
+                    {protocol.protocol}
                   </h3>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setProtocolStep(null)}
-                aria-label="Close protocol"
+                onClick={() => setProtocolIdx(null)}
+                aria-label={c.close}
                 className="-mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <p className="mb-6 text-sm leading-relaxed text-slate-600">{protocolStep.clinical}</p>
+            <p className="mb-6 text-sm leading-relaxed text-slate-600">{protocol.clinical}</p>
 
             <div className="space-y-6">
               <div>
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
-                  <Boxes size={14} className="text-[#1977C5]" aria-hidden="true" /> Equipment &amp; Materials
+                  <Boxes size={14} className="text-[#1977C5]" aria-hidden="true" /> {c.equipmentLabel}
                 </p>
                 <ul className="space-y-2">
-                  {protocolStep.equipment.map((item) => (
+                  {protocol.equipment.map((item) => (
                     <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
                       <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#1977C5]" />
                       {item}
@@ -239,10 +162,10 @@ export default function ProcessSection() {
 
               <div>
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
-                  <ShieldCheck size={14} className="text-[#1977C5]" aria-hidden="true" /> Quality Standards
+                  <ShieldCheck size={14} className="text-[#1977C5]" aria-hidden="true" /> {c.standardsLabel}
                 </p>
                 <ul className="space-y-2">
-                  {protocolStep.standards.map((item) => (
+                  {protocol.standards.map((item) => (
                     <li key={item} className="flex items-start gap-2 text-sm text-slate-600">
                       <MonitorCheck size={16} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
                       {item}
