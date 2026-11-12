@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import SectionHeader from '@/components/ui/SectionHeader';
 import { Cog, Flame, Sparkles, Printer, ScanLine, Timer, Cpu, FileCheck, type LucideIcon } from 'lucide-react';
 
 const equipment = [
@@ -59,21 +60,23 @@ const badges = [
   },
 ];
 
+const TILE = 'relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl';
+
 /** Renders the styled icon tile by default; the real lab photo fades in over it
  *  as soon as it exists in /public/images/lab/ (checked on every page load). */
 function LabImage({ src, alt, icon: Icon }: { src: string; alt: string; icon: LucideIcon }) {
   const [loaded, setLoaded] = useState(false);
 
   return (
-    <div className="relative w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-[11px] md:rounded-[16px] overflow-hidden shadow mb-3 sm:mb-4 md:mb-6 bg-(--bg-muted) flex items-center justify-center text-(--text-tertiary)">
-      <Icon className={`w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 ${loaded ? 'hidden' : ''}`} strokeWidth={1.75} />
+    <div className={`${TILE} bg-[#1977C5]/10 text-[#1668AD]`}>
+      <Icon size={24} strokeWidth={1.75} className={loaded ? 'hidden' : ''} aria-hidden="true" />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
         loading="lazy"
         onLoad={() => setLoaded(true)}
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
           loaded ? 'opacity-100' : 'opacity-0'
         }`}
       />
@@ -83,73 +86,52 @@ function LabImage({ src, alt, icon: Icon }: { src: string; alt: string; icon: Lu
 
 export default function EquipmentSection() {
   return (
-    <section className="py-7 sm:py-10 md:py-20 bg-(--bg-primary)">
+    <section className="bg-white py-16 md:py-24">
       <div className="container">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-14">
-          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary max-w-2xl">
-            Advanced Equipment,
-            <br />
-            Certified Quality
-          </div>
+        <SectionHeader
+          title={
+            <>
+              Advanced Equipment,
+              <br />
+              Certified Quality
+            </>
+          }
+          lead="We invest in authentic Japanese and global digital dentistry hardware so every case is designed, milled and finished in-house with sub-micron precision."
+        />
 
-          <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) w-full lg:max-w-md">
-            We invest in authentic Japanese and global digital dentistry hardware so every case is
-            designed, milled and finished in-house with sub-micron precision.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-          {equipment.map((item, index) => (
-            <div
-              key={index}
-              className="bg-(--bg-secondary) rounded-[10px] md:rounded-[16px] lg:rounded-[24px] p-4 sm:p-6 md:p-8 transition-all duration-300 hover:scale-105"
-            >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          {equipment.map((item) => (
+            <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-6">
               {item.image ? (
                 <LabImage src={item.image} alt={item.title} icon={item.icon} />
               ) : (
-                <div className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-[11px] md:rounded-[16px] bg-(--bg-muted) flex items-center justify-center shadow text-(--text-tertiary) mb-3 sm:mb-4 md:mb-6">
-                  <item.icon className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8" strokeWidth={1.75} />
+                <div className={`${TILE} bg-[#1977C5]/10 text-[#1668AD]`}>
+                  <item.icon size={24} strokeWidth={1.75} aria-hidden="true" />
                 </div>
               )}
-
-              <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl secondary leading-snug">{item.title}</div>
-              <div className="mt-1 text-xs sm:text-xs md:text-xs text-(--text-muted) font-medium">{item.tag}</div>
-              <p className="mt-1 sm:mt-2 md:mt-3 text-xs sm:text-xs md:text-xs lg:text-base text-(--text-secondary)">
-                {item.desc}
-              </p>
+              <h3 className="secondary mt-5 text-lg font-semibold leading-snug text-slate-900">{item.title}</h3>
+              <p className="mt-1 text-sm font-medium text-[#1668AD]">{item.tag}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.desc}</p>
             </div>
           ))}
 
-          {badges.map((item, index) => (
-            <div
-              key={index}
-              className="bg-(--bg-muted) rounded-[10px] md:rounded-[16px] lg:rounded-[24px] p-4 sm:p-6 md:p-8 text-(--text-tertiary) transition-all duration-300 hover:scale-105"
-            >
-              <div className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-[11px] md:rounded-[16px] bg-white/90 text-(--text-primary) flex items-center justify-center shadow mb-3 sm:mb-4 md:mb-6">
-                <item.icon className="w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8" strokeWidth={1.75} />
+          {badges.map((item) => (
+            <div key={item.title} className="rounded-2xl border border-[#1977C5]/15 bg-[#1977C5]/5 p-6">
+              <div className={`${TILE} bg-[#1977C5] text-white`}>
+                <item.icon size={24} strokeWidth={1.75} aria-hidden="true" />
               </div>
-
-              <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl secondary leading-snug">{item.title}</div>
-              <p className="mt-1 sm:mt-2 md:mt-3 text-xs sm:text-xs md:text-xs lg:text-base text-white/80">
-                {item.desc}
-              </p>
+              <h3 className="secondary mt-5 text-lg font-semibold leading-snug text-slate-900">{item.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.desc}</p>
             </div>
           ))}
         </div>
 
-        <div className="relative h-[160px] md:h-[220px] mt-14 rounded-[10px] md:rounded-[16px] lg:rounded-[24px] overflow-hidden">
-          <Image
-            src="/images/CTA.jpg"
-            alt="CNDL Global laboratory"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-linear-to-r from-[#226AB46B] to-[#3387CB]" />
-          <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
-            <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold secondary text-(--text-tertiary)">
-              Every restoration crafted in-house on certified digital hardware.
-            </div>
-          </div>
+        <div className="relative mt-12 flex min-h-40 items-center justify-center overflow-hidden rounded-2xl px-6 py-10 md:min-h-52">
+          <Image src="/images/CTA.jpg" alt="CNDL Global laboratory" fill sizes="(min-width: 1440px) 1296px, 90vw" className="object-cover" />
+          <div className="absolute inset-0 bg-slate-900/65" />
+          <p className="secondary relative max-w-2xl text-center text-xl font-semibold leading-snug text-white md:text-2xl">
+            Every restoration crafted in-house on certified digital hardware.
+          </p>
         </div>
       </div>
     </section>

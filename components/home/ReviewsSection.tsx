@@ -2,6 +2,7 @@ import { Star } from 'lucide-react';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
 import { safeJsonLd } from '@/lib/safe-json-ld';
+import SectionHeader from '@/components/ui/SectionHeader';
 
 type Review = {
   name: string;
@@ -71,76 +72,70 @@ export default async function ReviewComponent() {
     })),
   };
 
-  const renderReviews = (items: Review[]) =>
+  const renderReviews = (items: Review[], copy: boolean) =>
     [...items, ...items].map((review, index) => (
-      <div
+      <figure
         key={`${review.name}-${index}`}
-        className="p-6 lg:p-7 xl:p-8  rounded-[10px] md:rounded-[16px] lg:rounded-[24px] bg-(--bg-primary) border-[1.5px] border-(--border-primary) flex flex-col justify-between"
+        // The second half repeats the first so the scroll loops; hide it from screen readers.
+        aria-hidden={copy || index >= items.length ? true : undefined}
+        className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6"
       >
-        <div className="w-12 h-12 rounded-full flex items-center justify-center pb-10 pt-5">
-          <Image src={review.image} alt="review" width={48} height={48} className="rounded-full" />
-        </div>
-
-        <div className="font-semibold text-sm md:text-base lg:text-lg xl:text-xl pb-2">
-          {review.name}
-        </div>
-        <div className="text-xs md:text-xs text-(--text-secondary) pb-2">{review.role}</div>
-        <div className="flex gap-1 mb-6">
+        <div className="flex gap-0.5" role="img" aria-label={`${review.rating} out of 5`}>
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              size={18}
-              className={
-                i < review.rating
-                  ? 'fill-yellow-500 text-yellow-500'
-                  : 'fill-gray-300 text-gray-300'
-              }
+              size={16}
+              aria-hidden="true"
+              className={i < review.rating ? 'fill-amber-400 text-amber-400' : 'fill-slate-200 text-slate-200'}
             />
           ))}
         </div>
 
-        <p className="text-(--text-secondary) text-xs md:text-sm lg:text-base xl:text-lg">
-          &quot;{review.review}&quot;
-        </p>
-      </div>
+        <blockquote className="mt-4 text-base leading-relaxed text-slate-700">&ldquo;{review.review}&rdquo;</blockquote>
+
+        <figcaption className="mt-6 flex items-center gap-3 border-t border-slate-100 pt-5">
+          <Image src={review.image} alt="" width={40} height={40} className="size-10 shrink-0 rounded-full object-cover" />
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-slate-900">{review.name}</div>
+            <div className="text-sm text-slate-500">{review.role}</div>
+          </div>
+        </figcaption>
+      </figure>
     ));
 
   return (
-    <section className="py-7 sm:py-10 md:py-20  bg-(--bg-secondary) overflow-hidden" id="review">
+    <section className="overflow-hidden bg-white py-16 md:py-24" id="review">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <div className="container">
-        <div className="text-center gap-6 mb-14">
-          <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary">
-            Trusted by Top Dental Practitioners.
-          </div>
-          <p className="text-xs md:text-xs lg:text-base text-(--text-secondary) mt-2 md:mt-4">
-            Real stories from dentists across Bangladesh who trust CNDL with their cases
-          </p>
-        </div>
+        <SectionHeader
+          align="center"
+          title="Trusted by Top Dental Practitioners."
+          lead="Real stories from dentists across Bangladesh who trust CNDL with their cases"
+        />
 
-        <div className="relative h-[600px] container overflow-hidden">
-          <div className="pointer-events-none absolute top-0 left-0 w-full h-24 bg-linear-to-b from-(--bg-secondary) to-transparent z-10" />
-          <div className="pointer-events-none absolute bottom-0 left-0 w-full h-24 bg-linear-to-t from-(--bg-secondary) to-transparent z-10" />
+        <div className="relative h-[560px] overflow-hidden md:h-[600px]">
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-20 w-full bg-linear-to-b from-white to-transparent" />
+          <div className="pointer-events-none absolute bottom-0 left-0 z-10 h-20 w-full bg-linear-to-t from-white to-transparent" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 h-full">
+          <div className="grid h-full grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">
             <div className="overflow-hidden">
-              <div className="flex flex-col gap-6 review-scroll-up">
-                {reviews.length > 0 && renderReviews(reviews)}
+              <div className="review-scroll-up flex flex-col gap-4 lg:gap-6">
+                {reviews.length > 0 && renderReviews(reviews, false)}
               </div>
             </div>
 
-            <div className="overflow-hidden hidden md:block">
-              <div className="flex flex-col gap-6 review-scroll-down">
-                {reviews.length > 0 && renderReviews([...reviews].reverse())}
+            <div className="hidden overflow-hidden md:block">
+              <div className="review-scroll-down flex flex-col gap-4 lg:gap-6">
+                {reviews.length > 0 && renderReviews([...reviews].reverse(), true)}
               </div>
             </div>
 
-            <div className="overflow-hidden hidden xl:block">
-              <div className="flex flex-col gap-6 review-scroll-up">
-                {reviews.length > 0 && renderReviews(reviews)}
+            <div className="hidden overflow-hidden xl:block">
+              <div className="review-scroll-up flex flex-col gap-4 lg:gap-6">
+                {reviews.length > 0 && renderReviews(reviews, true)}
               </div>
             </div>
           </div>

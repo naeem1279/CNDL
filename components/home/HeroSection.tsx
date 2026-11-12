@@ -1,74 +1,56 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { MoveRight } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { ButtonLink } from '@/components/ui/Button';
 
 export default function HeroSection() {
   const [heroSrc, setHeroSrc] = useState('/images/hero-dental-cadcam.webp');
   const { t } = useLanguage();
 
   return (
-    <section className="relative overflow-hidden bg-(--bg-muted)">
-      <div className="container relative">
-        <div className="w-full h-screen lg:h-[600px] flex items-center justify-center py-8 sm:py-16 lg:py-0">
-          <Image
-            src="/images/PattranBanner.png"
-            alt="Dental Model"
-            width={1000}
-            height={1000}
-            className="object-contain w-full h-full"
-            priority
-          />
+    <section className="border-b border-slate-200 bg-linear-to-b from-white to-slate-50">
+      <div className="container grid grid-cols-1 items-center gap-10 py-12 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:py-20 xl:gap-16">
+        <div>
+          <p className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+            <ShieldCheck size={14} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+            <span className="min-w-0">{t.footer.servingSince}</span>
+          </p>
+
+          <h1 className="secondary mt-5 text-3xl font-semibold leading-[1.15] text-slate-900 sm:text-4xl lg:text-5xl">
+            <span className="block">
+              {t.hero.titleLine1} {t.hero.titleLine2}
+            </span>
+            <span className="mt-1 block text-[#1977C5]">
+              {t.hero.titleLine3} {t.hero.titleLine4}
+            </span>
+          </h1>
+
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 md:text-lg">{t.hero.subtitle}</p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <ButtonLink href="/order-create" size="lg" className="group">
+              {t.hero.getStarted}
+              <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </ButtonLink>
+            <ButtonLink href="/contact" variant="secondary" size="lg">
+              {t.hero.sendCase}
+            </ButtonLink>
+          </div>
         </div>
-        <div className="absolute inset-0 h-full w-full grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-10 xl:gap-14 items-center">
-          <div className="order-2 lg:order-1 text-(--text-tertiary) w-full">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold leading-tight secondary">
-              {t.hero.titleLine1}
-              <br />
-              {t.hero.titleLine2} <br />
-              {t.hero.titleLine3} <br />
-              {t.hero.titleLine4}
-            </h1>
 
-            <p className="text-xs md:text-sm lg:text-base xl:text-lg mt-2 md:mt-4 max-w-xl text-(--text-tertiary)">
-              {t.hero.subtitle}
-            </p>
-
-            <div className="mt-6 sm:mt-8 md:mt-10 lg:mt-12 flex gap-4 flex-wrap">
-              <Link
-                href="/order-create"
-                className="inline-flex items-center gap-2 rounded-full bg-(--bg-tertiary) border-2 border-(--border-tertiary) px-6 py-3 text-xs md:text-sm lg:text-base xl:text-lg font-medium text-black hover:bg-(--bg-tertiary)/98 transition group"
-              >
-                {t.hero.getStarted} <MoveRight size={24} className="group-hover:translate-x-2 transition"/>
-              </Link>
-
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 rounded-full border-2 border-(--border-primary) px-6 py-3 text-xs md:text-sm lg:text-base xl:text-lg font-medium text-(--text-tertiary) hover:bg-(--bg-tertiary) transition group"
-              >
-                {t.hero.sendCase} <MoveRight size={24} className="group-hover:translate-x-2 transition"/>
-              </Link>
-            </div>
-          </div>
-
-          <div className="order-1 lg:order-2 relative flex items-center justify-center w-full h-full">
-            <div className="absolute inset-0 bg-[url('/images/ShapeBanner.png')] bg-contain bg-no-repeat bg-center" />
-
-            <div className='pl-10 -pt-10'>
-              <Image
-                src={heroSrc}
-                alt="CNDL Digital CAD/CAM Dental Laboratory"
-                width={600}
-                height={600}
-                className="object-contain w-full h-full sm:h-[250px] md:w-[300px] md:h-[300px] lg:w-[600px] lg:h-[600px]"
-                priority
-                onError={() => setHeroSrc('/images/RightSiteBanner.png')}
-              />
-            </div>
-          </div>
+        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+          <Image
+            src={heroSrc}
+            alt="CNDL Digital CAD/CAM Dental Laboratory"
+            fill
+            sizes="(min-width: 1440px) 640px, (min-width: 1024px) 45vw, 90vw"
+            className="object-cover"
+            priority
+            onError={() => setHeroSrc('/images/RightSiteBanner.png')}
+          />
         </div>
       </div>
     </section>
