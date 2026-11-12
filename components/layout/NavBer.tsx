@@ -247,7 +247,11 @@ export default function NavBer() {
                     aria-pressed={on}
                     aria-label={name}
                     lang={code === 'bn' ? 'bn' : 'en'}
+                    // "বাং" uses the device's own font so this one label does not make English
+                    // pages download Noto Sans Bengali (app/layout.tsx); Bengali pages load it anyway.
                     className={`inline-flex h-10 min-w-10 items-center justify-center rounded-full px-2.5 text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ${
+                      code === 'bn' ? 'font-[system-ui,sans-serif]' : ''
+                    } ${
                       on ? 'bg-[#1977C5] text-white shadow-sm shadow-[#1977C5]/30' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
