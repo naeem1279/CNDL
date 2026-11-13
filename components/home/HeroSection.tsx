@@ -73,7 +73,7 @@ export default function HeroSection({ rating = null }: { rating?: RatingSummary 
           <ul className="mt-8 flex flex-col gap-x-6 gap-y-2.5 text-sm text-slate-700 sm:flex-row sm:flex-wrap">
             {c.hero.points.map((p) => (
               <li key={p} className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+                <CheckCircle2 size={16} className="shrink-0 text-accent-500" aria-hidden="true" />
                 {p}
               </li>
             ))}

@@ -24,7 +24,12 @@ export default function SectionHeader({ eyebrow, title, lead, align = 'left', ac
       } ${centered ? 'items-center text-center' : ''} ${className}`}
     >
       <div className={centered ? 'mx-auto max-w-2xl' : 'max-w-2xl'}>
-        {eyebrow && <p className="mb-3 text-sm font-medium text-[#1668AD]">{eyebrow}</p>}
+        {eyebrow && (
+          <p className="mb-3 flex items-center gap-2 text-sm font-medium text-[#1668AD]">
+            <span aria-hidden className="bar-brand h-1 w-8 shrink-0 rounded-full" />
+            {eyebrow}
+          </p>
+        )}
         <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">{title}</h2>
         {lead && <p className="mt-4 text-base leading-relaxed text-slate-600 md:text-lg">{lead}</p>}
       </div>

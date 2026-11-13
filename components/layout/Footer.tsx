@@ -15,7 +15,8 @@ export default function Footer() {
   const bn = lang === 'bn';
 
   return (
-    <footer className="border-t border-slate-200 bg-white print:hidden">
+    <footer className="relative border-t border-slate-200 bg-white print:hidden">
+      <div aria-hidden className="bar-brand absolute inset-x-0 top-0 h-1" />
       <div className="container pb-28 pt-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-5">

@@ -79,7 +79,7 @@ export default function ProcessSection() {
               <div className="h-full rounded-full bg-linear-to-r from-[#1977C5] to-sky-400 transition-[width] duration-700" style={{ width: `${((active + 1) / c.steps.length) * 100}%` }} />
             </div>
             <div className="flex items-center gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#1977C5]/10 text-[#1668AD]">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-duo text-[#226AB4]">
                 <ActiveIcon size={24} aria-hidden="true" />
               </span>
               <div>
@@ -95,7 +95,7 @@ export default function ProcessSection() {
             <ul className="mt-5 space-y-3">
               {step.standards.map((s) => (
                 <li key={s} className="flex items-start gap-3 text-sm text-slate-700">
-                  <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#1977C5]" aria-hidden="true" />
+                  <ShieldCheck size={18} className="mt-0.5 shrink-0 text-accent-500" aria-hidden="true" />
                   {s}
                 </li>
               ))}
@@ -121,7 +121,7 @@ export default function ProcessSection() {
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
                   <ProtocolIcon size={20} aria-hidden="true" />
                 </span>
                 <div>
@@ -162,7 +162,7 @@ export default function ProcessSection() {
 
               <div>
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
-                  <ShieldCheck size={14} className="text-[#1977C5]" aria-hidden="true" /> {c.standardsLabel}
+                  <ShieldCheck size={14} className="text-accent-500" aria-hidden="true" /> {c.standardsLabel}
                 </p>
                 <ul className="space-y-2">
                   {protocol.standards.map((item) => (

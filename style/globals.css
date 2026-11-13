@@ -30,6 +30,12 @@
   --color-brand-700: #13558c;
   --color-brand-800: #124670;
   --color-brand-900: #10395a;
+  /* Logo green (#7EC242). Fill/shape colour only: 700 is the darkest-needed text shade (4.9:1 on white). */
+  --color-accent-50: #f3f9ec;
+  --color-accent-100: #e3f2d3;
+  --color-accent-400: #7ec242;
+  --color-accent-500: #5fa52a;
+  --color-accent-700: #4a8a1c;
 
   --text-meta: 0.75rem;
   --text-meta--line-height: 1rem;
@@ -168,7 +174,7 @@ body {
   background-image:
     radial-gradient(48rem 32rem at 85% -10%, rgb(25 119 197 / 0.14), transparent 60%),
     radial-gradient(40rem 28rem at -10% 10%, rgb(56 189 248 / 0.12), transparent 60%),
-    radial-gradient(36rem 24rem at 60% 110%, rgb(136 200 69 / 0.08), transparent 60%);
+    radial-gradient(36rem 24rem at 60% 110%, rgb(126 194 66 / 0.3), transparent 60%);
 }
 /* Deep navy mesh for dark bands. */
 .bg-mesh-dark {
@@ -181,6 +187,7 @@ body {
 .bg-mesh-brand {
   background-color: #1668ad;
   background-image:
+    radial-gradient(34rem 22rem at 90% 110%, rgb(126 194 66 / 0.85), transparent 65%),
     radial-gradient(40rem 24rem at 100% 0%, rgb(56 189 248 / 0.45), transparent 60%),
     radial-gradient(36rem 24rem at 0% 100%, rgb(15 76 129 / 0.9), transparent 60%);
 }
@@ -261,4 +268,20 @@ body {
     transform: none;
     transition: none;
   }
+}
+
+/* Logo blue-to-green, for a short rule or one highlighted word. */
+.bar-brand {
+  background-image: linear-gradient(to right, #226ab4, #7ec242);
+}
+.text-gradient-brand {
+  background-image: linear-gradient(to right, #1668ad, #4a8a1c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Icon tile: logo blue fading into logo green. */
+.bg-brand-duo {
+  background-image: linear-gradient(135deg, rgb(34 106 180 / 0.12), rgb(126 194 66 / 0.3));
 }

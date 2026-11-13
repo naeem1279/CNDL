@@ -376,7 +376,7 @@ function CaseTrackerPage() {
             {/* ============ EMPTY STATE ============ */}
             {!caseData && !searched && (
               <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center md:p-12">
-                <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
                   <PackageCheck size={24} aria-hidden="true" />
                 </span>
                 <h2 className="secondary mb-3 text-xl font-semibold md:text-2xl">Live Case Visibility, Zero Guesswork</h2>
@@ -400,7 +400,7 @@ function CaseTrackerPage() {
                   </Button>
                 </div>
                 <p className="mt-7 flex items-center justify-center gap-2 text-sm text-slate-500">
-                  <ShieldCheck size={16} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+                  <ShieldCheck size={16} className="shrink-0 text-accent-500" aria-hidden="true" />
                   Patient-identifiable data is never displayed publicly — only clinical essentials.
                 </p>
               </div>

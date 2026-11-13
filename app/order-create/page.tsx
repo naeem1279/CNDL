@@ -309,7 +309,7 @@ export default function OrderCreatePage() {
                       className="sr-only"
                       onChange={onFileChange}
                     />
-                    <span className="flex size-12 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                    <span className="flex size-12 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
                       <UploadCloud size={24} aria-hidden="true" />
                     </span>
                     <span className="mt-4 text-lg font-semibold text-slate-900">Upload Digital Files</span>

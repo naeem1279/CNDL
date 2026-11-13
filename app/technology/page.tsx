@@ -226,7 +226,7 @@ export default function TechnologyPage() {
                 <article key={m.id} id={m.id} className="scroll-mt-32 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 lg:p-10">
                   <div className="flex flex-col justify-between gap-6 border-b border-slate-100 pb-6 lg:flex-row lg:items-start">
                     <div className="flex items-start gap-4">
-                      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
                         <Icon size={24} aria-hidden="true" />
                       </span>
                       <div className="min-w-0">

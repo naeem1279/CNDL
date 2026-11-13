@@ -175,7 +175,7 @@ function renderContent(content: string) {
               key={lIdx}
               className="flex items-start gap-3 text-base text-slate-700 leading-relaxed"
             >
-              <CheckCircle2 size={17} className="text-[#1977C5] shrink-0 mt-0.5" />
+              <CheckCircle2 size={17} className="text-accent-500 shrink-0 mt-0.5" />
               <span>{item}</span>
             </li>
           ))}
