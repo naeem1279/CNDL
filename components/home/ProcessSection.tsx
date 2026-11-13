@@ -95,7 +95,7 @@ export default function ProcessSection() {
             <ul className="mt-5 space-y-3">
               {step.standards.map((s) => (
                 <li key={s} className="flex items-start gap-3 text-sm text-slate-700">
-                  <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#1977C5]" aria-hidden="true" />
+                  <ShieldCheck size={18} className="mt-0.5 shrink-0 text-accent-500" aria-hidden="true" />
                   {s}
                 </li>
               ))}
@@ -162,7 +162,7 @@ export default function ProcessSection() {
 
               <div>
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
-                  <ShieldCheck size={14} className="text-[#1977C5]" aria-hidden="true" /> {c.standardsLabel}
+                  <ShieldCheck size={14} className="text-accent-500" aria-hidden="true" /> {c.standardsLabel}
                 </p>
                 <ul className="space-y-2">
                   {protocol.standards.map((item) => (

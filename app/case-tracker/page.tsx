@@ -400,7 +400,7 @@ function CaseTrackerPage() {
                   </Button>
                 </div>
                 <p className="mt-7 flex items-center justify-center gap-2 text-sm text-slate-500">
-                  <ShieldCheck size={16} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+                  <ShieldCheck size={16} className="shrink-0 text-accent-500" aria-hidden="true" />
                   Patient-identifiable data is never displayed publicly — only clinical essentials.
                 </p>
               </div>

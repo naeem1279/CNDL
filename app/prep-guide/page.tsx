@@ -160,7 +160,7 @@ export default function PrepGuidePage() {
       <PageHeader
         eyebrow={
           <>
-            <ShieldCheck size={14} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+            <ShieldCheck size={14} className="shrink-0 text-accent-500" aria-hidden="true" />
             <span className="min-w-0">ESTD. 2015 · CNDL CLINICAL PROTOCOLS</span>
           </>
         }
@@ -283,7 +283,7 @@ export default function PrepGuidePage() {
                   </div>
 
                   <div className="mt-5 flex items-start gap-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
-                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[#1977C5]" aria-hidden="true" />
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-accent-500" aria-hidden="true" />
                     <span>{rule.check}</span>
                   </div>
                 </div>

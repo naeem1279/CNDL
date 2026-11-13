@@ -17,11 +17,13 @@ export default function PageHeader({ eyebrow, title, lead, children }: Props) {
   return (
     <section className="relative isolate overflow-hidden border-b border-slate-200 bg-mesh-light">
       <div aria-hidden className="bg-grid-fade pointer-events-none absolute inset-0 -z-10" />
+      <div aria-hidden className="bar-brand absolute inset-x-0 bottom-0 h-0.5" />
       <div className="container py-12 md:py-16 lg:py-20">
         <div className="max-w-3xl">
           {eyebrow && (
             <Reveal>
               <p className="mb-4 inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 backdrop-blur">
+                <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-accent-400" />
                 {eyebrow}
               </p>
             </Reveal>

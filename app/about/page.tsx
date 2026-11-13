@@ -84,7 +84,7 @@ function AboutPage() {
       <PageHeader
         eyebrow={
           <>
-            <ShieldCheck size={14} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+            <ShieldCheck size={14} className="shrink-0 text-accent-500" aria-hidden="true" />
             <span className="min-w-0">Pioneering Digital Dental Artistry in Bangladesh</span>
           </>
         }
