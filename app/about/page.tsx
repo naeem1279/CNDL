@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { OG_IMAGE } from '@/lib/seo';
+import SpotlightCard from '@/components/ui/SpotlightCard';
 import PageHeader from '@/components/ui/PageHeader';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { ButtonLink } from '@/components/ui/Button';
@@ -162,7 +163,7 @@ function AboutPage() {
                 note: '100% Monomer-Free Biocompatible',
               },
             ].map((card) => (
-              <div key={card.title} className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
+              <SpotlightCard key={card.title} className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
                 <div>
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">{card.kicker}</span>
@@ -175,7 +176,7 @@ function AboutPage() {
                   <span>Turnaround: 3-4 Working Days</span>
                   <span className="font-medium text-slate-900">{card.note}</span>
                 </div>
-              </div>
+              </SpotlightCard>
             ))}
           </div>
         </div>
@@ -275,13 +276,13 @@ function AboutPage() {
           <SectionHeader align="center" eyebrow="Why CNDL" title="The 4 Uncompromising Lab Pillars" />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6 xl:grid-cols-4">
             {pillars.map((pillar) => (
-              <div key={pillar.title} className="rounded-2xl border border-slate-200 bg-white p-6">
+              <SpotlightCard key={pillar.title} className="rounded-2xl border border-slate-200 bg-white p-6">
                 <span className="mb-5 flex size-11 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
                   <pillar.icon size={22} strokeWidth={1.75} aria-hidden="true" />
                 </span>
                 <h3 className="secondary mb-2 text-lg font-semibold text-slate-900">{pillar.title}</h3>
                 <p className="text-sm leading-relaxed text-slate-600">{pillar.desc}</p>
-              </div>
+              </SpotlightCard>
             ))}
           </div>
         </div>
