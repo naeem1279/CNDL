@@ -78,7 +78,7 @@ export const ALL_TAB_KEYS: TabKey[] = [
   'dues', 'expenses', 'capex', 'shareholders',
   'messages', 'blogs', 'reviews',
   'leads',
-  'users',
+  'users', 'access',
 ];
 
 /** Panel statuses + badge styling (unknown legacy statuses render as neutral). */

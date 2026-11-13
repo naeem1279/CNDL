@@ -1,6 +1,6 @@
 import {
   Cpu, FileText, Landmark, Layers, LayoutDashboard, MapPin, MessageSquare, Package, Star,
-  TrendingDown, Users, Wallet,
+  ShieldCheck, TrendingDown, Users, Wallet,
 } from 'lucide-react';
 import type { TabKey } from './types';
 
@@ -45,7 +45,10 @@ export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   },
   {
     title: 'Access & Team',
-    items: [{ key: 'users', label: 'Team & Staff', icon: Users }],
+    items: [
+      { key: 'users', label: 'Team & Staff', icon: Users },
+      { key: 'access', label: 'Roles & Access', icon: ShieldCheck },
+    ],
   },
 ];
 

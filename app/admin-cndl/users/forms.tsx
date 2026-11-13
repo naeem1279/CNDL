@@ -8,19 +8,12 @@ import { useAdmin } from '../_lib/session';
 import type { ErpUser } from '../_lib/types';
 import { apiError, formatBDT, todayInput } from '../_lib/utils';
 
-/** Roles, what they can do, and whether they can sign in (see /api/admin/verify LOGIN_ROLES). */
-export const ROLES: { value: string; label: string; does: string; console: boolean }[] = [
-  { value: 'AGENT', label: 'Field agent', does: 'Their own client accounts and collections in Client Dues', console: true },
-  { value: 'ACCOUNTS', label: 'Accounts', does: 'Billing, collections, expenses, cases and payouts', console: true },
-  { value: 'CHAIRMAN', label: 'Chairman', does: 'Overview, cases, dues, machinery and shareholders', console: true },
-  { value: 'SUPERADMIN', label: 'Super Admin', does: 'Everything, including team members', console: true },
-  { value: 'DOCTOR', label: 'Doctor', does: 'Record only — cannot sign in to the console', console: false },
-  { value: 'PARTNER_LAB', label: 'Partner lab', does: 'Record only — cannot sign in to the console', console: false },
-];
-export const roleLabel = (r: string) => ROLES.find((x) => x.value === r)?.label ?? r;
+/** A role as listed by /api/admin/erp/roles. A role with no permissions can be assigned (record only) but cannot use the console. */
+export type RoleOption = { key: string; name: string; description: string | null; permissions: string[] };
+export const canUseConsole = (r: RoleOption | undefined) => !!r && r.permissions.length > 0;
 const MIN_PASSWORD = 8;
 
-export function MemberDialog({ editing, onClose, onSaved }: { editing: ErpUser | null; onClose: () => void; onSaved: () => void }) {
+export function MemberDialog({ editing, roles, onClose, onSaved }: { editing: ErpUser | null; roles: RoleOption[]; onClose: () => void; onSaved: () => void }) {
   const { me, adminFetch, handleAuthLoss } = useAdmin();
   const isSelf = !!editing && editing.id === me.uid;
   const [f, setF] = useState({
@@ -28,14 +21,15 @@ export function MemberDialog({ editing, onClose, onSaved }: { editing: ErpUser |
     phone: editing?.phone || '',
     email: editing?.email || '',
     address: editing?.address || '',
-    role: editing?.role || 'AGENT',
+    role: editing?.roleKey || editing?.role || (roles.some((r) => r.key === 'AGENT') ? 'AGENT' : roles[0]?.key || ''),
     status: editing?.status || 'ACTIVE',
     password: '',
   });
   const [showPw, setShowPw] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [saving, setSaving] = useState(false);
-  const role = ROLES.find((r) => r.value === f.role);
+  const role = roles.find((r) => r.key === f.role);
+  const signsIn = canUseConsole(role);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setF((x) => ({ ...x, [k]: e.target.value }));
     setErrors((x) => ({ ...x, [k]: undefined }));
@@ -47,7 +41,7 @@ export function MemberDialog({ editing, onClose, onSaved }: { editing: ErpUser |
     if (f.name.trim().length < 2) err.name = 'Enter their full name';
     if (f.phone.replace(/\D/g, '').length < 10) err.phone = 'Enter a full phone number (used to sign in)';
     if (f.email.trim() && !/^\S+@\S+\.\S+$/.test(f.email.trim())) err.email = 'Enter a valid email or leave it empty';
-    if (!editing && role?.console && !f.password) err.password = 'Set a password so they can sign in';
+    if (!editing && signsIn && !f.password) err.password = 'Set a password so they can sign in';
     if (f.password && f.password.length < MIN_PASSWORD) err.password = `Use at least ${MIN_PASSWORD} characters`;
     setErrors(err);
     const first = Object.keys(err).find((k) => err[k]);
@@ -62,7 +56,7 @@ export function MemberDialog({ editing, onClose, onSaved }: { editing: ErpUser |
           phone: f.phone.trim(),
           email: f.email.trim() || null,
           address: f.address.trim() || null,
-          ...(isSelf ? {} : { role: f.role }),
+          ...(isSelf ? {} : { roleKey: f.role }),
           ...(editing && !isSelf ? { status: f.status } : {}),
           ...(f.password ? { password: f.password } : {}),
         }),
@@ -90,12 +84,12 @@ export function MemberDialog({ editing, onClose, onSaved }: { editing: ErpUser |
           <Input id="mb-phone" type="tel" value={f.phone} onChange={set('phone')} invalid={!!errors.phone} placeholder="01XXXXXXXXX" autoComplete="off" />
         </Field>
       </div>
-      <Field label="Role" htmlFor="mb-role" hint={isSelf ? 'You cannot change your own role.' : role?.does}>
+      <Field label="Role" htmlFor="mb-role" hint={isSelf ? 'You cannot change your own role.' : role?.description || (signsIn ? undefined : 'Record only — this role cannot sign in to the console.')}>
         <Select id="mb-role" value={f.role} onChange={set('role')} disabled={isSelf}>
-          {ROLES.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
-              {r.console ? '' : ' (no sign-in)'}
+          {roles.map((r) => (
+            <option key={r.key} value={r.key}>
+              {r.name}
+              {canUseConsole(r) ? '' : ' (no sign-in)'}
             </option>
           ))}
         </Select>
@@ -109,11 +103,11 @@ export function MemberDialog({ editing, onClose, onSaved }: { editing: ErpUser |
           </Select>
         </Field>
       )}
-      {(role?.console || editing) && (
+      {(signsIn || editing) && (
         <Field
           label={editing ? 'New password' : 'Password'}
           htmlFor="mb-password"
-          required={!editing && role?.console}
+          required={!editing && signsIn}
           error={errors.password}
           hint={editing ? 'Leave empty to keep their current password.' : `At least ${MIN_PASSWORD} characters. Share it with them privately.`}
         >

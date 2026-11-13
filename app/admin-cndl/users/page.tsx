@@ -9,16 +9,17 @@ import { loadResources } from '../_lib/resources';
 import { useAdmin } from '../_lib/session';
 import type { ErpAgent, ErpExpense, ErpLedgerEntry, ErpUser, Order } from '../_lib/types';
 import { apiError, formatBDT, readPref } from '../_lib/utils';
-import { MemberDialog, PayoutDialog, ROLES, roleLabel } from './forms';
+import { MemberDialog, PayoutDialog, canUseConsole, type RoleOption } from './forms';
 
 type View = 'people' | 'agents';
+const keyOf = (u: ErpUser) => u.roleKey ?? u.role;
 type Group = 'all' | 'leadership' | 'accounts' | 'agents' | 'records' | 'inactive';
 const GROUPS: { key: Group; label: string; test: (u: ErpUser) => boolean }[] = [
   { key: 'all', label: 'All', test: () => true },
-  { key: 'leadership', label: 'Leadership', test: (u) => u.role === 'SUPERADMIN' || u.role === 'CHAIRMAN' },
-  { key: 'accounts', label: 'Accounts', test: (u) => u.role === 'ACCOUNTS' },
-  { key: 'agents', label: 'Field agents', test: (u) => u.role === 'AGENT' },
-  { key: 'records', label: 'Doctors & labs', test: (u) => u.role === 'DOCTOR' || u.role === 'PARTNER_LAB' },
+  { key: 'leadership', label: 'Leadership', test: (u) => keyOf(u) === 'SUPERADMIN' || keyOf(u) === 'CHAIRMAN' },
+  { key: 'accounts', label: 'Accounts', test: (u) => keyOf(u) === 'ACCOUNTS' },
+  { key: 'agents', label: 'Field agents', test: (u) => keyOf(u) === 'AGENT' },
+  { key: 'records', label: 'Doctors & labs', test: (u) => keyOf(u) === 'DOCTOR' || keyOf(u) === 'PARTNER_LAB' },
   { key: 'inactive', label: 'Not active', test: (u) => u.status !== 'ACTIVE' },
 ];
 const STATUS_TONE: Record<string, Tone> = { ACTIVE: 'success', SUSPENDED: 'danger', INACTIVE: 'neutral' };
@@ -31,6 +32,7 @@ export default function TeamPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [users, setUsers] = useState<ErpUser[]>([]);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
   const [agents, setAgents] = useState<ErpAgent[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ledger, setLedger] = useState<ErpLedgerEntry[]>([]);
@@ -49,6 +51,8 @@ export default function TeamPage() {
       const r = await loadResources(adminFetch, ['users', 'accounts', 'data', 'ledger', 'expenses'], me);
       if (!r) return;
       if (r.users) setUsers(r.users);
+      const rr = await adminFetch('/api/admin/erp/roles');
+      if (rr.ok) setRoles(((await rr.json().catch(() => ({}))).roles as RoleOption[]) ?? []);
       if (r.agents) setAgents(r.agents);
       if (r.orders) setOrders(r.orders);
       if (r.ledger) setLedger(r.ledger);
@@ -87,7 +91,7 @@ export default function TeamPage() {
     const qDigits = q.replace(/\D/g, '');
     return users
       .filter(g.test)
-      .filter((u) => !q || [u.name, u.email, roleLabel(u.role)].some((v) => (v || '').toLowerCase().includes(q)) || (qDigits.length >= 3 && u.phone.replace(/\D/g, '').includes(qDigits)))
+      .filter((u) => !q || [u.name, u.email, u.roleName ?? keyOf(u)].some((v) => (v || '').toLowerCase().includes(q)) || (qDigits.length >= 3 && u.phone.replace(/\D/g, '').includes(qDigits)))
       .sort((a, b) => Number(b.status === 'ACTIVE') - Number(a.status === 'ACTIVE') || a.name.localeCompare(b.name));
   }, [users, group, query]);
 
@@ -107,7 +111,9 @@ export default function TeamPage() {
   );
   const totalDue = agentRows.reduce((s, r) => s + Math.max(0, r.due), 0);
   const active = users.filter((u) => u.status === 'ACTIVE');
-  const canSignIn = active.filter((u) => ROLES.find((r) => r.value === u.role)?.console);
+  const roleOf = (u: ErpUser) => roles.find((r) => r.key === keyOf(u));
+  const roleName = (u: ErpUser) => u.roleName ?? roleOf(u)?.name ?? keyOf(u);
+  const canSignIn = active.filter((u) => canUseConsole(roleOf(u)));
 
   const kpis: Kpi[] = [
     { label: 'Team members', value: String(active.length), icon: Users, sub: `${users.length - active.length} not active` },
@@ -251,8 +257,8 @@ export default function TeamPage() {
                         </td>
                         <td className="px-3 py-2.5 font-mono text-zinc-700 tabular-nums">{u.phone}</td>
                         <td className="px-3 py-2.5 text-zinc-700">
-                          {roleLabel(u.role)}
-                          {!ROLES.find((r) => r.value === u.role)?.console && <span className="block text-meta text-zinc-400">No sign-in</span>}
+                          {roleName(u)}
+                          {!canUseConsole(roleOf(u)) && <span className="block text-meta text-zinc-400">No sign-in</span>}
                         </td>
                         <td className="px-3 py-2.5">
                           <Badge tone={STATUS_TONE[u.status] ?? 'neutral'}>{statusLabel(u.status)}</Badge>
@@ -271,7 +277,7 @@ export default function TeamPage() {
                           {u.id === me.uid && <span className="font-normal text-zinc-400"> (you)</span>}
                         </p>
                         <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-meta text-zinc-500">
-                          {roleLabel(u.role)} · <span className="font-mono">{u.phone}</span>
+                          {roleName(u)} · <span className="font-mono">{u.phone}</span>
                           {u.status !== 'ACTIVE' && <Badge tone={STATUS_TONE[u.status] ?? 'neutral'}>{statusLabel(u.status)}</Badge>}
                         </p>
                       </div>
@@ -346,7 +352,7 @@ export default function TeamPage() {
         )}
       </div>
 
-      {dialog !== undefined && <MemberDialog editing={dialog} onClose={() => setDialog(undefined)} onSaved={() => void fetchData(true)} />}
+      {dialog !== undefined && <MemberDialog editing={dialog} roles={roles} onClose={() => setDialog(undefined)} onSaved={() => void fetchData(true)} />}
       {paying && <PayoutDialog agent={paying} due={paying.due} onClose={() => setPaying(null)} onSaved={() => void fetchData(true)} />}
     </SectionFrame>
   );
