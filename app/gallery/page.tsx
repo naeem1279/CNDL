@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import PageHeader from '@/components/ui/PageHeader';
+import CtaBand from '@/components/ui/CtaBand';
 
 const FILTERS = ['All Work', 'Zirconia', 'E-max', 'PFM', 'Full Dentures'] as const;
 
@@ -27,6 +28,7 @@ export default function GalleryPage() {
   const visible = activeFilter === 'All Work' ? products : products.filter((p) => p.category === activeFilter);
 
   return (
+    <>
     <section>
       <PageHeader
         eyebrow="Precision in Every Restoration"
@@ -72,5 +74,7 @@ export default function GalleryPage() {
         </div>
       </div>
     </section>
+    <CtaBand title="Like what you see? Send us your next case" lead="Every restoration is fabricated in-house in Dhaka. Submit online or chat with our team." />
+    </>
   );
 }
