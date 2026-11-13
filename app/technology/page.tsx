@@ -351,7 +351,7 @@ export default function TechnologyPage() {
       {/* Direct Open STL Acceptance Banner: the page's one blue band */}
       <section className="bg-white pb-16 md:pb-24">
         <div className="container">
-          <div className="flex flex-col justify-between gap-8 rounded-2xl bg-[#1977C5] p-8 text-white sm:p-12 lg:flex-row lg:items-center">
+          <div className="flex flex-col justify-between gap-8 bg-mesh-brand rounded-[2rem] p-8 text-white shadow-2xl shadow-[#1977C5]/20 sm:p-12 lg:flex-row lg:items-center">
             <div className="max-w-xl">
               <p className="text-sm font-medium text-white/80">Open Scan Protocol</p>
               <h2 className="secondary mt-2 text-2xl font-semibold leading-tight sm:text-3xl">

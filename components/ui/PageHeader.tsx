@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import Reveal from '@/components/ui/Reveal';
 
 /**
- * Top of every inner public page: white-to-slate band with the page's h1.
+ * Top of every inner public page: the same soft mesh and faded grid as the home hero,
+ * with the eyebrow, h1, lead and actions fading in one after another.
  */
 type Props = {
   eyebrow?: ReactNode;
@@ -13,17 +15,30 @@ type Props = {
 
 export default function PageHeader({ eyebrow, title, lead, children }: Props) {
   return (
-    <section className="border-b border-slate-200 bg-linear-to-b from-white to-slate-50">
+    <section className="relative isolate overflow-hidden border-b border-slate-200 bg-mesh-light">
+      <div aria-hidden className="bg-grid-fade pointer-events-none absolute inset-0 -z-10" />
       <div className="container py-12 md:py-16 lg:py-20">
         <div className="max-w-3xl">
           {eyebrow && (
-            <p className="mb-4 inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
-              {eyebrow}
-            </p>
+            <Reveal>
+              <p className="mb-4 inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 backdrop-blur">
+                {eyebrow}
+              </p>
+            </Reveal>
           )}
-          <h1 className="secondary text-3xl font-semibold leading-[1.15] text-slate-900 sm:text-4xl lg:text-5xl">{title}</h1>
-          {lead && <div className="mt-5 space-y-3 text-base leading-relaxed text-slate-600 md:text-lg">{lead}</div>}
-          {children && <div className="mt-8">{children}</div>}
+          <Reveal delay={60}>
+            <h1 className="secondary text-3xl font-semibold leading-[1.15] text-slate-900 sm:text-4xl lg:text-5xl">{title}</h1>
+          </Reveal>
+          {lead && (
+            <Reveal delay={120}>
+              <div className="mt-5 space-y-3 text-base leading-relaxed text-slate-600 md:text-lg">{lead}</div>
+            </Reveal>
+          )}
+          {children && (
+            <Reveal delay={180}>
+              <div className="mt-8">{children}</div>
+            </Reveal>
+          )}
         </div>
       </div>
     </section>
