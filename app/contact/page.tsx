@@ -1,4 +1,5 @@
 'use client';
+import SpotlightCard from '@/components/ui/SpotlightCard';
 import Input from '@/components/share/Input';
 import Select from '@/components/share/Select';
 import PageHeader from '@/components/ui/PageHeader';
@@ -124,7 +125,7 @@ function ContactPage() {
       <section className="bg-white pt-12 md:pt-16">
         <div className="container grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-6">
           {INTENTS.map((item) => (
-            <div key={item.title} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
+            <SpotlightCard key={item.title} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
               <div className="mb-3 flex items-center gap-3">
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
                   <item.icon size={22} strokeWidth={1.75} aria-hidden="true" />
@@ -139,7 +140,7 @@ function ContactPage() {
                 {item.action.label}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
       </section>
