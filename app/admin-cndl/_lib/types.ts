@@ -83,6 +83,9 @@ export type ErpUser = {
   email: string | null;
   address: string | null;
   role: string;
+  /** Current role (built-in key or custom_xxxx); `role` is only the legacy column. */
+  roleKey?: string;
+  roleName?: string;
   status: string;
   metadata: string | null;
   createdAt: string;
@@ -177,7 +180,7 @@ export type TabKey =
   | 'dues' | 'expenses' | 'capex' | 'shareholders'
   | 'messages' | 'blogs' | 'reviews'
   | 'leads'
-  | 'users';
+  | 'users' | 'access';
 
 /** Dhaka Dental Leads (CNDL local pipeline) row shape — from /api/admin/leads. */
 export type LeadRow = {
