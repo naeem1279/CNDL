@@ -277,7 +277,7 @@ function AboutPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6 xl:grid-cols-4">
             {pillars.map((pillar) => (
               <SpotlightCard key={pillar.title} className="rounded-2xl border border-slate-200 bg-white p-6">
-                <span className="mb-5 flex size-11 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                <span className="mb-5 flex size-11 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
                   <pillar.icon size={22} strokeWidth={1.75} aria-hidden="true" />
                 </span>
                 <h3 className="secondary mb-2 text-lg font-semibold text-slate-900">{pillar.title}</h3>
@@ -324,7 +324,7 @@ function AboutPage() {
 function TourismCard({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
-      <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+      <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
         <Icon size={22} aria-hidden="true" />
       </span>
       <h3 className="secondary mb-2 text-xl font-semibold text-slate-900">{title}</h3>

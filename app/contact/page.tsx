@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 const WHATSAPP_URL =
   'https://wa.me/8801743167963?text=Hello%20CNDL,%20I%20would%20like%20to%20discuss%20a%20dental%20case.';
 
-const ICON_TILE = 'flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]';
+const ICON_TILE = 'flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]';
 
 const PHONE_CARDS = [
   {
@@ -127,7 +127,7 @@ function ContactPage() {
           {INTENTS.map((item) => (
             <SpotlightCard key={item.title} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
               <div className="mb-3 flex items-center gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
                   <item.icon size={22} strokeWidth={1.75} aria-hidden="true" />
                 </span>
                 <h2 className="secondary text-lg font-semibold text-slate-900">{item.title}</h2>

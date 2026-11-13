@@ -262,7 +262,7 @@ export default function PrepGuidePage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold tabular-nums text-slate-400">RULE {rule.num}</span>
-                      <span className="flex size-10 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                      <span className="flex size-10 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
                         <Icon size={20} aria-hidden="true" />
                       </span>
                     </div>
@@ -297,7 +297,7 @@ export default function PrepGuidePage() {
       <section className="py-16 md:py-20 print:py-6">
         <div className="container">
           <div className="mb-8 flex items-start gap-4">
-            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-brand-duo text-[#226AB4]">
               <Microscope size={24} aria-hidden="true" />
             </span>
             <div>

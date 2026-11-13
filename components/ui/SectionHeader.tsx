@@ -26,7 +26,7 @@ export default function SectionHeader({ eyebrow, title, lead, align = 'left', ac
       <div className={centered ? 'mx-auto max-w-2xl' : 'max-w-2xl'}>
         {eyebrow && (
           <p className="mb-3 flex items-center gap-2 text-sm font-medium text-[#1668AD]">
-            <span aria-hidden className="bar-brand h-0.5 w-6 shrink-0 rounded-full" />
+            <span aria-hidden className="bar-brand h-1 w-8 shrink-0 rounded-full" />
             {eyebrow}
           </p>
         )}
