@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 import { sharesField } from "@/lib/shares";
 
@@ -15,7 +15,7 @@ const dividendCreateSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const denied = await requireRole(req, FINANCE_ROLES);
+  const denied = await requirePermission(req, "shareholders.view");
   if (denied) return denied;
   try {
     const dividends = await prisma.shareholderPayout.findMany({
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const denied = await requireRole(req, FINANCE_ROLES);
+  const denied = await requirePermission(req, "shareholders.payout");
   if (denied) return denied;
   try {
     const json = await req.json();

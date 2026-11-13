@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { readActiveSession, requireRole } from "@/lib/admin-auth";
+import { authorize, requirePermission } from "@/lib/access";
 
 /**
- * Phase 1 RBAC hardening (2026-11-06):
- * - GET is role-scoped: AGENT (and any non-privileged role) receives only the
- *   orders attributed to them and NO inquiry messages; SUPERADMIN / CHAIRMAN /
- *   ACCOUNTS receive everything.
- * - PATCH validates status/progress with zod and is restricted to
- *   SUPERADMIN / ACCOUNTS / CHAIRMAN — an AGENT can no longer move cases or
- *   trigger dispatch auto-invoicing.
- * - DELETE is strictly SUPERADMIN.
+ * Access (permission-based; see lib/permissions.ts):
+ * - GET returns what the person may see: all cases ("cases.view") or only the ones credited to them
+ *   ("cases.view_own"), the client inquiries only with "messages.view", and the billed amount and
+ *   commission only with "cases.view_money". A person with none of these gets 403.
+ * - PATCH validates status/progress with zod and needs "cases.move_stage".
+ * - DELETE needs "cases.delete" (Super Admin only, locked).
  */
-
-/** Roles that see the full operations dataset. */
-const PRIVILEGED_ROLES = new Set(["SUPERADMIN", "CHAIRMAN", "ACCOUNTS"]);
 
 /**
  * Canonical lifecycle statuses (Phase 1 spec) UNION the legacy production
@@ -42,19 +37,26 @@ const patchSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const session = await readActiveSession(req);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await authorize(req, ["cases.view", "cases.view_own", "messages.view"]);
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   try {
-    const scoped = !PRIVILEGED_ROLES.has(session.role);
-    const orders = await prisma.order.findMany({
-      where: scoped ? { agentId: session.uid } : undefined,
-      orderBy: { createdAt: "desc" },
-    });
-    const messages = scoped
-      ? [] // inquiries are never sent to field agents
-      : await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } });
+    const seeAll = access.can("cases.view");
+    const seeOwn = !seeAll && access.can("cases.view_own");
+    const found =
+      seeAll || seeOwn
+        ? await prisma.order.findMany({
+            where: seeAll ? undefined : { agentId: access.uid },
+            orderBy: { createdAt: "desc" },
+          })
+        : [];
+    // Without "cases.view_money" the money fields never leave the server.
+    const orders = access.can("cases.view_money")
+      ? found
+      : found.map((o) => ({ ...o, billedAmount: null, commissionAmount: 0 }));
+    const messages = access.can("messages.view")
+      ? await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } })
+      : [];
     return NextResponse.json({ orders, messages });
   } catch {
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
@@ -62,7 +64,7 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN", "ACCOUNTS", "CHAIRMAN"]);
+  const denied = await requirePermission(req, "cases.move_stage");
   if (denied) return denied;
   try {
     const json = await req.json().catch(() => null);
@@ -144,7 +146,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "cases.delete");
   if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);

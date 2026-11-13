@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
-import { requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { PUBLIC_UPLOADS_DIR } from "@/lib/paths";
 
 export const runtime = "nodejs";
@@ -37,7 +37,7 @@ function safeBaseName(name: string): string {
 export async function POST(req: Request) {
   // Phase 1 (2026-11-06): file writes are SUPERADMIN-only — agents and other
   // staff roles can no longer push files to the web-served public directory.
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "uploads.create");
   if (denied) return denied;
 
   let file: File | null = null;

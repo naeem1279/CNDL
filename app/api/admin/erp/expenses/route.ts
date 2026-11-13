@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { FINANCE_ROLES, readSession, requireRole } from "@/lib/admin-auth";
+import { readSession } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
 const categoryEnum = z.enum(["RAW_MATERIAL", "LOGISTICS", "LAB_UTILITY", "MAINTENANCE", "OTHER"]);
@@ -41,7 +42,7 @@ async function auditExpense(
 }
 
 export async function GET(req: Request) {
-  const denied = await requireRole(req, FINANCE_ROLES);
+  const denied = await requirePermission(req, ["expenses.view", "shareholders.view"]);
   if (denied) return denied;
   try {
     const expenses = await prisma.dailyExpense.findMany({
@@ -60,7 +61,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const denied = await requireRole(req, ["ACCOUNTS", "SUPERADMIN"]);
+  const denied = await requirePermission(req, "expenses.create");
   if (denied) return denied;
   try {
     const json = await req.json();
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "expenses.edit");
   if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
@@ -115,7 +116,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "expenses.delete");
   if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);

@@ -1,4 +1,5 @@
 'use client';
+import { hasPermission } from '@/lib/permissions';
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarCheck, Coins, MoreHorizontal, Pencil, PieChart, Plus, Trash2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
@@ -39,7 +40,7 @@ export default function ShareholdersPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['shareholders', 'dividends', 'ledger', 'expenses'], me.role);
+      const r = await loadResources(adminFetch, ['shareholders', 'dividends', 'ledger', 'expenses'], me);
       if (!r) return;
       if (r.shareholders) setShareholders(r.shareholders);
       if (r.dividends) setDividends(r.dividends);
@@ -200,7 +201,7 @@ export default function ShareholdersPage() {
                       variant="ghost"
                       items={[
                         { label: 'Edit', icon: Pencil, onSelect: () => setDialog(s) },
-                        ...(removingId === s.id ? [] : [{ label: 'Remove', icon: Trash2, danger: true, onSelect: () => void remove(s) }]),
+                        ...(removingId === s.id || !hasPermission(me.permissions, 'shareholders.delete') ? [] : [{ label: 'Remove', icon: Trash2, danger: true, onSelect: () => void remove(s) }]),
                       ]}
                     />
                   </div>
@@ -241,7 +242,9 @@ export default function ShareholdersPage() {
         </Panel>
 
         {/* ---------------------------------------------------- payout run */}
-        <PayoutRun shareholders={sorted} dividends={dividends} ledger={ledger} expenses={expenses} onRecorded={() => fetchData(true)} />
+        {hasPermission(me.permissions, 'shareholders.payout') && (
+          <PayoutRun shareholders={sorted} dividends={dividends} ledger={ledger} expenses={expenses} onRecorded={() => fetchData(true)} />
+        )}
 
         {/* ------------------------------------------------------- history */}
         <Panel

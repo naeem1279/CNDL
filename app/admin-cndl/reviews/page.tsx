@@ -1,4 +1,5 @@
 'use client';
+import { hasPermission } from '@/lib/permissions';
 import { useEffect, useMemo, useState } from 'react';
 import { MapPin, MessageSquareQuote, MoreHorizontal, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -34,7 +35,7 @@ export default function ReviewsPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['testimonials'], me.role);
+      const r = await loadResources(adminFetch, ['testimonials'], me);
       if (!r) return;
       if (r.reviews) setReviews(r.reviews);
       setLastSyncedAt(Date.now());
@@ -107,7 +108,7 @@ export default function ReviewsPage() {
                     variant="ghost"
                     items={[
                       { label: 'Edit', icon: Pencil, onSelect: () => setDialog(r) },
-                      { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(r) },
+                      ...(hasPermission(me.permissions, 'reviews.delete') ? [{ label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(r) }] : []),
                     ]}
                   />
                 </div>

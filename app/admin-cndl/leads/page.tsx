@@ -49,7 +49,7 @@ export default function LeadsPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['accounts', 'leads'], me.role);
+      const r = await loadResources(adminFetch, ['accounts', 'leads'], me);
       if (!r) return;
       if (r.accounts) setAccounts(r.accounts);
       if (r.leads) setLeads(r.leads);

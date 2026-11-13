@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { readActiveSession, requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
 const serviceCreateSchema = z.object({
@@ -19,9 +19,8 @@ const serviceCreateSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  if (!(await readActiveSession(req))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await requirePermission(req, "products.view");
+  if (denied) return denied;
   try {
     const services = await prisma.service.findMany({
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
@@ -35,7 +34,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   // Phase 1 (2026-11-06): catalogue writes drive the public website —
   // SUPERADMIN only.
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "products.manage");
   if (denied) return denied;
   try {
     const json = await req.json();

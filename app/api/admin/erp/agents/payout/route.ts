@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 
 const payoutSchema = z.object({
   agentId: z.string().trim().min(1, "Agent is required").max(60),
@@ -17,7 +17,7 @@ const payoutSchema = z.object({
  * notes JSON (`{"agentId":...}`) so pending-commission math can subtract it.
  */
 export async function POST(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN", "ACCOUNTS"]);
+  const denied = await requirePermission(req, "agents.payout");
   if (denied) return denied;
   try {
     const json = await req.json();

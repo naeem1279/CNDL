@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { firstIssueMessage } from "@/lib/validation";
 
 const SOURCE_ENUM = ["OFFLINE_RIDER", "PHONE", "WHATSAPP", "ONLINE"] as const;
@@ -83,9 +83,9 @@ async function createOrderWithCaseId(data: Omit<Prisma.OrderUncheckedCreateInput
 }
 
 export async function POST(req: Request) {
-  // Phase 1 (2026-11-06): offline intake is SUPERADMIN/ACCOUNTS-only — a field
+  // Phase 1 (2026-11-06): offline intake needs the "Record new cases" permission — a field
   // AGENT can no longer self-attribute cases with arbitrary commissions.
-  const denied = await requireRole(req, ["SUPERADMIN", "ACCOUNTS"]);
+  const denied = await requirePermission(req, "cases.create");
   if (denied) return denied;
   try {
     const json = await req.json();

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 
 /** Latest 50 expense audit entries (pre-change snapshots) — SUPERADMIN only. */
 export async function GET(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "expenses.audit");
   if (denied) return denied;
   try {
     const entries = await prisma.expenseAuditLog.findMany({

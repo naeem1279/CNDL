@@ -1,4 +1,5 @@
 'use client';
+import { hasPermission } from '@/lib/permissions';
 import { useEffect, useMemo, useState } from 'react';
 import { History, MoreHorizontal, Package, Pencil, Plus, Receipt, Search, Trash2, Truck, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,8 +20,9 @@ const catLabel = (k: string) => EXPENSE_CATEGORY_META[k]?.label ?? k;
 
 export default function ExpensesPage() {
   const { me, adminFetch, askConfirm, handleAuthLoss } = useAdmin();
-  const canAdd = me.role === 'SUPERADMIN' || me.role === 'ACCOUNTS';
-  const canChange = me.role === 'SUPERADMIN';
+  const canAdd = hasPermission(me.permissions, 'expenses.create');
+  const canChange = hasPermission(me.permissions, 'expenses.edit');
+  const canDelete = hasPermission(me.permissions, 'expenses.delete');
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,7 +45,7 @@ export default function ExpensesPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['expenses', 'accounts', 'users'], me.role);
+      const r = await loadResources(adminFetch, ['expenses', 'accounts', 'users'], me);
       if (!r) return;
       if (r.expenses) setExpenses(r.expenses);
       if (r.agents) setAgents(r.agents);
@@ -175,7 +177,7 @@ export default function ExpensesPage() {
         variant="ghost"
         items={[
           { label: 'Edit', icon: Pencil, onSelect: () => setDialog(x) },
-          { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(x) },
+          ...(canDelete ? [{ label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(x) }] : []),
         ]}
       />
     ) : null;

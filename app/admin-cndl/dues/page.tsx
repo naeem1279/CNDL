@@ -24,7 +24,7 @@ const cx = (...p: (string | false | null | undefined)[]) => p.filter(Boolean).jo
 
 export default function DuesPage() {
   const { me, adminFetch, handleAuthLoss } = useAdmin();
-  const perm = duesPermissions(me.role);
+  const perm = duesPermissions(me.permissions);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +55,7 @@ export default function DuesPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['accounts', 'ledger', 'users'], me.role);
+      const r = await loadResources(adminFetch, ['accounts', 'ledger', 'users'], me);
       if (!r) return;
       if (r.accounts) setAccounts(r.accounts);
       if (r.agents) setAgents(r.agents);

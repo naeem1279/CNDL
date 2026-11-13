@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { SectionFrame } from '../_components/SectionFrame';
 import type { Kpi } from '../_components/StatTile';
 import { Badge, EmptyState, ListRow, MenuButton, Panel, type MenuItem } from '../_components/ui';
-import { EXPENSE_CATEGORY_META, ROLE_TABS } from '../_lib/constants';
+import { hasPermission, visibleTabs } from '@/lib/permissions';
+import { EXPENSE_CATEGORY_META } from '../_lib/constants';
 import { adminPath } from '../_lib/nav';
 import { loadResources } from '../_lib/resources';
 import { useAdmin } from '../_lib/session';
@@ -51,7 +52,7 @@ type FeedItem = {
 export default function OverviewPage() {
   const { me, adminFetch } = useAdmin();
   const router = useRouter();
-  const allowedTabs = ROLE_TABS[me.role] ?? [];
+  const allowedTabs = visibleTabs(me.permissions);
   const can = (t: TabKey) => allowedTabs.includes(t);
   /** Opens another section; `create` opens its "new" form on arrival. */
   const go = (t: TabKey, create = false) => router.push(`${adminPath(t)}${create ? '?new=1' : ''}`);
@@ -70,7 +71,7 @@ export default function OverviewPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['accounts', 'data', 'expenses', 'ledger', 'metrics'], me.role);
+      const r = await loadResources(adminFetch, ['accounts', 'data', 'expenses', 'ledger', 'metrics'], me);
       if (!r) return;
       if (r.orders) setOrders(r.orders);
       if (r.accounts) setAccounts(r.accounts);
@@ -127,7 +128,7 @@ export default function OverviewPage() {
   /* ---------- "New" menu: only actions this role can complete ---------- */
   const newItems: MenuItem[] = [
     { label: 'Submit a case', icon: Layers, onSelect: () => window.open('/order-create', '_blank', 'noopener') },
-    ...(can('dues') && (me.role === 'SUPERADMIN' || me.role === 'ACCOUNTS')
+    ...(can('dues') && hasPermission(me.permissions, 'ledger.invoice')
       ? [{ label: 'Record invoice or collection', icon: Receipt, onSelect: () => go('dues') }]
       : []),
     ...(can('expenses') ? [{ label: 'Log an expense', icon: TrendingDown, onSelect: () => go('expenses', true) }] : []),

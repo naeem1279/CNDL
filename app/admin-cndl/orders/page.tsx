@@ -21,7 +21,7 @@ const cx = (...p: (string | false | null | undefined)[]) => p.filter(Boolean).jo
 
 export default function OrdersPage() {
   const { me, adminFetch, askConfirm, handleAuthLoss } = useAdmin();
-  const perm = casePermissions(me.role);
+  const perm = casePermissions(me.permissions);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -45,7 +45,7 @@ export default function OrdersPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['data', 'accounts', 'services', 'ledger'], me.role);
+      const r = await loadResources(adminFetch, ['data', 'accounts', 'services', 'ledger'], me);
       if (!r) return;
       if (r.orders) setOrders(r.orders);
       if (r.accounts) setAccounts(r.accounts);

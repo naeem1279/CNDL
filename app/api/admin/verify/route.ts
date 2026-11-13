@@ -6,10 +6,11 @@ import {
   MASTER_ADMIN_ID,
   issueSessionToken,
   parseMetadata,
-  readActiveSession,
   verifyPassword,
   verifyUserPassword,
 } from '@/lib/admin-auth';
+import { getAccess, loadRole } from '@/lib/access';
+import { ALL_PERMISSION_KEYS } from '@/lib/permissions';
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -18,19 +19,20 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
-// Roles allowed into the admin console.
-const LOGIN_ROLES = new Set(['SUPERADMIN', 'CHAIRMAN', 'ACCOUNTS', 'AGENT']);
-
 /** Returns the current session user (used by the client to restore state on load).
- *  Phase 1 (2026-11-06): uses readActiveSession, so a session whose AppUser has
- *  been SUSPENDED (or deleted) is rejected immediately instead of surviving
- *  until the cookie TTL. */
+ *  Phase 1 (2026-11-06): a session whose AppUser has been SUSPENDED (or deleted) is
+ *  rejected immediately instead of surviving until the cookie TTL. The role and the
+ *  permissions come from the database NOW, not from the cookie, so a Super Admin's
+ *  change shows up on the person's next page load without signing in again. */
 export async function GET(req: Request) {
-  const user = await readActiveSession(req);
-  if (!user) {
+  const access = await getAccess(req);
+  if (!access) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
-  return NextResponse.json({ success: true, user });
+  return NextResponse.json({
+    success: true,
+    user: { uid: access.uid, name: access.name, phone: access.phone, role: access.roleKey, roleName: access.roleName, permissions: access.permissions },
+  });
 }
 
 export async function POST(req: Request) {
@@ -69,7 +71,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 });
     }
     const user = { uid: '', name: 'Administrator', phone: 'master', role: 'SUPERADMIN' };
-    const res = NextResponse.json({ success: true, user });
+    const res = NextResponse.json({ success: true, user: { ...user, roleName: 'Super Admin', permissions: ALL_PERMISSION_KEYS } });
     res.cookies.set(ADMIN_COOKIE, issueSessionToken(user), {
       ...COOKIE_OPTIONS,
       maxAge: 60 * 60 * 8, // 8 hours
@@ -77,7 +79,7 @@ export async function POST(req: Request) {
     return res;
   }
 
-  // AppUser login: match phone OR email, must be ACTIVE, role must be console-capable.
+  // AppUser login: match phone OR email, must be ACTIVE, and their role must hold at least one permission.
   try {
     const account = await prisma.appUser.findFirst({
       where: { OR: [{ phone: identifier }, { email: identifier }] },
@@ -86,7 +88,9 @@ export async function POST(req: Request) {
     if (!account || account.status !== 'ACTIVE') {
       return NextResponse.json({ success: false, error: 'Invalid credentials' }, { status: 401 });
     }
-    if (!LOGIN_ROLES.has(account.role)) {
+    const roleKey = account.roleKey ?? account.role;
+    const roleInfo = await loadRole(roleKey);
+    if (!roleInfo || roleInfo.permissions.length === 0) {
       return NextResponse.json(
         { success: false, error: 'This role does not have admin console access' },
         { status: 403 }
@@ -103,9 +107,9 @@ export async function POST(req: Request) {
       uid: account.id,
       name: account.name,
       phone: account.phone,
-      role: account.role,
+      role: roleKey,
     };
-    const res = NextResponse.json({ success: true, user });
+    const res = NextResponse.json({ success: true, user: { ...user, roleName: roleInfo.name, permissions: roleInfo.permissions } });
     res.cookies.set(ADMIN_COOKIE, issueSessionToken(user), {
       ...COOKIE_OPTIONS,
       maxAge: 60 * 60 * 8, // 8 hours

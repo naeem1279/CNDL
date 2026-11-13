@@ -47,7 +47,7 @@ export default function MessagesPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['data'], me.role);
+      const r = await loadResources(adminFetch, ['data'], me);
       if (!r) return;
       if (r.messages) setMessages(r.messages);
       setLastSyncedAt(Date.now());

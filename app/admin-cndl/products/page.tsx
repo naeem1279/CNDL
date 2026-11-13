@@ -1,4 +1,5 @@
 'use client';
+import { hasPermission } from '@/lib/permissions';
 import { useEffect, useMemo, useState } from 'react';
 import { Clock, Eye, EyeOff, ImageOff, MoreHorizontal, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -33,7 +34,7 @@ export default function ProductsPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['services'], me.role);
+      const r = await loadResources(adminFetch, ['services'], me);
       if (!r) return;
       if (r.services) setServices(r.services);
       setLastSyncedAt(Date.now());
@@ -111,7 +112,7 @@ export default function ProductsPage() {
       items={[
         { label: 'Edit', icon: Pencil, onSelect: () => setDialog(s) },
         { label: s.isActive ? 'Hide from website' : 'Show on website', icon: s.isActive ? EyeOff : Eye, onSelect: () => void toggle(s) },
-        { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(s) },
+        ...(hasPermission(me.permissions, 'products.delete') ? [{ label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(s) }] : []),
       ]}
     />
   );

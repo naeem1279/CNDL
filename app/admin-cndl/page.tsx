@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw } from 'lucide-react';
-import { ROLE_TABS } from './_lib/constants';
+import { visibleTabs } from '@/lib/permissions';
 import { adminPath } from './_lib/nav';
 import { useAdmin } from './_lib/session';
 import type { TabKey } from './_lib/types';
@@ -18,11 +18,11 @@ export default function AdminIndex() {
   const router = useRouter();
 
   useEffect(() => {
-    const permitted: TabKey[] = ROLE_TABS[me.role] ?? ROLE_TABS.SUPERADMIN;
+    const permitted = visibleTabs(me.permissions) as TabKey[];
     const fromHash = window.location.hash.slice(1);
     const candidate = fromHash || readPref('cndl-admin-tab') || '';
     const target = (permitted as string[]).includes(candidate) ? (candidate as TabKey) : permitted[0];
-    router.replace(adminPath(target));
+    if (target) router.replace(adminPath(target));
   }, [me, router]);
 
   return (

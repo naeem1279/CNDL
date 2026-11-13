@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { readActiveSession } from "@/lib/admin-auth";
+import { authorize } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
 const invoiceSchema = z.object({
@@ -33,12 +33,11 @@ const paymentSchema = z.object({
 const ledgerSchema = z.discriminatedUnion("transactionType", [invoiceSchema, paymentSchema]);
 
 export async function GET(req: Request) {
-  const session = await readActiveSession(req);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await authorize(req, ["ledger.view", "ledger.view_own"]);
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   try {
-    const privileged = session.role === "SUPERADMIN" || session.role === "CHAIRMAN" || session.role === "ACCOUNTS";
+    const privileged = access.can("ledger.view");
     if (privileged) {
       // Phase 1 (2026-11-06): the arbitrary take:500 cap is removed — aging and
       // today/month revenue are computed client-side from this list and used to
@@ -48,10 +47,10 @@ export async function GET(req: Request) {
       });
       return NextResponse.json({ entries });
     }
-    // AGENT (and other non-privileged roles): only ledger activity of the
-    // accounts assigned to them, or collections they personally recorded.
+    // "ledger.view_own" (field agents): only ledger activity of the accounts assigned
+    // to them, or collections they personally recorded.
     const assigned = await prisma.clientAccount.findMany({
-      where: { assignedAgentId: session.uid },
+      where: { assignedAgentId: access.uid },
       select: { id: true },
     });
     const accountIds = assigned.map((a) => a.id);
@@ -59,7 +58,7 @@ export async function GET(req: Request) {
       where: {
         OR: [
           { clientAccountId: { in: accountIds } },
-          { collectedById: session.uid },
+          { collectedById: access.uid },
         ],
       },
       orderBy: { createdAt: "desc" },
@@ -71,10 +70,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await readActiveSession(req);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await authorize(req, ["ledger.invoice", "ledger.collect", "ledger.collect_own"]);
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   try {
     const json = await req.json();
     const parsed = ledgerSchema.safeParse(json);
@@ -86,41 +84,39 @@ export async function POST(req: Request) {
     }
     const input = parsed.data;
 
-    // Phase 1 financial-integrity rules (2026-11-06):
-    // - INVOICE (billing/due creation) is SUPERADMIN/ACCOUNTS-only.
-    // - AGENT may only post PAYMENT, only against accounts assigned to them,
-    //   and collectedById is FORCED to their own id — no attributing
-    //   collections to colleagues.
-    if (input.transactionType === "INVOICE" && !["SUPERADMIN", "ACCOUNTS"].includes(session.role)) {
+    // Phase 1 financial-integrity rules (2026-11-06), now permission-based:
+    // - INVOICE (billing/due creation) needs "ledger.invoice".
+    // - A PAYMENT needs "ledger.collect" (any client) or "ledger.collect_own". With only the
+    //   "own" permission (field agents) it must be against an account assigned to them, and
+    //   collectedById is FORCED to their own id — no attributing collections to colleagues.
+    const anyClient = access.can("ledger.collect");
+    const ownOnly = !anyClient && access.can("ledger.collect_own");
+    if (input.transactionType === "INVOICE" && !access.can("ledger.invoice")) {
       return NextResponse.json(
-        { error: "Forbidden — invoices can only be recorded by SUPERADMIN or ACCOUNTS" },
+        { error: ownOnly ? "Forbidden — agents can only record collections" : "Forbidden — recording invoices needs its own permission" },
         { status: 403 }
       );
     }
+    if (input.transactionType === "PAYMENT" && !anyClient && !ownOnly) {
+      return NextResponse.json({ error: "Forbidden — recording collections needs its own permission" }, { status: 403 });
+    }
     let collectedById = input.transactionType === "PAYMENT" ? input.collectedById ?? null : null;
-    if (session.role === "AGENT") {
-      if (input.transactionType !== "PAYMENT") {
-        return NextResponse.json(
-          { error: "Forbidden — agents can only record collections" },
-          { status: 403 }
-        );
-      }
+    if (ownOnly) {
       const account = await prisma.clientAccount.findUnique({
         where: { id: input.clientAccountId },
         select: { assignedAgentId: true },
       });
-      if (!account || account.assignedAgentId !== session.uid) {
+      if (!account || account.assignedAgentId !== access.uid) {
         return NextResponse.json(
           { error: "Forbidden — agents can only record collections for their assigned accounts" },
           { status: 403 }
         );
       }
-      collectedById = session.uid;
+      collectedById = access.uid;
     }
-    // Week 1 fix (2026-11-11): a collector can never verify their own cash —
-    // verification is the accounts team's sign-off.
-    const isVerified =
-      input.transactionType === "PAYMENT" && session.role !== "AGENT" ? input.isVerified : false;
+    // Week 1 fix (2026-11-11): a collector with only the "own" permission can never verify
+    // their own cash — verification is the accounts team's sign-off.
+    const isVerified = input.transactionType === "PAYMENT" && anyClient ? input.isVerified : false;
 
     // Discretionary discount override requires a mandatory justification note.
     if (input.transactionType === "INVOICE" && input.discountAmount > 0 && !input.notes) {

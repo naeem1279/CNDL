@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { readActiveSession } from "@/lib/admin-auth";
+import { authorize } from "@/lib/access";
 
 /**
  * PATCH /api/admin/erp/ledger/:id — mark a collection (PAYMENT) as verified.
@@ -14,15 +14,12 @@ import { readActiveSession } from "@/lib/admin-auth";
  *   POST /api/admin/erp/ledger, which never lets an agent self-verify).
  * Amounts and balances are never touched here.
  */
-const VERIFY_ROLES = ["SUPERADMIN", "ACCOUNTS"];
 const patchSchema = z.object({ isVerified: z.literal(true) });
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const session = await readActiveSession(req);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!VERIFY_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "Forbidden — only SUPERADMIN or ACCOUNTS can verify collections" }, { status: 403 });
-  }
+  const auth = await authorize(req, "ledger.verify");
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   const parsed = patchSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Send { isVerified: true } to verify a collection" }, { status: 400 });
@@ -37,7 +34,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     if (entry.transactionType !== "PAYMENT") {
       return NextResponse.json({ error: "Only collections can be verified" }, { status: 400 });
     }
-    if (session.uid && entry.collectedById === session.uid) {
+    if (access.uid && entry.collectedById === access.uid) {
       return NextResponse.json(
         { error: "You collected this payment, so someone else has to verify it" },
         { status: 403 }

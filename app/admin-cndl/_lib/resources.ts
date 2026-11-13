@@ -1,7 +1,8 @@
+import { hasAnyPermission } from '@/lib/permissions';
 import type { AdminFetch } from './adminFetch';
 import type {
   BlogRow, ErpAccount, ErpAgent, ErpAsset, ErpDividend, ErpExpense, ErpLedgerEntry, ErpShareholder,
-  ErpUser, LeadRow, Message, Order, OverviewMetrics, ReviewRow, ServiceRow,
+  ErpUser, LeadRow, Message, Order, OverviewMetrics, ReviewRow, ServiceRow, SessionUser,
 } from './types';
 
 /** Every admin read endpoint a section can ask for. Each section page lists
@@ -27,15 +28,20 @@ export type ResourceKey = keyof typeof ENDPOINTS;
 /** Feeds the API only serves to some roles (mirrors the route guards). A
     role outside the list is never sent the request, so a field agent on
     mobile data does not pay for a guaranteed 403. */
-const FINANCE = ['SUPERADMIN', 'CHAIRMAN', 'ACCOUNTS'];
-const READ_ROLES: Partial<Record<ResourceKey, string[]>> = {
-  users: ['SUPERADMIN'],
-  expenses: FINANCE,
-  capex: FINANCE,
-  dividends: FINANCE,
-  shareholders: FINANCE,
-  metrics: FINANCE,
-  leads: ['SUPERADMIN'],
+const READ_PERMISSIONS: Partial<Record<ResourceKey, string[]>> = {
+  data: ['cases.view', 'cases.view_own', 'messages.view'],
+  blogs: ['blogs.view'],
+  testimonials: ['reviews.view'],
+  services: ['products.view'],
+  accounts: ['clients.view', 'clients.view_own'],
+  users: ['users.manage'],
+  expenses: ['expenses.view', 'shareholders.view'],
+  capex: ['capex.view'],
+  dividends: ['shareholders.view'],
+  ledger: ['ledger.view', 'ledger.view_own'],
+  shareholders: ['shareholders.view'],
+  metrics: ['overview.view'],
+  leads: ['leads.manage'],
 };
 
 export type Loaded = {
@@ -69,9 +75,9 @@ const list = <T,>(body: any, key: string): T[] =>
 export async function loadResources(
   adminFetch: AdminFetch,
   wanted: readonly ResourceKey[],
-  role: string
+  me: Pick<SessionUser, 'permissions'>
 ): Promise<Loaded | null> {
-  const keys = wanted.filter((k) => READ_ROLES[k]?.includes(role) ?? true);
+  const keys = wanted.filter((k) => hasAnyPermission(me.permissions, READ_PERMISSIONS[k] ?? []));
   const responses = await Promise.all(keys.map((k) => adminFetch(ENDPOINTS[k])));
   if (responses.some((r) => r.status === 401)) return null;
   const out: Loaded = {};

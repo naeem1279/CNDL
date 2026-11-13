@@ -46,7 +46,7 @@ export default function TeamPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['users', 'accounts', 'data', 'ledger', 'expenses'], me.role);
+      const r = await loadResources(adminFetch, ['users', 'accounts', 'data', 'ledger', 'expenses'], me);
       if (!r) return;
       if (r.users) setUsers(r.users);
       if (r.agents) setAgents(r.agents);
