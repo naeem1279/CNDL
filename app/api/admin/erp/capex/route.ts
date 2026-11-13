@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
 const capexCreateSchema = z.object({
@@ -21,7 +21,7 @@ const capexUpdateSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const denied = await requireRole(req, FINANCE_ROLES);
+  const denied = await requirePermission(req, "capex.view");
   if (denied) return denied;
   try {
     const assets = await prisma.capExAsset.findMany({
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "capex.manage");
   if (denied) return denied;
   try {
     const json = await req.json();
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "capex.manage");
   if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
@@ -88,7 +88,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "capex.delete");
   if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);

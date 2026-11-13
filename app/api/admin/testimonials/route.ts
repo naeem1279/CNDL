@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { readActiveSession, requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
 const testimonialSchema = z.object({
@@ -13,9 +13,8 @@ const testimonialSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  if (!(await readActiveSession(req))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await requirePermission(req, "reviews.view");
+  if (denied) return denied;
   try {
     const testimonials = await prisma.testimonial.findMany({ orderBy: { createdAt: "desc" } });
     return NextResponse.json({ testimonials });
@@ -26,7 +25,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   // Phase 1 (2026-11-06): public content writes — SUPERADMIN/CHAIRMAN only.
-  const denied = await requireRole(req, ["SUPERADMIN", "CHAIRMAN"]);
+  const denied = await requirePermission(req, "reviews.manage");
   if (denied) return denied;
   try {
     const parsed = testimonialSchema.safeParse(await req.json());

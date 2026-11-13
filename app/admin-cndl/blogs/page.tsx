@@ -1,4 +1,5 @@
 'use client';
+import { hasPermission } from '@/lib/permissions';
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, ExternalLink, FileText, Folder, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -29,7 +30,7 @@ export default function BlogsPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['blogs'], me.role);
+      const r = await loadResources(adminFetch, ['blogs'], me);
       if (!r) return;
       if (r.blogs) setBlogs(r.blogs);
       setLastSyncedAt(Date.now());
@@ -83,7 +84,7 @@ export default function BlogsPage() {
       items={[
         { label: 'Edit', icon: Pencil, onSelect: () => setDialog(b) },
         { label: 'View on website', icon: ExternalLink, onSelect: () => window.open(`/blog/${b.slug}`, '_blank', 'noopener') },
-        { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(b) },
+        ...(hasPermission(me.permissions, 'blogs.delete') ? [{ label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(b) }] : []),
       ]}
     />
   );

@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createAdminFetch } from '../_lib/adminFetch';
-import { ROLE_META, ROLE_TABS } from '../_lib/constants';
+import { visibleTabs } from '@/lib/permissions';
+import { ROLE_META } from '../_lib/constants';
 import { NAV_GROUPS, adminPath, tabFromPath } from '../_lib/nav';
 import { AdminContext, type AdminSession } from '../_lib/session';
 import type { SessionUser, TabKey } from '../_lib/types';
@@ -212,7 +213,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     const id = setInterval(async () => {
       try {
         const r = await fetch('/api/admin/verify');
-        if (r.status === 401) handleAuthLoss();
+        if (r.status === 401) {
+          handleAuthLoss();
+          return;
+        }
+        // A Super Admin may have changed this role: pick up the new access without a re-login.
+        const body = await r.json().catch(() => null);
+        const fresh = body?.user as SessionUser | undefined;
+        if (fresh && Array.isArray(fresh.permissions)) {
+          setMe((cur) => (cur && JSON.stringify([cur.role, cur.roleName, cur.permissions]) !== JSON.stringify([fresh.role, fresh.roleName, fresh.permissions]) ? { ...cur, ...fresh } : cur));
+        }
       } catch {
         /* offline — keep current state */
       }
@@ -220,12 +230,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id);
   }, [auth, handleAuthLoss]);
 
-  const permittedTabs = me ? ROLE_TABS[me.role] ?? ROLE_TABS.SUPERADMIN : [];
+  // Derived from what the role may do (fail closed: no permissions, no sections).
+  const permittedTabs = useMemo(() => (me ? (visibleTabs(me.permissions) as TabKey[]) : []), [me]);
   const allowed = !tab || permittedTabs.includes(tab);
 
   // Keep the operator inside their role's sections.
   useEffect(() => {
-    if (me && tab && !allowed) router.replace(adminPath(permittedTabs[0]));
+    if (me && tab && !allowed && permittedTabs.length) router.replace(adminPath(permittedTabs[0]));
   }, [me, tab, allowed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Remember the last section for the next visit to /admin-cndl.
@@ -343,7 +354,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     .map((g) => ({ ...g, items: g.items.filter((i) => permittedTabs.includes(i.key)) }))
     .filter((g) => g.items.length > 0);
 
-  const roleLabel = me && ROLE_META[me.role] ? ROLE_META[me.role].label : 'Administrator';
+  const roleLabel = me ? me.roleName ?? ROLE_META[me.role]?.label ?? 'Administrator' : 'Administrator';
 
   return (
     <AdminContext.Provider value={session}>
@@ -478,7 +489,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className={railCollapsed ? 'lg:pl-[68px]' : 'lg:pl-60'}>
-        <main className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{allowed ? children : null}</main>
+        <main className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{me && permittedTabs.length === 0 ? (
+            <div className="mx-auto max-w-md py-24 text-center">
+              <h1 className="text-title font-semibold text-zinc-900">No sections available</h1>
+              <p className="mt-2 text-body text-zinc-500">Your role does not have access to any part of the console yet. Ask a Super Admin to update your access.</p>
+            </div>
+          ) : allowed ? children : null}</main>
       </div>
 
       {pwModal && (

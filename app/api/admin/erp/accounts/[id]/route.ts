@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { firstIssueMessage } from "@/lib/validation";
 
 const institutionTypeEnum = z.enum(["CHAMBER", "HOSPITAL", "PARTNER_LAB", "FREELANCE"]);
@@ -25,7 +25,7 @@ function firstZodMessage(err: unknown): string {
 }
 
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "clients.edit");
   if (denied) return denied;
   try {
     const { id } = await ctx.params;
@@ -69,7 +69,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 }
 
 export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const denied = await requireRole(req, ["SUPERADMIN"]);
+  const denied = await requirePermission(req, "clients.delete");
   if (denied) return denied;
   try {
     const { id } = await ctx.params;

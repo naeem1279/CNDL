@@ -1,5 +1,4 @@
 import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
-import { NextResponse } from 'next/server';
 
 // Server-side only. ADMIN_SECRET MUST be provided via the environment
 // (.env.local / PM2 env). No fallback constant — the process refuses to boot
@@ -13,10 +12,6 @@ if (!ADMIN_SECRET_RAW || ADMIN_SECRET_RAW.length < 32) {
 export const ADMIN_SECRET: string = ADMIN_SECRET_RAW;
 
 export const ADMIN_COOKIE = 'cndl_admin';
-
-/** Roles that may read/write company-level finance (cap table, dividends,
- *  expenses, capex, overview metrics). Mirrors the console's ROLE_TABS. */
-export const FINANCE_ROLES = ['SUPERADMIN', 'CHAIRMAN', 'ACCOUNTS'];
 
 /**
  * Optional machine-to-machine token (Week 1 fix, 2026-11-11). The master login
@@ -106,9 +101,11 @@ function getCookie(req: Request, name: string): string | null {
 }
 
 /**
- * Resolves the current session user.
+ * Reads WHO the cookie or API token says this is. This is identity only, never authorization: the role in
+ * the cookie can be stale, and suspension is not checked here. Authorization lives in lib/access.ts
+ * (`requirePermission` / `authorize`), which reads the person's current role and permissions from the database.
  * - `Authorization: Bearer <ADMIN_API_TOKEN>` → SUPERADMIN (only if that env is set).
- * - Signed session cookie → the stored role/name/phone (8h expiry).
+ * - Signed session cookie → the stored uid/name/phone (8h expiry).
  * The legacy never-expiring static cookie was removed on 2026-11-11.
  */
 export function readSession(req: Request): SessionUser | null {
@@ -139,54 +136,4 @@ export function readSession(req: Request): SessionUser | null {
   } catch {
     return null;
   }
-}
-
-/** Any authenticated session (signed role session or API token). */
-export function isAuthorized(req: Request): boolean {
-  return readSession(req) !== null;
-}
-
-/**
- * Session resolution WITH instant suspension enforcement (Phase 1, 2026-11-06):
- * a valid signed session whose AppUser row is missing or no longer ACTIVE is
- * rejected immediately — a SUSPENDED user loses access the moment an admin
- * flips their status, without waiting out the 8h cookie TTL. Master-key and
- * legacy sessions (uid === "") are environment-held and skip the DB check.
- */
-export async function readActiveSession(req: Request): Promise<SessionUser | null> {
-  const session = readSession(req);
-  if (!session) return null;
-  if (!session.uid) return session; // master / legacy → env-held secret
-  try {
-    const { prisma } = await import('@/lib/prisma');
-    const user = await prisma.appUser.findUnique({ where: { id: session.uid }, select: { status: true } });
-    if (!user || user.status !== 'ACTIVE') return null;
-  } catch {
-    // DB unavailable — fail closed for named users (safe default).
-    return null;
-  }
-  return session;
-}
-
-/**
- * Server-side role gate for privileged route handlers. ASYNC since Phase 1
- * (2026-11-06): performs the live AppUser status check, so suspending a user
- * revokes their session immediately. Returns a 401/403 response to bail out
- * with, or null when the role is permitted.
- *
- *   const denied = await requireRole(req, ['SUPERADMIN', 'CHAIRMAN']);
- *   if (denied) return denied;
- */
-export async function requireRole(req: Request, allowedRoles: string[]): Promise<NextResponse | null> {
-  const session = await readActiveSession(req);
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (!allowedRoles.includes(session.role)) {
-    return NextResponse.json(
-      { error: `Forbidden — requires role: ${allowedRoles.join(' | ')}` },
-      { status: 403 }
-    );
-  }
-  return null;
 }

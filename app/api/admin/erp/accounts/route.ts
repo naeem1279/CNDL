@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { readActiveSession } from "@/lib/admin-auth";
+import { authorize } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
 const accountTypeEnum = z.enum(["CHAMBER", "PARTNER_LAB", "CHAIRMAN_PERSONAL"]);
@@ -28,20 +28,16 @@ const accountCreateSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const session = await readActiveSession(req);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await authorize(req, ["clients.view", "clients.view_own"]);
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   try {
-    // Phase 1 (2026-11-06): AGENT and other non-privileged roles receive ONLY
-    // the accounts assigned to them — the full 104-account book with balances
-    // no longer ships to field collectors.
-    const privileged =
-      session.role === "SUPERADMIN" ||
-      session.role === "CHAIRMAN" ||
-      session.role === "ACCOUNTS";
+    // Phase 1 (2026-11-06): someone who may only see "their own" clients receives ONLY the
+    // accounts assigned to them — the full account book with balances no longer ships to
+    // field collectors. ("clients.view" = the whole book.)
+    const privileged = access.can("clients.view");
     const accounts = await prisma.clientAccount.findMany({
-      where: privileged ? undefined : { assignedAgentId: session.uid },
+      where: privileged ? undefined : { assignedAgentId: access.uid },
       orderBy: { createdAt: "desc" },
     });
     // Resolve assigned agent names (assignedAgentId is a soft reference to AppUser).
@@ -73,10 +69,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await readActiveSession(req);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await authorize(req, "clients.create");
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   try {
     const json = await req.json();
     const parsed = accountCreateSchema.safeParse(json);
@@ -88,12 +83,12 @@ export async function POST(req: Request) {
     }
     const { allowDuplicate, openingDue, ...accountData } = parsed.data;
 
-    // Week 1 fix (2026-11-11): an opening due is an INVOICE, and invoices are
-    // SUPERADMIN/ACCOUNTS-only (same rule as /erp/ledger). Other roles may still
-    // onboard an account, but only with a zero opening balance.
-    if (openingDue > 0 && !["SUPERADMIN", "ACCOUNTS"].includes(session.role)) {
+    // Week 1 fix (2026-11-11): an opening due is an INVOICE, so it needs the invoice
+    // permission (same rule as /erp/ledger). Others may still onboard an account, but
+    // only with a zero opening balance.
+    if (openingDue > 0 && !access.can("ledger.invoice")) {
       return NextResponse.json(
-        { error: "Forbidden — only SUPERADMIN or ACCOUNTS can set an opening due" },
+        { error: "Forbidden — setting an opening due needs the permission to record invoices" },
         { status: 403 }
       );
     }

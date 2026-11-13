@@ -197,7 +197,8 @@ export type LeadRow = {
   activityLog: { text: string; at: string }[];
 };
 
-export type SessionUser = { uid: string; name: string; phone: string; role: string };
+/** The signed-in operator. `permissions` are the keys their role holds right now (from /api/admin/verify). */
+export type SessionUser = { uid: string; name: string; phone: string; role: string; roleName?: string; permissions: string[] };
 
 /** Finance snapshot behind the Overview KPI row (from /api/admin/erp/overview-metrics). */
 export interface OverviewMetrics {

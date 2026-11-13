@@ -1,4 +1,5 @@
 'use client';
+import { hasPermission } from '@/lib/permissions';
 import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Cpu, MoreHorizontal, Pencil, Plus, Trash2, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,7 +24,8 @@ const bdDay = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3600000).t
 
 export default function CapexPage() {
   const { me, adminFetch, askConfirm, handleAuthLoss } = useAdmin();
-  const canChange = me.role === 'SUPERADMIN';
+  const canChange = hasPermission(me.permissions, 'capex.manage');
+  const canDelete = hasPermission(me.permissions, 'capex.delete');
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,7 +39,7 @@ export default function CapexPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
     try {
-      const r = await loadResources(adminFetch, ['capex'], me.role);
+      const r = await loadResources(adminFetch, ['capex'], me);
       if (!r) return;
       if (r.assets) setAssets(r.assets);
       setLastSyncedAt(Date.now());
@@ -123,7 +125,7 @@ export default function CapexPage() {
           ...Object.entries(STATUS)
             .filter(([k]) => k !== a.status)
             .map(([k, m]) => ({ label: `Mark ${m.label.toLowerCase()}`, onSelect: () => void setStatus(a, k) })),
-          { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(a) },
+          ...(canDelete ? [{ label: 'Delete', icon: Trash2, danger: true, onSelect: () => void remove(a) }] : []),
         ]}
       />
     ) : null;

@@ -1,3 +1,4 @@
+import { hasPermission } from '@/lib/permissions';
 /* Lab case stages, roles and helpers shared by the Lab Cases page, panel and form. */
 import type { ErpLedgerEntry, Order } from '../_lib/types';
 
@@ -34,11 +35,11 @@ export const dueThisWeek = (o: Order) => {
 };
 
 /** Role rules mirrored from the API (POST /api/admin/orders, PATCH/DELETE /api/admin/data). */
-export function casePermissions(role: string) {
+export function casePermissions(permissions: readonly string[]) {
   return {
-    canCreate: role === 'SUPERADMIN' || role === 'ACCOUNTS',
-    canMove: role === 'SUPERADMIN' || role === 'ACCOUNTS' || role === 'CHAIRMAN',
-    canDelete: role === 'SUPERADMIN',
+    canCreate: hasPermission(permissions, 'cases.create'),
+    canMove: hasPermission(permissions, 'cases.move_stage'),
+    canDelete: hasPermission(permissions, 'cases.delete'),
   };
 }
 

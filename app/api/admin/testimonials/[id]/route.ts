@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
 type Params = { params: Promise<{ id: string }> };
@@ -17,7 +17,7 @@ const testimonialUpdateSchema = z.object({
 
 export async function PUT(req: Request, { params }: Params) {
   // Phase 1 (2026-11-06): public content writes — SUPERADMIN/CHAIRMAN only.
-  const denied = await requireRole(req, ["SUPERADMIN", "CHAIRMAN"]);
+  const denied = await requirePermission(req, "reviews.manage");
   if (denied) return denied;
   try {
     const { id } = await params;
@@ -41,7 +41,7 @@ export async function PUT(req: Request, { params }: Params) {
 }
 
 export async function DELETE(req: Request, { params }: Params) {
-  const denied = await requireRole(req, ["SUPERADMIN", "CHAIRMAN"]);
+  const denied = await requirePermission(req, "reviews.delete");
   if (denied) return denied;
   try {
     const { id } = await params;

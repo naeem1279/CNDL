@@ -1,4 +1,5 @@
 'use client';
+import { hasPermission } from '@/lib/permissions';
 import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,13 +14,15 @@ const TEXTAREA =
   'block w-full rounded-lg border bg-white px-3 py-2 text-body text-zinc-900 placeholder:text-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30';
 
 /** Role rules mirrored from the API so nobody is shown a button the server refuses. */
-export function duesPermissions(role: string) {
+export function duesPermissions(permissions: readonly string[]) {
+  const has = (k: string) => hasPermission(permissions, k);
   return {
-    isAgent: role === 'AGENT',
-    canInvoice: role === 'SUPERADMIN' || role === 'ACCOUNTS',
-    canVerify: role === 'SUPERADMIN' || role === 'ACCOUNTS',
-    canEditAccount: role === 'SUPERADMIN',
-    canSetOpeningDue: role === 'SUPERADMIN' || role === 'ACCOUNTS',
+    /** Sees only their own clients and collections (a field agent). */
+    isAgent: !has('ledger.view') && has('ledger.view_own'),
+    canInvoice: has('ledger.invoice'),
+    canVerify: has('ledger.verify'),
+    canEditAccount: has('clients.edit'),
+    canSetOpeningDue: has('ledger.invoice'),
   };
 }
 
@@ -125,7 +128,7 @@ export function CollectionDialog({
   onSaved: () => void;
 }) {
   const { me, adminFetch, handleAuthLoss } = useAdmin();
-  const perm = duesPermissions(me.role);
+  const perm = duesPermissions(me.permissions);
   const [f, setF] = useState({
     amount: '',
     method: '',
@@ -281,7 +284,7 @@ export function AccountDialog({
   onSaved: () => void;
 }) {
   const { me, adminFetch, handleAuthLoss } = useAdmin();
-  const perm = duesPermissions(me.role);
+  const perm = duesPermissions(me.permissions);
   const [f, setF] = useState<AccountForm>(() => ({
     accountType: editing?.accountType || 'CHAMBER',
     institutionType: editing?.institutionType || 'CHAMBER',

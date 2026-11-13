@@ -125,11 +125,43 @@ model AppUser {
   phone     String   @unique
   email     String?
   address   String?
+  /// Legacy role enum, kept for compatibility. `roleKey` is the source of truth;
+  /// for a role that is not in this enum the value here is DOCTOR (zero permissions).
   role      Role     @default(DOCTOR)
+  /// Key of a RoleDefinition (e.g. CHAIRMAN, MODERATOR or a custom role). Null means "same as role".
+  roleKey   String?
   status    String   @default("ACTIVE")
   metadata  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// A named set of permissions (see lib/permissions.ts). The built-in roles are seeded lazily on first use;
+/// Super Admin can edit their permissions and create custom roles. SUPERADMIN is fixed in code.
+model RoleDefinition {
+  key         String   @id
+  name        String
+  description String?
+  /// JSON array of permission keys.
+  permissions String
+  isBuiltIn   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Who changed which role or user's role, and what it looked like before and after.
+model AccessAuditLog {
+  id              String   @id @default(cuid())
+  action          String // ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE, USER_ROLE_CHANGE
+  roleKey         String?
+  targetUserId    String?
+  before          String? // JSON
+  after           String? // JSON
+  performedBy     String // AppUser id, or "master" / "api"
+  performedByName String?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model ClientAccount {

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const denied = await requireRole(req, FINANCE_ROLES);
+  const denied = await requirePermission(req, "overview.view");
   if (denied) return denied;
 
   try {

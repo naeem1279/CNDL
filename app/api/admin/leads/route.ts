@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 
-/** Only SUPERADMIN has the Dental Leads section (ROLE_TABS), so only it may read or edit leads. */
-const LEAD_ROLES = ["SUPERADMIN"];
+/** Dental Leads: needs the "leads.manage" permission. */
 
 /**
  * /api/admin/leads — Dhaka Dental Leads (CNDL) panel data source.
@@ -119,7 +118,7 @@ function toPublic(p: Lead) {
 }
 
 export async function GET(req: Request) {
-  const denied = await requireRole(req, LEAD_ROLES);
+  const denied = await requirePermission(req, "leads.manage");
   if (denied) return denied;
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") || "").trim().toLowerCase();
@@ -138,7 +137,7 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const denied = await requireRole(req, LEAD_ROLES);
+  const denied = await requirePermission(req, "leads.manage");
   if (denied) return denied;
   let body: { key?: string; status?: string; notes?: string };
   try {

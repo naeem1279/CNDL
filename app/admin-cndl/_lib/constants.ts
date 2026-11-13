@@ -23,15 +23,6 @@ export const PAYMENT_METHODS = ['Cash', 'bKash', 'Bank'];
 
 export { TOTAL_SHARES } from '@/lib/shares';
 
-/** Which sidebar sections each role can see. First entry = landing tab. */
-export const ROLE_TABS: Record<string, TabKey[]> = {
-  SUPERADMIN: ['overview', 'orders', 'products', 'dues', 'expenses', 'capex', 'shareholders', 'messages', 'leads', 'blogs', 'reviews', 'users'],
-  CHAIRMAN: ['overview', 'orders', 'dues', 'capex', 'shareholders'],
-  ACCOUNTS: ['overview', 'orders', 'dues', 'expenses', 'shareholders'],
-  AGENT: ['dues'],
-  PARTNER_LAB: ['orders'],
-  DOCTOR: ['orders'],
-};
 
 export const EXPENSE_CATEGORY_META: Record<string, { label: string; cls: string }> = {
   RAW_MATERIAL: { label: 'Raw Material', cls: 'bg-teal-50 text-teal-700 border-teal-200' },

@@ -1,22 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, parseMetadata, readActiveSession } from "@/lib/admin-auth";
+import { hashPassword, parseMetadata } from "@/lib/admin-auth";
+import { accessLogData, authorize, listRoles, resolveRoleInput } from "@/lib/access";
 import { firstIssueMessage } from "@/lib/validation";
 
-/** User management is strictly SUPERADMIN. Phase 1: suspension-aware. */
-async function requireSuperAdmin(req: Request): Promise<NextResponse | null> {
-  const session = await readActiveSession(req);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (session.role !== "SUPERADMIN") {
-    return NextResponse.json({ error: "Only a SuperAdmin can manage users" }, { status: 403 });
-  }
-  return null;
-}
-
-const roleEnum = z.enum(["SUPERADMIN", "CHAIRMAN", "ACCOUNTS", "AGENT", "PARTNER_LAB", "DOCTOR"]);
+/** User management needs "users.manage" (locked to Super Admin). Suspension-aware. */
 
 const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
 
@@ -28,15 +17,22 @@ const userCreateSchema = z.object({
     z.string().trim().email("Enter a valid email address").max(200).nullish()
   ),
   address: z.preprocess(emptyToNull, z.string().trim().max(500).nullish()),
-  role: roleEnum.default("DOCTOR"),
+  /** Either the legacy `role` or the new `roleKey` may be sent; any defined role is accepted. */
+  role: z.string().trim().max(60).optional(),
+  roleKey: z.string().trim().max(60).optional(),
   status: z.string().trim().max(30).default("ACTIVE"),
   metadata: z.string().trim().max(2000).nullish(),
   password: z.string().min(4, "Password must be at least 4 characters").max(100).optional(),
 });
 
-function publicUser<T extends { metadata?: string | null }>(user: T) {
+/** Never sends the password hash; adds the current role key and its display name. */
+function publicUser<T extends { metadata?: string | null; role: string; roleKey?: string | null }>(
+  user: T,
+  names?: Map<string, string>
+) {
   const { metadata: _metadata, ...safe } = user;
-  return safe;
+  const roleKey = user.roleKey ?? user.role;
+  return { ...safe, roleKey, roleName: names?.get(roleKey) ?? roleKey };
 }
 
 function firstZodMessage(err: unknown): string {
@@ -44,21 +40,21 @@ function firstZodMessage(err: unknown): string {
 }
 
 export async function GET(req: Request) {
-  const denied = await requireSuperAdmin(req);
-  if (denied) return denied;
+  const auth = await authorize(req, "users.manage");
+  if (auth.denied) return auth.denied;
   try {
-    const users = await prisma.appUser.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    return NextResponse.json({ users: users.map(publicUser) });
+    const [users, roles] = await Promise.all([prisma.appUser.findMany({ orderBy: { createdAt: "desc" } }), listRoles()]);
+    const names = new Map(roles.map((r) => [r.key, r.name]));
+    return NextResponse.json({ users: users.map((u) => publicUser(u, names)) });
   } catch {
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
-  const denied = await requireSuperAdmin(req);
-  if (denied) return denied;
+  const auth = await authorize(req, "users.manage");
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   try {
     const json = await req.json();
     const parsed = userCreateSchema.safeParse(json);
@@ -66,7 +62,13 @@ export async function POST(req: Request) {
       // Surface the exact validation message so the UI can show what went wrong.
       return NextResponse.json({ error: firstZodMessage(parsed.error) }, { status: 400 });
     }
-    const { password, ...data } = parsed.data;
+    const { password, role: roleInput, roleKey: roleKeyInput, ...data } = parsed.data;
+
+    // A new person gets the role named in the request; with none named, the least-privileged built-in (Doctor).
+    const resolved = (await resolveRoleInput({ role: roleInput, roleKey: roleKeyInput })) ?? (await resolveRoleInput({ roleKey: "DOCTOR" }));
+    if (!resolved || "error" in resolved) {
+      return NextResponse.json({ error: resolved && "error" in resolved ? resolved.error : "Role not found" }, { status: 400 });
+    }
 
     // Store the login password as a scrypt hash inside AppUser.metadata.
     if (password) {
@@ -75,7 +77,13 @@ export async function POST(req: Request) {
       data.metadata = JSON.stringify(metaObj);
     }
 
-    const user = await prisma.appUser.create({ data });
+    const user = await prisma.$transaction(async (tx) => {
+      const created = await tx.appUser.create({ data: { ...data, role: resolved.role, roleKey: resolved.roleKey } });
+      await tx.accessAuditLog.create({
+        data: accessLogData(access, { action: "USER_ROLE_CHANGE", roleKey: resolved.roleKey, targetUserId: created.id, before: null, after: { roleKey: resolved.roleKey } }),
+      });
+      return created;
+    });
     return NextResponse.json(publicUser(user), { status: 201 });
   } catch (error) {
     if (

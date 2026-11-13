@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { FINANCE_ROLES, requireRole } from "@/lib/admin-auth";
+import { requirePermission } from "@/lib/access";
 import { firstIssueMessage } from "@/lib/validation";
 import { TOTAL_SHARES, formatShares, sharesField, sumShares, toHundredths, unallocatedShares } from "@/lib/shares";
 
@@ -21,7 +21,7 @@ function firstZodMessage(err: unknown): string {
 }
 
 export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const denied = await requireRole(req, FINANCE_ROLES);
+  const denied = await requirePermission(req, "shareholders.manage");
   if (denied) return denied;
   try {
     const { id } = await ctx.params;
@@ -65,7 +65,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
 }
 
 export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const denied = await requireRole(req, FINANCE_ROLES);
+  const denied = await requirePermission(req, "shareholders.delete");
   if (denied) return denied;
   try {
     const { id } = await ctx.params;
