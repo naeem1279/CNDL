@@ -1,11 +1,12 @@
-import Link from 'next/link';
 import type { Metadata } from 'next';
 import { OG_IMAGE } from '@/lib/seo';
-import ShareHero from '@/components/share/ShareHero';
+import PageHeader from '@/components/ui/PageHeader';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { ButtonLink } from '@/components/ui/Button';
 import LeadershipImage from '@/components/about/LeadershipImage';
 import {
   Plane, Globe, Timer, ScanLine, Home, Award, Microscope, Truck,
-  ArrowRight, MessageCircle, ShieldCheck, Quote, Sparkles
+  ArrowRight, MessageCircle, ShieldCheck, Quote, Sparkles, type LucideIcon,
 } from 'lucide-react';
 
 // G1 (2026-11-05): unique per-page metadata (was inheriting the homepage title).
@@ -79,35 +80,27 @@ const WHATSAPP_URL = 'https://wa.me/8801743167963';
 function AboutPage() {
   return (
     <section>
-      <ShareHero>
-        <div className="container px-4 sm:px-0">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/25 px-4 py-1.5 text-xs md:text-xs font-semibold uppercase tracking-widest text-(--text-tertiary) mb-3 md:mb-4">
-            <ShieldCheck size={13} />
-            Pioneering Digital Dental Artistry in Bangladesh
-          </span>
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl font-semibold leading-tight text-(--text-tertiary) max-w-3xl">
-            Crafting World-Class Smiles with Precision, Passion &amp; Purpose
-          </h1>
-          <p className="text-xs md:text-sm lg:text-base mt-2 md:mt-4 max-w-2xl text-(--text-tertiary)/90">
-            Founded in 2015, CNDL Global combines Japanese 5-axis milling, master-crafted manual prosthetics, authentic Aidite &amp;
-            Shofu materials, and an unwavering commitment to affordable excellence for clinicians
-            across Bangladesh and visiting global patients.
-          </p>
-        </div>
-      </ShareHero>
+      <PageHeader
+        eyebrow={
+          <>
+            <ShieldCheck size={14} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+            <span className="min-w-0">Pioneering Digital Dental Artistry in Bangladesh</span>
+          </>
+        }
+        title="Crafting World-Class Smiles with Precision, Passion & Purpose"
+        lead="Founded in 2015, CNDL Global combines Japanese 5-axis milling, master-crafted manual prosthetics, authentic Aidite & Shofu materials, and an unwavering commitment to affordable excellence for clinicians across Bangladesh and visiting global patients."
+      />
 
       {/* ================= 2015 GENESIS & DOMESTIC MISSION ================= */}
-      <section className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-8 lg:gap-16 items-start">
+      <section className="bg-white py-16 md:py-24">
+        <div className="container grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
           <div>
-            <span className="text-xs md:text-xs lg:text-base text-(--text-secondary) mb-2 md:mb-3 block uppercase tracking-widest font-semibold secondary">
-              Our Story — Since 2015
-            </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl font-semibold secondary leading-tight">
+            <p className="mb-3 text-sm font-medium text-[#1668AD]">Our Story — Since 2015</p>
+            <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               The 2015 Genesis &amp; Our Domestic Mission
             </h2>
           </div>
-          <div className="space-y-4 md:space-y-5 text-sm md:text-base lg:text-lg text-(--text-secondary) leading-relaxed">
+          <div className="space-y-5 text-base leading-relaxed text-slate-600 md:text-lg">
             <p>
               CNDL — the Chishtiya Nizamia Dental Lab — began in 2015 in a modest workshop in
               Khilgaon, Dhaka, with a single conviction: no patient in Bangladesh should receive a
@@ -130,171 +123,57 @@ function AboutPage() {
       </section>
 
       {/* ================= DUAL-WORKFLOW DENTURE WING ================= */}
-      <section className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
-        <div className="bg-(--bg-secondary) border border-(--border-muted) rounded-[16px] md:rounded-[24px] lg:rounded-[32px] p-6 sm:p-10 md:p-14">
-          <div className="max-w-3xl mb-8 md:mb-10">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1977C5]/10 border border-[#1977C5]/20 px-3.5 py-1 text-xs md:text-xs font-semibold uppercase tracking-wider text-[#1977C5]">
-                <Sparkles size={12} />
+      <section className="border-y border-slate-200 bg-slate-50 py-16 md:py-24">
+        <div className="container">
+          <div className="mb-10 max-w-3xl">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1977C5]/10 px-3 py-1 text-xs font-medium text-[#1668AD]">
+                <Sparkles size={14} aria-hidden="true" />
                 Dual-Workflow Denture Wing · Since 2015
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1 text-xs md:text-xs font-semibold text-emerald-700">
-                Dual Digital &amp; Manual Workflows
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 text-xs md:text-xs font-semibold text-blue-700">
-                High Patient Adaptation Rate
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 px-3.5 py-1 text-xs md:text-xs font-semibold text-purple-700">
-                Unbreakable Flexible Resin
-              </span>
+              {['Dual Digital & Manual Workflows', 'High Patient Adaptation Rate', 'Unbreakable Flexible Resin'].map((chip) => (
+                <span key={chip} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                  {chip}
+                </span>
+              ))}
             </div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl font-semibold secondary leading-tight">
+            <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               Digital CAD/CAM + Master Manual Denture Craftsmanship
             </h2>
-            <p className="mt-3 text-xs md:text-sm lg:text-base text-(--text-secondary) leading-relaxed">
+            <p className="mt-4 text-base leading-relaxed text-slate-600 md:text-lg">
               While conventional labs treat removable prosthetics as a secondary craft, CNDL champions a dedicated Dual-Workflow Denture Wing with 11+ years of refinement. We pair micron-accurate digital scan architecture and 3D printing with master dental technicians&rsquo; manual articulatory contouring — delivering superior retention, biological occlusal balance, and effortless adaptation.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Full Dentures Card */}
-            <div className="rounded-[14px] md:rounded-[20px] bg-(--bg-primary) border border-(--border-primary) p-6 md:p-8 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs md:text-xs font-semibold uppercase tracking-wider text-[#1977C5]">Complete Removable Prosthetics</span>
-                  <span className="rounded-full bg-blue-50 text-[#1977C5] px-3 py-0.5 text-xs md:text-xs font-semibold">Digital CAD + Heat-Cure</span>
-                </div>
-                <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2">Full Dentures</h3>
-                <p className="text-xs md:text-sm lg:text-base text-(--text-secondary) leading-relaxed">
-                  High-impact heat-cure acrylic &amp; digital 3D-milled precision bases. Engineered with bilateral balanced occlusion, physiological post-palatal seal, and optional internal mesh reinforcement to eliminate fracture risk under heavy masticatory load.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-(--border-muted) flex items-center justify-between text-xs md:text-xs text-(--text-secondary)">
-                <span>Turnaround: 3-4 Working Days</span>
-                <span className="text-[#1977C5] font-semibold">Zero-Porosity Polymerization</span>
-              </div>
-            </div>
-
-            {/* Flexible Partial Dentures Card */}
-            <div className="rounded-[14px] md:rounded-[20px] bg-(--bg-primary) border border-(--border-primary) p-6 md:p-8 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs md:text-xs font-semibold uppercase tracking-wider text-emerald-600">Aesthetic Removable Partials</span>
-                  <span className="rounded-full bg-emerald-50 text-emerald-700 px-3 py-0.5 text-xs md:text-xs font-semibold">Valplast-Style Nylon</span>
-                </div>
-                <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2">Flexible Partial Dentures</h3>
-                <p className="text-xs md:text-sm lg:text-base text-(--text-secondary) leading-relaxed">
-                  Unbreakable Valplast-style nylon resin with anatomical gingival blending. Invisible tissue-colored clasps eliminate unsightly metal clasps, distributing functional loads gently while preserving natural abutment teeth without irritation.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-(--border-muted) flex items-center justify-between text-xs md:text-xs text-(--text-secondary)">
-                <span>Turnaround: 3-4 Working Days</span>
-                <span className="text-emerald-600 font-semibold">100% Monomer-Free Biocompatible</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= DENTAL TOURISM & NRB FAST-TRACK ================= */}
-      <section className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
-        <div className="relative rounded-[16px] md:rounded-[24px] lg:rounded-[32px] overflow-hidden bg-linear-to-br from-[#226AB4] to-[#3387CB] p-6 sm:p-10 md:p-14 text-white shadow-xl">
-          <div className="max-w-3xl mb-8 md:mb-12">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/25 px-4 py-1.5 text-xs md:text-xs font-semibold uppercase tracking-widest mb-4">
-              <Plane size={13} />
-              Dental Tourism &amp; NRB Fast-Track
-            </span>
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold leading-tight">
-              World-Class Dental Restorations for Visiting Expatriates &amp; Global Dental Tourists
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            <div className="rounded-[16px] md:rounded-[24px] bg-white/10 border border-white/20 p-6 md:p-8 backdrop-blur-sm">
-              <div className="w-11 h-11 rounded-[14px] bg-white/15 flex items-center justify-center mb-4">
-                <Globe size={22} />
-              </div>
-              <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2">The Reality Abroad</h3>
-              <p className="text-xs md:text-sm lg:text-base text-white/85 leading-relaxed">
-                A single crown or veneer in North America, Europe, Australia or the Middle East
-                routinely costs <span className="font-semibold text-white">$1,500 – $2,500</span> —
-                placing world-class restorative care out of reach for many families.
-              </p>
-            </div>
-
-            <div className="rounded-[16px] md:rounded-[24px] bg-white/10 border border-white/20 p-6 md:p-8 backdrop-blur-sm">
-              <div className="w-11 h-11 rounded-[14px] bg-white/15 flex items-center justify-center mb-4">
-                <Plane size={22} />
-              </div>
-              <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2">The CNDL Solution</h3>
-              <p className="text-xs md:text-sm lg:text-base text-white/85 leading-relaxed">
-                Overseas Bangladeshis visiting home can partner with top local dental surgeons to
-                receive flawless Aidite Monolithic Zirconia, E-Max, or Clear Aligners at an{' '}
-                <span className="font-semibold text-white">80%+ cost advantage</span> — without
-                compromise on materials or precision.
-              </p>
-            </div>
-
-            <div className="rounded-[16px] md:rounded-[24px] bg-white/10 border border-white/20 p-6 md:p-8 backdrop-blur-sm">
-              <div className="w-11 h-11 rounded-[14px] bg-white/15 flex items-center justify-center mb-4">
-                <Timer size={22} />
-              </div>
-              <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2">3-Day Express Guarantee</h3>
-              <p className="text-xs md:text-sm lg:text-base text-white/85 leading-relaxed">
-                Our fast-track production allows visiting patients to receive and seat their final
-                restorations within a short holiday schedule — no multiple follow-up visits, no
-                extended stays.
-              </p>
-            </div>
-
-            <div className="rounded-[16px] md:rounded-[24px] bg-white/10 border border-white/20 p-6 md:p-8 backdrop-blur-sm">
-              <div className="w-11 h-11 rounded-[14px] bg-white/15 flex items-center justify-center mb-4">
-                <ScanLine size={22} />
-              </div>
-              <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2">Open STL Architecture</h3>
-              <p className="text-xs md:text-sm lg:text-base text-white/85 leading-relaxed">
-                Expat patients or overseas clinicians can digitally transmit intraoral scans (Medit,
-                3Shape, iTero) before arrival — so design work starts before the patient lands.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= MILESTONE TIMELINE 2015 – PRESENT ================= */}
-      <section className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
-        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-14">
-          <span className="text-xs md:text-xs lg:text-base text-(--text-secondary) uppercase tracking-widest font-semibold secondary block mb-2">
-            Our Journey
-          </span>
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary leading-tight">
-            From Khilgaon Workshop to Global Digital Lab
-          </h2>
-        </div>
-
-        <div className="max-w-3xl mx-auto relative">
-          <div className="absolute left-[19px] md:left-[23px] top-2 bottom-2 w-[2px] bg-(--background-muted)/30" />
-          <div className="space-y-8 md:space-y-10">
-            {milestones.map((m) => (
-              <div key={m.year} className="relative pl-16 md:pl-20">
-                <div className="absolute left-0 top-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-(--background-muted) text-white font-semibold text-xs md:text-xs flex items-center justify-center shadow-lg">
-                  {m.year === 'Present' ? (
-                    <Globe size={18} />
-                  ) : (
-                    <span className="text-xs md:text-xs">{m.year}</span>
-                  )}
-                </div>
-                <div className="bg-(--bg-secondary) border border-(--border-muted) rounded-[10px] md:rounded-[16px] lg:rounded-[24px] p-5 md:p-7">
-                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    <span className="text-xs md:text-xs font-semibold secondary uppercase tracking-widest">
-                      {m.year}
-                    </span>
-                    <span className="text-xs md:text-xs text-(--text-secondary)">·</span>
-                    <h3 className="text-sm md:text-base lg:text-lg font-semibold">{m.title}</h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+            {[
+              {
+                kicker: 'Complete Removable Prosthetics',
+                chip: 'Digital CAD + Heat-Cure',
+                title: 'Full Dentures',
+                body: 'High-impact heat-cure acrylic & digital 3D-milled precision bases. Engineered with bilateral balanced occlusion, physiological post-palatal seal, and optional internal mesh reinforcement to eliminate fracture risk under heavy masticatory load.',
+                note: 'Zero-Porosity Polymerization',
+              },
+              {
+                kicker: 'Aesthetic Removable Partials',
+                chip: 'Valplast-Style Nylon',
+                title: 'Flexible Partial Dentures',
+                body: 'Unbreakable Valplast-style nylon resin with anatomical gingival blending. Invisible tissue-colored clasps eliminate unsightly metal clasps, distributing functional loads gently while preserving natural abutment teeth without irritation.',
+                note: '100% Monomer-Free Biocompatible',
+              },
+            ].map((card) => (
+              <div key={card.title} className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
+                <div>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">{card.kicker}</span>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-700">{card.chip}</span>
                   </div>
-                  <p className="text-xs md:text-sm lg:text-base text-(--text-secondary) leading-relaxed">
-                    {m.desc}
-                  </p>
+                  <h3 className="secondary mb-2 text-xl font-semibold text-slate-900">{card.title}</h3>
+                  <p className="text-base leading-relaxed text-slate-600">{card.body}</p>
+                </div>
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4 text-sm text-slate-600">
+                  <span>Turnaround: 3-4 Working Days</span>
+                  <span className="font-medium text-slate-900">{card.note}</span>
                 </div>
               </div>
             ))}
@@ -302,97 +181,135 @@ function AboutPage() {
         </div>
       </section>
 
+      {/* ================= DENTAL TOURISM & NRB FAST-TRACK ================= */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="container">
+          <div className="mb-10 max-w-3xl">
+            <p className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-[#1668AD]">
+              <Plane size={16} aria-hidden="true" />
+              Dental Tourism &amp; NRB Fast-Track
+            </p>
+            <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
+              World-Class Dental Restorations for Visiting Expatriates &amp; Global Dental Tourists
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+            <TourismCard icon={Globe} title="The Reality Abroad">
+              A single crown or veneer in North America, Europe, Australia or the Middle East
+              routinely costs <span className="font-semibold text-slate-900">$1,500 – $2,500</span> —
+              placing world-class restorative care out of reach for many families.
+            </TourismCard>
+            <TourismCard icon={Plane} title="The CNDL Solution">
+              Overseas Bangladeshis visiting home can partner with top local dental surgeons to
+              receive flawless Aidite Monolithic Zirconia, E-Max, or Clear Aligners at an{' '}
+              <span className="font-semibold text-slate-900">80%+ cost advantage</span> — without
+              compromise on materials or precision.
+            </TourismCard>
+            <TourismCard icon={Timer} title="3-Day Express Guarantee">
+              Our fast-track production allows visiting patients to receive and seat their final
+              restorations within a short holiday schedule — no multiple follow-up visits, no
+              extended stays.
+            </TourismCard>
+            <TourismCard icon={ScanLine} title="Open STL Architecture">
+              Expat patients or overseas clinicians can digitally transmit intraoral scans (Medit,
+              3Shape, iTero) before arrival — so design work starts before the patient lands.
+            </TourismCard>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= MILESTONE TIMELINE 2015 – PRESENT ================= */}
+      <section className="border-y border-slate-200 bg-slate-50 py-16 md:py-24">
+        <div className="container">
+          <SectionHeader align="center" eyebrow="Our Journey" title="From Khilgaon Workshop to Global Digital Lab" />
+
+          <ol className="relative mx-auto max-w-3xl">
+            <span className="absolute bottom-2 left-[23px] top-2 w-0.5 bg-[#1977C5]/20" aria-hidden="true" />
+            {milestones.map((m) => (
+              <li key={m.year} className="relative pb-6 pl-16 last:pb-0 md:pl-20">
+                <span className="absolute left-0 top-0 flex size-12 items-center justify-center rounded-full border-4 border-slate-50 bg-[#1977C5] text-xs font-semibold text-white">
+                  {m.year === 'Present' ? <Globe size={18} aria-label="Present" /> : m.year}
+                </span>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+                  <p className="text-sm font-medium text-[#1668AD]">{m.year}</p>
+                  <h3 className="mt-0.5 text-lg font-semibold text-slate-900">{m.title}</h3>
+                  <p className="mt-1.5 text-base leading-relaxed text-slate-600">{m.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       {/* ================= LEADERSHIP & INSTITUTIONAL VISION ================= */}
-      <section className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 sm:gap-10 md:gap-16">
+      <section className="bg-white py-16 md:py-24">
+        <div className="container grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <LeadershipImage />
           <div>
-            <span className="text-xs md:text-xs lg:text-base text-(--text-secondary) mb-2 md:mb-3 block uppercase tracking-widest font-semibold secondary">
-              Leadership
-            </span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-4xl font-semibold secondary leading-tight">
+            <p className="mb-3 text-sm font-medium text-[#1668AD]">Leadership</p>
+            <h2 className="secondary text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
               Leadership &amp; Commitment to Dental Excellence
             </h2>
-            <div className="mt-4 md:mt-6 border-l-[3px] border-(--background-muted) pl-4 md:pl-6">
-              <Quote size={20} className="text-(--background-muted) mb-2" />
-              <p className="text-sm md:text-base lg:text-lg text-(--text-secondary) italic leading-relaxed">
+            <figure className="mt-6 border-l-2 border-[#1977C5] pl-5 md:pl-6">
+              <Quote size={20} className="mb-2 text-[#1977C5]" aria-hidden="true" />
+              <blockquote className="text-base italic leading-relaxed text-slate-600 md:text-lg">
                 At CNDL, we practice restorative dentistry as a matter of medical ethics — every
                 restoration carries a patient&rsquo;s trust. Since establishing our laboratory in 2015, I hold our technicians to the standard
                 of master craftsmen, and we reinvest continuously in cutting-edge digital
                 technology, from 5-axis Japanese milling to in-house clear aligner planning and precision dentures, so
                 that world-class care is made in Bangladesh, priced for Bangladesh, and trusted
                 by Bangladeshi families everywhere in the world.
-              </p>
-              <footer className="mt-3 md:mt-4 text-xs md:text-sm lg:text-base font-semibold secondary">
+              </blockquote>
+              <figcaption className="mt-4 text-sm font-semibold text-slate-900">
                 — M. Abdul Kadir, Chairman, CN Dental Lab (CNDL Global)
-              </footer>
-            </div>
+              </figcaption>
+            </figure>
           </div>
         </div>
       </section>
 
       {/* ================= 4 UNCOMPROMISING LAB PILLARS ================= */}
-      <section className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
-        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-14">
-          <span className="text-xs md:text-xs lg:text-base text-(--text-secondary) uppercase tracking-widest font-semibold secondary block mb-2">
-            Why CNDL
-          </span>
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold secondary leading-tight">
-            The 4 Uncompromising Lab Pillars
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
-          {pillars.map((pillar) => (
-            <div
-              key={pillar.title}
-              className="bg-(--bg-secondary) border border-(--border-muted) rounded-[10px] md:rounded-[16px] lg:rounded-[24px] p-6 md:p-8 transition-all duration-300 hover:scale-105"
-            >
-              <div className="w-14 h-14 rounded-[16px] bg-(--background-muted) flex items-center justify-center shadow text-white mb-5">
-                <pillar.icon size={26} strokeWidth={1.75} />
+      <section className="border-t border-slate-200 bg-slate-50 py-16 md:py-24">
+        <div className="container">
+          <SectionHeader align="center" eyebrow="Why CNDL" title="The 4 Uncompromising Lab Pillars" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6 xl:grid-cols-4">
+            {pillars.map((pillar) => (
+              <div key={pillar.title} className="rounded-2xl border border-slate-200 bg-white p-6">
+                <span className="mb-5 flex size-11 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+                  <pillar.icon size={22} strokeWidth={1.75} aria-hidden="true" />
+                </span>
+                <h3 className="secondary mb-2 text-lg font-semibold text-slate-900">{pillar.title}</h3>
+                <p className="text-sm leading-relaxed text-slate-600">{pillar.desc}</p>
               </div>
-              <h3 className="text-sm md:text-base lg:text-lg font-semibold text-(--text-primary) mb-2">
-                {pillar.title}
-              </h3>
-              <p className="text-xs md:text-sm text-(--text-secondary) leading-relaxed">
-                {pillar.desc}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ================= CALL TO ACTION ================= */}
-      <section className="container my-8 sm:my-10 md:my-12 lg:my-14 xl:my-16">
-        <div className="relative rounded-[16px] md:rounded-[24px] lg:rounded-[32px] overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/images/CTA.jpg')" }}
-          />
-          <div className="absolute inset-0 bg-linear-to-r from-[#226AB4E6] to-[#3387CBCC]" />
-          <div className="relative z-10 px-6 py-12 md:py-16 text-center text-white">
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold leading-tight max-w-3xl mx-auto">
+      {/* ================= CALL TO ACTION: the page's one blue band ================= */}
+      <section className="bg-slate-50 pb-16 md:pb-24">
+        <div className="container">
+          <div className="rounded-2xl bg-[#1977C5] px-6 py-12 text-center text-white md:py-16">
+            <h2 className="secondary mx-auto max-w-3xl text-3xl font-semibold leading-tight md:text-4xl">
               Partner with Bangladesh&rsquo;s Premier Dental Lab
             </h2>
-            <p className="text-xs md:text-sm lg:text-base text-white/85 mt-3 max-w-xl mx-auto">
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/85 md:text-lg">
               Submit your next case online or dispatch an intraoral scan directly to our lab team —
               guaranteed 3-4 working day turnaround.
             </p>
-            <div className="mt-7 md:mt-9 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Link
-                href="/order-create"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-7 py-3.5 text-xs md:text-sm lg:text-base font-semibold text-[#1977C5] shadow-lg hover:shadow-xl transition-all group w-full sm:w-auto min-h-[48px]"
-              >
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <ButtonLink href="/order-create" variant="inverse" size="lg" className="group">
                 Submit a Case Online
-                <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
+                <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </ButtonLink>
               <a
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/70 px-7 py-3.5 text-xs md:text-sm lg:text-base font-semibold text-white hover:bg-white/10 transition-all w-full sm:w-auto min-h-[48px]"
+                className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/40 px-6 text-base font-medium text-white transition-colors duration-150 hover:bg-white/10"
               >
-                <MessageCircle size={17} />
+                <MessageCircle size={18} aria-hidden="true" />
                 WhatsApp: +880 1743-167963
               </a>
             </div>
@@ -400,6 +317,18 @@ function AboutPage() {
         </div>
       </section>
     </section>
+  );
+}
+
+function TourismCard({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8">
+      <span className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[#1977C5]/10 text-[#1668AD]">
+        <Icon size={22} aria-hidden="true" />
+      </span>
+      <h3 className="secondary mb-2 text-xl font-semibold text-slate-900">{title}</h3>
+      <p className="text-base leading-relaxed text-slate-600">{children}</p>
+    </div>
   );
 }
 

@@ -13,7 +13,7 @@ export default function LeadershipImage() {
       alt="CAD design station at CNDL Global laboratory, Dhaka"
       width={800}
       height={600}
-      className="w-full h-[320px] md:h-[420px] object-cover rounded-[16px] md:rounded-[24px] lg:rounded-[32px] shadow-lg"
+      className="h-[320px] w-full rounded-2xl object-cover md:h-[420px]"
       onError={() => setSrc('/images/WhyChooseIcon.png')}
     />
   );

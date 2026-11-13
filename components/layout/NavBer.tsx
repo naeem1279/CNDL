@@ -167,7 +167,7 @@ export default function NavBer() {
   ];
 
   return (
-    <header className="sticky top-0 z-[60]">
+    <header className="sticky top-0 z-[60] print:hidden">
       {/* Info bar: contact details, quiet slate. Phones show the main number only. */}
       <div className="border-b border-slate-200 bg-slate-50 text-xs text-slate-600">
         <div className="container flex h-10 items-center justify-between gap-4">

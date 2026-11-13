@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 
 /**
- * Top of an inner public page: white-to-slate band with the page's h1.
- * Replaces the blue ShareHero banner (pages migrate one phase at a time).
+ * Top of every inner public page: white-to-slate band with the page's h1.
  */
 type Props = {
   eyebrow?: ReactNode;

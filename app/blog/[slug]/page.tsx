@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import ShareHero from '@/components/share/ShareHero';
+import PageHeader from '@/components/ui/PageHeader';
 import { prisma } from '@/lib/prisma';
 import { safeJsonLd } from '@/lib/safe-json-ld';
 import { ChevronRight, CheckCircle2, MessageCircle, ArrowLeft, Calendar, User, Tag } from 'lucide-react';
@@ -65,7 +65,7 @@ function renderContent(content: string) {
       elements.push(
         <h2
           key={i}
-          className="text-xl sm:text-2xl md:text-3xl font-semibold secondary mt-10 mb-4 pb-2 border-b-2 border-teal-500/40 text-(--text-primary) tracking-tight"
+          className="text-2xl md:text-3xl font-semibold secondary mt-12 mb-4 pb-3 border-b border-slate-200 text-(--text-primary) tracking-tight"
         >
           {heading}
         </h2>
@@ -78,7 +78,7 @@ function renderContent(content: string) {
     if (line.startsWith('### ')) {
       const heading = line.replace(/^###\s+/, '');
       elements.push(
-        <h3 key={i} className="text-lg sm:text-xl font-semibold mt-7 mb-3 text-(--text-primary)">
+        <h3 key={i} className="text-xl font-semibold mt-8 mb-3 text-(--text-primary)">
           {heading}
         </h3>
       );
@@ -96,7 +96,7 @@ function renderContent(content: string) {
       elements.push(
         <blockquote
           key={i}
-          className="my-6 border-l-4 border-slate-800 dark:border-teal-400 bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-r-2xl italic text-sm md:text-base text-(--text-secondary) leading-relaxed shadow-xs"
+          className="my-6 border-l-4 border-[#1977C5] bg-slate-50 p-5 md:p-6 rounded-r-xl italic text-base text-(--text-secondary) leading-relaxed"
         >
           {quoteLines.join(' ')}
         </blockquote>
@@ -123,10 +123,10 @@ function renderContent(content: string) {
         elements.push(
           <div
             key={i}
-            className="my-6 overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs"
+            className="my-6 overflow-x-auto rounded-xl border border-slate-200"
           >
-            <table className="w-full text-left border-collapse text-xs md:text-sm">
-              <thead className="bg-slate-100 dark:bg-slate-800/60 text-(--text-primary) border-b border-slate-200 dark:border-slate-700">
+            <table className="w-full text-left border-collapse text-sm">
+              <thead className="bg-slate-100 text-(--text-primary) border-b border-slate-200">
                 <tr>
                   {headers.map((h, hIdx) => (
                     <th key={hIdx} className="py-3.5 px-4 font-semibold uppercase tracking-wider text-xs">
@@ -135,9 +135,9 @@ function renderContent(content: string) {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {rows.map((row, rIdx) => (
-                  <tr key={rIdx} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                  <tr key={rIdx} className="hover:bg-slate-50 transition-colors">
                     {row.map((cell, cIdx) => (
                       <td key={cIdx} className="py-3 px-4 text-(--text-secondary) leading-relaxed">
                         {cell}
@@ -173,9 +173,9 @@ function renderContent(content: string) {
           {listItems.map((item, lIdx) => (
             <li
               key={lIdx}
-              className="flex items-start gap-3 text-xs sm:text-sm md:text-base text-(--text-secondary) leading-relaxed"
+              className="flex items-start gap-3 text-base text-slate-700 leading-relaxed"
             >
-              <CheckCircle2 size={17} className="text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+              <CheckCircle2 size={17} className="text-[#1977C5] shrink-0 mt-0.5" />
               <span>{item}</span>
             </li>
           ))}
@@ -189,7 +189,7 @@ function renderContent(content: string) {
       elements.push(
         <div
           key={i}
-          className="my-6 border-l-4 border-teal-500 bg-teal-50/70 dark:bg-teal-950/20 p-4 md:p-5 rounded-r-2xl text-sm md:text-base text-teal-950 dark:text-teal-200 leading-relaxed font-medium shadow-xs"
+          className="my-6 border-l-4 border-[#1977C5] bg-[#1977C5]/5 p-5 rounded-r-xl text-base text-slate-800 leading-relaxed font-medium"
         >
           {line}
         </div>
@@ -200,7 +200,7 @@ function renderContent(content: string) {
 
     // Standard paragraph
     elements.push(
-      <p key={i} className="text-sm sm:text-base md:text-lg text-(--text-secondary) leading-relaxed my-3.5">
+      <p key={i} className="text-base md:text-lg text-slate-700 leading-[1.75] my-4">
         {line}
       </p>
     );
@@ -260,7 +260,7 @@ export default async function BlogPostPage({ params }: Props) {
   };
 
   return (
-    <section className="bg-(--bg-primary)">
+    <section className="bg-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
@@ -269,86 +269,71 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbLd) }}
       />
-      <ShareHero>
-        <div className="space-y-3 max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold uppercase tracking-wider">
-            <Tag size={12} /> {post.category}
-          </span>
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold leading-tight secondary text-(--text-tertiary)">
-            {post.title}
-          </h1>
-          <p className="text-xs md:text-sm text-(--text-tertiary)/90 line-clamp-2">
-            {post.excerpt}
-          </p>
-        </div>
-      </ShareHero>
+      <PageHeader
+        eyebrow={
+          <>
+            <Tag size={14} className="shrink-0 text-[#1977C5]" aria-hidden="true" />
+            <span className="min-w-0">{post.category}</span>
+          </>
+        }
+        title={post.title}
+        lead={<p className="line-clamp-3">{post.excerpt}</p>}
+      />
 
-      <div className="container my-8 sm:my-10 md:my-14">
-        <article className="max-w-4xl mx-auto">
+      <div className="container py-10 md:py-14">
+        <article className="mx-auto max-w-3xl">
           {/* Breadcrumb Navigation */}
-          <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs md:text-sm text-(--text-secondary) flex-wrap">
-            <Link href="/" className="hover:text-[#1977C5] transition-colors">Home</Link>
-            <ChevronRight size={13} className="text-slate-400 shrink-0" />
-            <Link href="/blog" className="hover:text-[#1977C5] transition-colors">Blog</Link>
-            <ChevronRight size={13} className="text-slate-400 shrink-0" />
-            <span className="text-(--text-primary) font-semibold truncate max-w-[200px] sm:max-w-xs md:max-w-md">
+          <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1 text-sm text-slate-500">
+            <Link href="/" className="inline-flex min-h-10 items-center hover:text-[#1668AD]">Home</Link>
+            <ChevronRight size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
+            <Link href="/blog" className="inline-flex min-h-10 items-center hover:text-[#1668AD]">Blog</Link>
+            <ChevronRight size={14} className="shrink-0 text-slate-400" aria-hidden="true" />
+            <span className="max-w-[200px] truncate font-medium text-slate-900 sm:max-w-xs md:max-w-md" aria-current="page">
               {post.title}
             </span>
           </nav>
 
           {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-4 py-3 border-y border-(--border-primary) mb-6 text-xs text-(--text-secondary)">
-            <span className="flex items-center gap-1.5 font-medium">
-              <Calendar size={14} className="text-[#1977C5]" />
+          <div className="mb-8 flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-slate-200 py-3 text-sm text-slate-600">
+            <span className="flex items-center gap-1.5">
+              <Calendar size={16} className="text-slate-400" aria-hidden="true" />
               {formatDate(post.publishedAt)}
             </span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <User size={14} className="text-[#1977C5]" />
+            <span className="flex items-center gap-1.5">
+              <User size={16} className="text-slate-400" aria-hidden="true" />
               By {post.author}
-            </span>
-            <span className="flex items-center gap-1.5 font-medium ml-auto">
-              <Tag size={14} className="text-[#88C845]" />
-              {post.category}
             </span>
           </div>
 
           {/* Featured Image */}
-          <div className="relative h-[260px] sm:h-[380px] md:h-[460px] w-full rounded-2xl md:rounded-[32px] overflow-hidden shadow-sm mb-8">
-            <Image
-              src={post.image}
-              alt={post.title}
-              fill
-              className="object-cover"
-              priority
-            />
+          <div className="relative mb-8 aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-100">
+            <Image src={post.image} alt={post.title} fill sizes="(min-width: 768px) 768px, 90vw" className="object-cover" priority />
           </div>
 
           {/* Editorial Rendered Content */}
-          <div className="editorial-content mt-6">
-            {renderContent(post.content)}
-          </div>
+          <div className="editorial-content">{renderContent(post.content)}</div>
 
           {/* Lab Director Authority Card */}
-          <div className="mt-12 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-800 bg-(--bg-secondary) p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 shadow-sm">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#1977C5] text-white flex items-center justify-center font-semibold text-2xl shrink-0 shadow-md">
+          <div className="mt-12 flex flex-col items-center gap-5 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:flex-row sm:items-start sm:p-8">
+            <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-[#1977C5] text-xl font-semibold text-white">
               AK
-            </div>
-            <div className="space-y-2 text-center sm:text-left flex-1">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            </span>
+            <div className="flex-1 space-y-2 text-center sm:text-left">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div>
-                  <h4 className="text-lg font-semibold secondary text-(--text-primary)">M. Abdul Kadir</h4>
-                  <p className="text-xs font-semibold text-[#1977C5]">Chairman &amp; Managing Director · CN Dental Lab (CNDL)</p>
+                  <h2 className="secondary text-lg font-semibold text-slate-900">M. Abdul Kadir</h2>
+                  <p className="text-sm text-[#1668AD]">Chairman &amp; Managing Director · CN Dental Lab (CNDL)</p>
                 </div>
                 <a
                   href={`https://wa.me/8801743167963?text=${encodeURIComponent(`Hello CNDL, I am reading "${post.title}" and have a clinical question.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#25D366] text-white text-xs font-semibold shadow hover:brightness-105 transition-all self-center sm:self-auto shrink-0"
+                  className="inline-flex h-11 shrink-0 items-center justify-center gap-2 self-center rounded-full bg-[#128C7E] px-5 text-sm font-medium text-white transition-colors hover:bg-[#0F7A6D] sm:self-auto"
                 >
-                  <MessageCircle size={16} /> Clinical WhatsApp Inquiry
+                  <MessageCircle size={16} aria-hidden="true" /> Clinical WhatsApp Inquiry
                 </a>
               </div>
-              <p className="text-xs sm:text-sm text-(--text-secondary) leading-relaxed">
+              <p className="text-sm leading-relaxed text-slate-600">
                 Direct supervisor of CNDL’s Japanese 5-axis Roland dry milling, 1530°C Aidite sintering cycles, and Shofu glaze finishing. Serving dental practices across Dhaka with guaranteed 3-day turnaround.
               </p>
             </div>
@@ -358,41 +343,36 @@ export default async function BlogPostPage({ params }: Props) {
           <div className="mt-10">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold secondary hover:text-[#1977C5] transition-colors"
+              className="-ml-2 inline-flex min-h-11 items-center gap-2 rounded-full px-2 text-sm font-medium text-[#1668AD] hover:bg-[#1977C5]/5"
             >
-              <ArrowLeft size={16} /> Back to all articles
+              <ArrowLeft size={16} aria-hidden="true" /> Back to all articles
             </Link>
           </div>
         </article>
 
         {/* Related Posts */}
         {related.length > 0 && (
-          <div className="max-w-4xl mx-auto mt-14 pt-10 border-t border-(--border-primary)">
-            <h2 className="text-xl sm:text-2xl font-semibold secondary mb-6">
-              More Clinical Articles from CNDL
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mx-auto mt-14 max-w-5xl border-t border-slate-200 pt-10">
+            <h2 className="secondary mb-6 text-2xl font-semibold text-slate-900">More Clinical Articles from CNDL</h2>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {related.map((item) => (
                 <Link
                   key={item.id}
                   href={`/blog/${item.slug}`}
-                  className="group rounded-2xl overflow-hidden bg-(--bg-secondary) border border-(--border-primary) flex flex-col hover:shadow-md transition-shadow"
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-colors duration-150 hover:border-slate-300"
                 >
-                  <div className="relative h-[160px] overflow-hidden">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                     <Image
                       src={item.image}
                       alt={item.title}
                       fill
-                      className="object-cover group-hover:scale-105 transition duration-500"
+                      sizes="(min-width: 768px) 320px, 90vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                     />
                   </div>
-                  <div className="p-4 flex flex-col flex-1">
-                    <span className="text-xs font-semibold text-[#1977C5] uppercase tracking-wider">
-                      {item.category}
-                    </span>
-                    <h3 className="text-sm font-semibold text-(--text-primary) mt-1.5 group-hover:text-[#1977C5] transition line-clamp-2">
-                      {item.title}
-                    </h3>
+                  <div className="flex flex-1 flex-col p-5">
+                    <span className="text-xs font-medium uppercase tracking-wide text-[#1668AD]">{item.category}</span>
+                    <h3 className="mt-1.5 line-clamp-2 text-base font-semibold text-slate-900 group-hover:text-[#1668AD]">{item.title}</h3>
                   </div>
                 </Link>
               ))}
