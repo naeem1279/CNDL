@@ -9,11 +9,14 @@ import { apiError } from '../_lib/utils';
 import type { RoleRow } from './types';
 
 /** Creates a custom role, optionally starting from a copy of an existing one (locked permissions are never copied). */
-export function NewRoleDialog({ roles, onClose, onCreated }: { roles: RoleRow[]; onClose: () => void; onCreated: (key: string) => void | Promise<void> }) {
+export function NewRoleDialog({ roles, initialFrom = '', onClose, onCreated }: { roles: RoleRow[]; initialFrom?: string; onClose: () => void; onCreated: (key: string) => void | Promise<void> }) {
   const { adminFetch, handleAuthLoss } = useAdmin();
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => {
+    const src = roles.find((r) => r.key === initialFrom);
+    return src ? `${src.name} copy` : '';
+  });
   const [description, setDescription] = useState('');
-  const [from, setFrom] = useState('');
+  const [from, setFrom] = useState(initialFrom);
   const [error, setError] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
 
@@ -48,7 +51,7 @@ export function NewRoleDialog({ roles, onClose, onCreated }: { roles: RoleRow[];
   };
 
   return (
-    <FormDialog title="New role" onClose={onClose} onSubmit={submit} submitLabel="Create role" saving={saving} savingLabel="Creating…">
+    <FormDialog title={initialFrom ? 'Clone role' : 'New role'} onClose={onClose} onSubmit={submit} submitLabel="Create role" saving={saving} savingLabel="Creating…">
       <Field label="Role name" htmlFor="nr-name" required error={error}>
         <Input
           id="nr-name"

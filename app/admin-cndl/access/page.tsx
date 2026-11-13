@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { History, Lock, Plus, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
+import { Copy, History, Lock, Plus, RotateCcw, ShieldCheck, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { BUILTIN_ROLES, SUPERADMIN_KEY } from '@/lib/permissions';
 import { SectionFrame } from '../_components/SectionFrame';
@@ -13,6 +13,15 @@ import { AccessLog } from './AccessLog';
 import type { CatalogPermission, RoleRow } from './types';
 
 type View = 'roles' | 'log';
+
+/** "All" and "own only" permissions that are really one choice, shown as None / Own / All. */
+const SCOPES: { group: string; all: string; own: string; label: string; hint: string }[] = [
+  { group: 'Cases', all: 'cases.view', own: 'cases.view_own', label: 'Which cases they see', hint: 'Own = only cases credited to them (field agents).' },
+  { group: 'Clients', all: 'clients.view', own: 'clients.view_own', label: 'Which client accounts they see', hint: 'Own = only clients assigned to them.' },
+  { group: 'Dues and collections', all: 'ledger.view', own: 'ledger.view_own', label: 'Which invoices and collections they see', hint: 'Own = entries for their clients or collected by them.' },
+  { group: 'Dues and collections', all: 'ledger.collect', own: 'ledger.collect_own', label: 'Recording collections', hint: 'Own = only for their own clients, and they cannot verify their own cash.' },
+];
+const SCOPED_KEYS = new Set(SCOPES.flatMap((s) => [s.all, s.own]));
 
 const cx = (...p: (string | false | null | undefined)[]) => p.filter(Boolean).join(' ');
 const sameSet = (a: Iterable<string>, b: Iterable<string>) => {
@@ -36,6 +45,7 @@ export default function AccessPage() {
   const [draft, setDraft] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [cloneOf, setCloneOf] = useState('');
   const [logVersion, setLogVersion] = useState(0);
 
   const role = roles.find((r) => r.key === selected) ?? null;
@@ -94,8 +104,21 @@ export default function AccessPage() {
       return next;
     });
 
+  const setScope = (s: (typeof SCOPES)[number], level: 'none' | 'own' | 'all') =>
+    setDraft((cur) => {
+      const next = new Set(cur);
+      next.delete(s.all);
+      next.delete(s.own);
+      if (level === 'all') next.add(s.all);
+      if (level === 'own') next.add(s.own);
+      return next;
+    });
+
   const grouped = useMemo(
-    () => groups.map((g) => ({ group: g, items: catalog.filter((p) => p.group === g) })).filter((g) => g.items.length),
+    () =>
+      groups
+        .map((g) => ({ group: g, items: catalog.filter((p) => p.group === g && !SCOPED_KEYS.has(p.key)), scopes: SCOPES.filter((s) => s.group === g) }))
+        .filter((g) => g.items.length || g.scopes.length),
     [groups, catalog]
   );
 
@@ -162,7 +185,7 @@ export default function AccessPage() {
       }}
       description="Choose what each role can see and do. Changes apply to everyone in that role straight away, with no re-login."
       actions={
-        <Button variant="primary" icon={Plus} onClick={() => setCreating(true)}>
+        <Button variant="primary" icon={Plus} onClick={() => { setCloneOf(''); setCreating(true); }}>
           <span className="hidden sm:inline">New role</span>
           <span className="sm:hidden">New</span>
         </Button>
@@ -200,6 +223,7 @@ export default function AccessPage() {
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-table font-medium text-zinc-900">{r.name}</span>
+                    {r.description && <span className="block truncate text-meta text-zinc-600">{r.description}</span>}
                     <span className="block text-meta text-zinc-500">
                       {r.userCount === 1 ? '1 person' : `${r.userCount} people`}
                       {r.key === SUPERADMIN_KEY ? ' · everything' : ` · ${r.permissions.length} permissions`}
@@ -242,10 +266,35 @@ export default function AccessPage() {
               )}
 
               <div className="space-y-4">
-                {grouped.map(({ group, items }) => (
+                {grouped.map(({ group, items, scopes }) => (
                   <fieldset key={group} className="rounded-lg border border-zinc-200">
                     <legend className="ml-3 px-1.5 text-meta font-semibold uppercase tracking-wide text-zinc-500">{group}</legend>
                     <ul className="divide-y divide-zinc-100">
+                      {scopes.map((s) => {
+                        const level = isSuper || draft.has(s.all) ? 'all' : draft.has(s.own) ? 'own' : 'none';
+                        const name = `scope-${s.all}`;
+                        return (
+                          <li key={s.all} className="px-3 py-2.5">
+                            <p className="text-table font-medium text-zinc-900">{s.label}</p>
+                            <p className="text-meta text-zinc-500">{s.hint}</p>
+                            <div role="radiogroup" aria-label={s.label} className="mt-2 inline-flex rounded-lg border border-zinc-200 bg-zinc-50 p-0.5">
+                              {(['none', 'own', 'all'] as const).map((lv) => (
+                                <label
+                                  key={lv}
+                                  className={cx(
+                                    'inline-flex min-h-[36px] min-w-[64px] items-center justify-center rounded-md px-3 text-table font-medium',
+                                    isSuper ? 'cursor-not-allowed' : 'cursor-pointer',
+                                    level === lv ? 'bg-white text-zinc-900 shadow-sm ring-1 ring-zinc-200' : 'text-zinc-600 hover:text-zinc-900'
+                                  )}
+                                >
+                                  <input type="radio" name={name} value={lv} checked={level === lv} disabled={isSuper} onChange={() => setScope(s, lv)} className="sr-only" />
+                                  {lv === 'none' ? 'None' : lv === 'own' ? 'Own' : 'All'}
+                                </label>
+                              ))}
+                            </div>
+                          </li>
+                        );
+                      })}
                       {items.map((p) => {
                         const locked = !!p.locked;
                         const checked = isSuper || (!locked && draft.has(p.key));
@@ -287,6 +336,9 @@ export default function AccessPage() {
                   <Button variant="ghost" onClick={() => select(role)} disabled={!dirty || saving}>
                     Discard
                   </Button>
+                  <Button variant="ghost" icon={Copy} onClick={() => { setCloneOf(role.key); setCreating(true); }} disabled={saving}>
+                    Clone
+                  </Button>
                   {builtin && (
                     <Button variant="ghost" icon={RotateCcw} onClick={resetToDefault} disabled={atDefault || saving}>
                       Reset to default
@@ -311,6 +363,7 @@ export default function AccessPage() {
       {creating && (
         <NewRoleDialog
           roles={roles}
+          initialFrom={cloneOf}
           onClose={() => setCreating(false)}
           onCreated={async (key) => {
             setCreating(false);
