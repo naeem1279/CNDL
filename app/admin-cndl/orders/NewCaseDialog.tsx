@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { ClientPicker } from '../_components/ClientPicker';
 import { FormDialog } from '../_components/FormDialog';
 import { Button, Field, Input, Segmented, Select } from '../_components/ui';
 import { DIVISIONS, ORDER_SOURCE_META, VITA_SHADES } from '../_lib/constants';
@@ -95,6 +96,14 @@ export function NewCaseDialog({
       addToLedger: id ? x.addToLedger || x.historical : false,
     }));
     setErrors((x) => ({ ...x, doctorName: undefined }));
+  };
+
+  /** From the picker's "Add … as a new client" row: the typed text becomes the phone or the clinic name. */
+  const startQuick = (typed: string) => {
+    pickAccount('');
+    const text = typed.trim();
+    const isPhone = text.replace(/\D/g, '').length >= 6;
+    setQuick({ name: isPhone ? '' : text, ownerName: '', phone: isPhone ? text : '', division: 'DHAKA' });
   };
 
   const createQuick = async () => {
@@ -223,15 +232,15 @@ export function NewCaseDialog({
       <div className={SECTION}>
         <div className="flex items-end justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <Field label="Client account" htmlFor="case-clientAccountId" hint={account ? `Owes ${formatBDT(account.currentBalance)} · ${account.phone}` : 'Leave empty for a walk-in'}>
-              <Select id="case-clientAccountId" value={f.clientAccountId} onChange={(e) => pickAccount(e.target.value)}>
-                <option value="">Walk-in (type details below)</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name} · {a.ownerName}
-                  </option>
-                ))}
-              </Select>
+            <Field label="Client account" htmlFor="case-clientAccountId" hint={account ? `Owes ${formatBDT(account.currentBalance)} · ${account.phone}` : 'Search by name, clinic, doctor or phone. Leave empty for a walk-in.'}>
+              <ClientPicker
+                id="case-clientAccountId"
+                accounts={accounts}
+                value={f.clientAccountId}
+                onChange={pickAccount}
+                emptyLabel="Walk-in (type details below)"
+                onCreate={startQuick}
+              />
             </Field>
           </div>
         </div>
