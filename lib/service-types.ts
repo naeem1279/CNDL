@@ -9,5 +9,4 @@ export type ServiceApiRow = {
   imageUrl?: string | null;
   turnaroundDays?: number | null;
   warrantyYears?: number | null;
-  basePrice?: string | null;
 };

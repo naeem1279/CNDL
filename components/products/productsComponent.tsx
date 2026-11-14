@@ -134,7 +134,6 @@ type DynamicItem = {
   image: string;
   turnaroundDays?: number;
   warrantyYears?: number;
-  basePrice?: string | null;
 };
 
 export default function ProductsComponent() {
@@ -167,7 +166,6 @@ export default function ProductsComponent() {
               image: s.imageUrl || fallback?.image || `/images/Services${idx % 6 ? `_${idx % 6}` : ''}.webp`,
               turnaroundDays: s.turnaroundDays,
               warrantyYears: s.warrantyYears,
-              basePrice: s.basePrice,
             };
           });
           setItems(mapped);
