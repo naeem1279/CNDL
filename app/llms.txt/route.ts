@@ -11,25 +11,20 @@ export const revalidate = 3600;
 const BASE = 'https://cndl-global.com';
 
 export async function GET() {
-  let products: { name: string; category: string; basePrice: string | null; turnaroundDays: number; warrantyYears: number }[] = [];
+  let products: { name: string; category: string; turnaroundDays: number; warrantyYears: number }[] = [];
   let posts: { title: string; slug: string; excerpt: string }[] = [];
   try {
     [products, posts] = await Promise.all([
       prisma.service.findMany({
         where: { isActive: true },
         orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
-        select: { name: true, category: true, basePrice: true, turnaroundDays: true, warrantyYears: true },
+        select: { name: true, category: true, turnaroundDays: true, warrantyYears: true },
       }),
       prisma.blogPost.findMany({ orderBy: { publishedAt: 'desc' }, select: { title: true, slug: true, excerpt: true } }),
     ]);
   } catch {
     // Database unavailable: still serve the static facts below.
   }
-
-  const price = (p: string | null) => {
-    const v = (p || '').replace(/[৳\s]/g, '');
-    return v ? `from ৳${v}` : 'price on request';
-  };
 
   const lines = [
     '# CN Dental Lab (CNDL Global)',
@@ -60,7 +55,7 @@ export async function GET() {
       ? products.map(
           (p) =>
             // A warranty of 0 means "not set" in the catalogue, so it is left out rather than shown as "0-year".
-            `- ${p.name} (${p.category}): ${price(p.basePrice)}, about ${p.turnaroundDays} working days${p.warrantyYears > 0 ? `, ${p.warrantyYears}-year warranty` : ''}`
+            `- ${p.name} (${p.category}): price on request, about ${p.turnaroundDays} working days${p.warrantyYears > 0 ? `, ${p.warrantyYears}-year warranty` : ''}`
         )
       : [`- See the [product catalogue](${BASE}/products)`]),
     '',

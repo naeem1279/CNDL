@@ -92,8 +92,7 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
     body: (
       <>
         <p>
-          Where a starting price is published, it is shown in the product catalogue. For a full price list, request
-          pricing through our{' '}
+          Prices are not published on this website. To receive our price list, request pricing through our{' '}
           <Link href="/contact#contact-form" className="font-medium text-[#1668AD] underline-offset-2 hover:underline">contact form</Link>{' '}
           or call the lab.
         </p>

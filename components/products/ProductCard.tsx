@@ -20,7 +20,6 @@ export type ProductCardData = {
   image?: string | null;
   turnaroundDays?: number | null;
   warrantyYears?: number | null;
-  basePrice?: string | null;
 };
 
 const TEXT = {
@@ -53,8 +52,6 @@ export default function ProductCard({ item, sizes }: { item: ProductCardData; si
     item.turnaroundDays ? tx.days(num(item.turnaroundDays)) : null,
     item.warrantyYears && item.warrantyYears > 0 ? tx.warranty(num(item.warrantyYears)) : null,
   ].filter(Boolean) as string[];
-  const price = Number(item.basePrice);
-  const hasPrice = !!item.basePrice && Number.isFinite(price) && price > 0;
   const src = item.image;
   const unoptimized = !!src && (src.startsWith('/images/uploads') || /^https?:/.test(src));
 
@@ -96,15 +93,8 @@ export default function ProductCard({ item, sizes }: { item: ProductCardData; si
         {item.desc && <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-500">{item.desc}</p>}
 
         <div className="mt-auto flex items-end justify-between gap-3 pt-6">
-          {hasPrice ? (
-            <p className="leading-tight">
-              <span className="block text-xs text-slate-500">{tx.from}</span>
-              {/* ৳ keeps Noto Sans Bengali even in English: device fonts draw it small and thin next to Inter digits. */}
-              <span className="text-xl font-semibold tabular-nums tracking-tight text-slate-900">৳{num(price)}</span>
-            </p>
-          ) : (
-            <span />
-          )}
+          {/* Prices are not published; they are shared on request. */}
+          <span />
           <ButtonLink
             href={`/order-create?product=${encodeURIComponent(item.title)}`}
             aria-label={tx.ctaFor(title)}

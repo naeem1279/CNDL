@@ -21,7 +21,6 @@ type HomeProduct = {
   tag?: string | null;
   turnaroundDays?: number;
   warrantyYears?: number;
-  basePrice?: string | null;
 };
 
 /**
@@ -91,7 +90,6 @@ export default function ServicesSection() {
               image: s.imageUrl || fallback?.image || `/images/Services${idx % 6 ? `_${idx % 6}` : ''}.webp`,
               turnaroundDays: s.turnaroundDays,
               warrantyYears: s.warrantyYears,
-              basePrice: s.basePrice,
             };
           });
           setProducts(mapped);

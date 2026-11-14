@@ -18,7 +18,6 @@ export async function GET() {
         imageUrl: true,
         turnaroundDays: true,
         warrantyYears: true,
-        basePrice: true,
       },
     });
     return NextResponse.json({ services });
