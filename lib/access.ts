@@ -188,7 +188,7 @@ export async function authorize(
 /* ------------------------------------------------------------------ audit */
 
 export type AccessLogEntry = {
-  action: 'ROLE_CREATE' | 'ROLE_UPDATE' | 'ROLE_DELETE' | 'USER_ROLE_CHANGE';
+  action: 'ROLE_CREATE' | 'ROLE_UPDATE' | 'ROLE_DELETE' | 'USER_ROLE_CHANGE' | 'EXPORT_ORDERS';
   roleKey?: string | null;
   targetUserId?: string | null;
   before?: unknown;

@@ -1,138 +1,148 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { AlarmClock, CheckCheck, ChevronRight, FlaskConical, Layers, Plus, Search } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlarmClock, ArrowDown, ArrowUp, ArrowUpDown, ChevronRight, Download, FlaskConical, Layers, Plus, Search, SlidersHorizontal, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  BILLING_LABEL, BILLING_VALUES, CATEGORIES, DEFAULT_FILTERS, PAGE_SIZES, SOURCE_VALUES, filtersToQuery, parseOrderFilters,
+  type OrderFilters, type SortKey,
+} from '@/lib/orders-filters';
 import { Pager } from '../_components/Pager';
 import { SectionFrame } from '../_components/SectionFrame';
 import type { Kpi } from '../_components/StatTile';
-import { Badge, Button, EmptyState, Input, Select } from '../_components/ui';
+import { Badge, Button, EmptyState, Field, Input, Select } from '../_components/ui';
+import { ORDER_SOURCE_META } from '../_lib/constants';
 import { loadResources } from '../_lib/resources';
 import { useAdmin } from '../_lib/session';
 import type { ErpAccount, ErpAgent, ErpLedgerEntry, Order, ServiceRow } from '../_lib/types';
-import { apiError, bdMonthKey, formatBDT, formatDay, parseClinical } from '../_lib/utils';
+import { apiError, formatBDT, formatDay, parseClinical } from '../_lib/utils';
 import { CasePanel } from './CasePanel';
-import { LINE, STAGES, casePermissions, dispatchBills, dueThisWeek, isLate, isOpen, stageOf } from './cases';
+import { LINE, STAGES, casePermissions, dispatchBills, isLate, stageOf } from './cases';
 import { NewCaseDialog } from './NewCaseDialog';
 
-type StageFilter = 'open' | 'late' | 'all' | string;
-type Sort = 'newest' | 'due';
-const PER_PAGE = 20;
 const cx = (...p: (string | false | null | undefined)[]) => p.filter(Boolean).join(' ');
+type Summary = { count: number; open: number; late: number; billed: number | null; commission: number | null };
+
+/** Filters that are not the default (the "Clear" button and the active-filter count use this). */
+const activeCount = (f: OrderFilters) =>
+  [f.q, f.stage !== DEFAULT_FILTERS.stage, f.from, f.to, f.client, f.agent, f.category, f.billing, f.source].filter(Boolean).length;
 
 export default function OrdersPage() {
   const { me, adminFetch, askConfirm, handleAuthLoss } = useAdmin();
   const perm = casePermissions(me.permissions);
+  const canMoney = me.permissions.includes('cases.view_money');
+  const canExport = me.permissions.includes('exports.run'); // locked: Super Admin only
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState<Summary>({ count: 0, open: 0, late: 0, billed: null, commission: null });
   const [accounts, setAccounts] = useState<ErpAccount[]>([]);
   const [agents, setAgents] = useState<ErpAgent[]>([]);
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [ledger, setLedger] = useState<ErpLedgerEntry[]>([]);
 
-  const [query, setQuery] = useState('');
-  const [stageFilter, setStageFilter] = useState<StageFilter>('open');
-  const [sort, setSort] = useState<Sort>('newest');
-  const [page, setPage] = useState(1);
+  // The filters live in the URL, so a filtered view can be bookmarked or shared.
+  const [filters, setFilters] = useState<OrderFilters>(DEFAULT_FILTERS);
+  const [ready, setReady] = useState(false);
+  const [qInput, setQInput] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const seq = useRef(0);
 
-  const fetchData = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+  const patch = useCallback((p: Partial<OrderFilters>) => setFilters((f) => ({ ...f, page: 1, ...p })), []);
+
+  // Read the URL once. Older deep links still work: ?stage=late, ?case=<id>, ?new=1.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const f = parseOrderFilters(p);
+    const cs = p.get('case');
+    if (cs) f.q = cs.slice(0, 100);
+    setFilters(f);
+    setQInput(f.q);
+    if (activeCount(f) > (f.q ? 1 : 0) + (f.stage !== DEFAULT_FILTERS.stage ? 1 : 0)) setShowFilters(true);
+    if (p.get('new') === '1' && perm.canCreate) setNewOpen(true);
+    setReady(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the URL in step with the filters (no navigation, no history entry per keystroke).
+  useEffect(() => {
+    if (!ready) return;
+    const qs = filtersToQuery(filters);
+    window.history.replaceState(null, '', `${window.location.pathname}${qs ? `?${qs}` : ''}`);
+  }, [filters, ready]);
+
+  // Search box: wait for a pause in typing before asking the server.
+  useEffect(() => {
+    if (!ready || qInput.trim() === filters.q) return;
+    const t = setTimeout(() => patch({ q: qInput.trim() }), 300);
+    return () => clearTimeout(t);
+  }, [qInput, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchList = useCallback(
+    async (isRefresh = false) => {
+      const mine = ++seq.current;
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+      try {
+        const res = await adminFetch(`/api/admin/erp/orders?${filtersToQuery(filters)}`);
+        if (res.status === 401 || mine !== seq.current) return;
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) return void toast.error(apiError(body, 'Failed to load lab cases'));
+        setOrders(body.orders ?? []);
+        setTotal(body.total ?? 0);
+        setSummary(body.summary);
+        if (body.page && body.page !== filters.page) setFilters((f) => ({ ...f, page: body.page }));
+        setLastSyncedAt(Date.now());
+      } catch {
+        if (mine === seq.current) toast.error('Failed to load lab cases');
+      } finally {
+        if (mine === seq.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    [adminFetch, filters]
+  );
+
+  useEffect(() => {
+    if (ready) void fetchList();
+  }, [ready, fetchList]);
+
+  // Reference data for names, the new-case form and the dispatch-bill check (loaded once).
+  const loadRefs = useCallback(async () => {
     try {
-      const r = await loadResources(adminFetch, ['data', 'accounts', 'services', 'ledger'], me);
+      const r = await loadResources(adminFetch, ['accounts', 'services', 'ledger'], me);
       if (!r) return;
-      if (r.orders) setOrders(r.orders);
       if (r.accounts) setAccounts(r.accounts);
       if (r.agents) setAgents(r.agents);
       if (r.services) setServices(r.services);
       if (r.ledger) setLedger(r.ledger);
-      setLastSyncedAt(Date.now());
     } catch {
-      toast.error('Failed to load lab cases');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      /* names fall back to what the case itself stores */
     }
-  };
-
+  }, [adminFetch, me]);
   useEffect(() => {
-    void fetchData();
+    void loadRefs();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Deep links: ?new=1 (Overview "Submit a case"), ?stage=late|open|<stage>, ?case=<caseId>.
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    if (![...p.keys()].length) return;
-    if (p.get('new') === '1' && perm.canCreate) setNewOpen(true);
-    const st = p.get('stage');
-    if (st) setStageFilter(st);
-    const cs = p.get('case');
-    if (cs) setQuery(cs);
-    window.history.replaceState(null, '', window.location.pathname);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => setPage(1), [query, stageFilter, sort]);
 
   /* --------------------------------------------------------- derived */
 
   const accountName = useMemo(() => new Map(accounts.map((a) => [a.id, a.name])), [accounts]);
   const agentName = useMemo(() => new Map(agents.map((a) => [a.id, a.name])), [agents]);
-
-  const searched = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return orders;
-    const qDigits = q.replace(/\D/g, '');
-    return orders.filter((o) => {
-      const c = parseClinical(o.productType);
-      const text = [o.caseId, o.customerName, o.clinicName, c.patient, c.work, c.teeth].some((v) => (v || '').toLowerCase().includes(q));
-      return text || (qDigits.length >= 3 && o.phone.replace(/\D/g, '').includes(qDigits));
-    });
-  }, [orders, query]);
-
-  const counts = useMemo(() => {
-    const m: Record<string, number> = { open: 0, late: 0, all: searched.length };
-    for (const o of searched) {
-      const s = stageOf(o.status).value;
-      m[s] = (m[s] || 0) + 1;
-      if (isOpen(o)) m.open++;
-      if (isLate(o)) m.late++;
-    }
-    return m;
-  }, [searched]);
-
-  const filtered = useMemo(() => {
-    const list = searched.filter((o) =>
-      stageFilter === 'all' ? true : stageFilter === 'open' ? isOpen(o) : stageFilter === 'late' ? isLate(o) : stageOf(o.status).value === stageFilter
-    );
-    if (sort === 'due') {
-      const t = (o: Order) => (o.deliveryDate ? new Date(o.deliveryDate).getTime() : Number.MAX_SAFE_INTEGER);
-      return [...list].sort((a, b) => t(a) - t(b));
-    }
-    return list; // the API returns newest first
-  }, [searched, stageFilter, sort]);
-
-  const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const curPage = Math.min(page, pages);
-  const pageRows = filtered.slice((curPage - 1) * PER_PAGE, curPage * PER_PAGE);
-
-  const open = orders.filter(isOpen);
-  const late = orders.filter(isLate);
-  const thisWeek = orders.filter(dueThisWeek);
-  const inQc = orders.filter((o) => stageOf(o.status).value === 'Quality Control');
-  const month = bdMonthKey(new Date().toISOString());
-  const dispatchedThisMonth = orders.filter((o) => ['Dispatched', 'Delivered'].includes(stageOf(o.status).value) && bdMonthKey(o.updatedAt) === month);
+  const sortedAccounts = useMemo(() => [...accounts].sort((a, b) => a.name.localeCompare(b.name)), [accounts]);
 
   const kpis: Kpi[] = [
-    { label: 'In the lab', value: String(open.length), icon: Layers, sub: `${thisWeek.length} due this week` },
-    { label: 'Late', value: String(late.length), icon: AlarmClock, sub: 'Past due date', subTone: late.length ? 'down' : 'neutral' },
-    { label: 'In quality control', value: String(inQc.length), icon: FlaskConical, sub: 'Next to dispatch' },
-    { label: 'Dispatched', value: String(dispatchedThisMonth.length), icon: CheckCheck, sub: 'This month' },
+    { label: 'Matching cases', value: String(summary.count), icon: Layers, sub: activeCount(filters) ? 'With the filters below' : 'In the lab' },
+    { label: 'In the lab', value: String(summary.open), icon: FlaskConical, sub: 'Not yet dispatched' },
+    { label: 'Late', value: String(summary.late), icon: AlarmClock, sub: 'Past due date', subTone: summary.late ? 'down' : 'neutral' },
+    ...(summary.billed !== null ? [{ label: 'Billed amount', value: formatBDT(summary.billed), icon: Wallet, sub: 'Of the matching cases' } as Kpi] : []),
   ];
 
   /* ---------------------------------------------------------- writes */
@@ -150,10 +160,7 @@ export default function OrdersPage() {
       if (!ok) return;
     }
     if (value === 'Cancelled') {
-      const ok = await askConfirm(`Mark ${o.caseId} as cancelled? It leaves the production line.`, {
-        title: 'Cancel this case?',
-        confirmLabel: 'Cancel case',
-      });
+      const ok = await askConfirm(`Mark ${o.caseId} as cancelled? It leaves the production line.`, { title: 'Cancel this case?', confirmLabel: 'Cancel case' });
       if (!ok) return;
     }
     setSavingId(o.id);
@@ -173,7 +180,8 @@ export default function OrdersPage() {
       }
       setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, ...body } : x)));
       toast.success(`${o.caseId} moved to ${to.value === 'Quality Control' ? 'quality control' : to.label}${bill > 0 ? ` · ${formatBDT(bill)} billed` : ''}`);
-      if (bill > 0) void fetchData(true); // pick up the new invoice
+      void fetchList(true); // the case may now belong to a different filter, and the counts changed
+      if (bill > 0) void loadRefs(); // pick up the new invoice
     } catch {
       setOrders((prev) => prev.map((x) => (x.id === o.id ? o : x)));
       toast.error('Network error — the stage was not changed');
@@ -189,9 +197,9 @@ export default function OrdersPage() {
       if (res.status === 401) return handleAuthLoss();
       const body = await res.json().catch(() => ({}));
       if (!res.ok) return void toast.error(apiError(body, 'Could not delete the case'));
-      setOrders((prev) => prev.filter((x) => x.id !== o.id));
       setOpenId(null);
       toast.success(`Case ${o.caseId} deleted`);
+      void fetchList(true);
     } catch {
       toast.error('Network error — nothing was deleted');
     }
@@ -207,17 +215,62 @@ export default function OrdersPage() {
     }
   };
 
+  /** Super Admin only (the server enforces it; the button is just not shown to anyone else). */
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const res = await adminFetch(`/api/admin/erp/orders/export?${filtersToQuery(filters, { withPaging: false })}`);
+      if (res.status === 401) return handleAuthLoss();
+      if (!res.ok) return void toast.error(apiError(await res.json().catch(() => ({})), 'Could not export the cases'));
+      const blob = await res.blob();
+      const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '')?.[1] ?? 'cndl-cases.csv';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${total} ${total === 1 ? 'case' : 'cases'} · ${name}`);
+    } catch {
+      toast.error('Network error — nothing was exported');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   /* ------------------------------------------------------------ bits */
 
-  const chips: { key: StageFilter; label: string; dot?: string }[] = [
+  const chips: { key: string; label: string; dot?: string }[] = [
     { key: 'open', label: 'In the lab' },
     { key: 'late', label: 'Late' },
     ...LINE.map((s) => ({ key: s.value, label: s.label, dot: s.dot })),
     { key: 'Delivered', label: 'Delivered' },
+    { key: 'Cancelled', label: 'Cancelled' },
     { key: 'all', label: 'All' },
   ];
   const chip = (on: boolean) =>
     cx('inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-table font-medium transition-colors', on ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900');
+
+  const setSort = (key: SortKey) =>
+    patch(filters.sort === key ? { dir: filters.dir === 'asc' ? 'desc' : 'asc' } : { sort: key, dir: key === 'case' || key === 'client' || key === 'due' ? 'asc' : 'desc' });
+  const sortHead = (key: SortKey, label: string, cls: string) => {
+    const on = filters.sort === key;
+    const Icon = !on ? ArrowUpDown : filters.dir === 'asc' ? ArrowUp : ArrowDown;
+    return (
+      <th scope="col" aria-sort={on ? (filters.dir === 'asc' ? 'ascending' : 'descending') : 'none'} className={cx('py-1 font-medium', cls)}>
+        <button
+          type="button"
+          onClick={() => setSort(key)}
+          className={cx('-ml-2 inline-flex min-h-[36px] items-center gap-1 rounded-md px-2 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40', on && 'text-zinc-900')}
+        >
+          {label}
+          <Icon size={13} aria-hidden="true" className={on ? 'text-zinc-700' : 'text-zinc-300'} />
+        </button>
+      </th>
+    );
+  };
 
   const stageCell = (o: Order) => {
     const s = stageOf(o.status);
@@ -264,7 +317,22 @@ export default function OrdersPage() {
     );
 
   const openOrder = openId ? orders.find((o) => o.id === openId) : undefined;
-  const filtersOn = query.trim() !== '' || stageFilter !== 'open';
+  const nActive = activeCount(filters);
+  const clearAll = () => {
+    setQInput('');
+    setFilters({ ...DEFAULT_FILTERS, sort: filters.sort, dir: filters.dir, size: filters.size });
+  };
+  const pageSizeSelect = (
+    <div className="w-[8.5rem] shrink-0">
+    <Select aria-label="Cases per page" value={String(filters.size)} onChange={(e) => patch({ size: Number(e.target.value) })}>
+      {PAGE_SIZES.map((n) => (
+        <option key={n} value={n}>
+          {n} per page
+        </option>
+      ))}
+    </Select>
+    </div>
+  );
 
   /* ----------------------------------------------------------- render */
 
@@ -272,17 +340,28 @@ export default function OrdersPage() {
     <SectionFrame
       tab="orders"
       kpis={kpis}
-      loading={loading}
+      loading={loading && orders.length === 0}
       refreshing={refreshing}
       lastSyncedAt={lastSyncedAt}
-      onRefresh={() => fetchData(true)}
+      onRefresh={() => {
+        void fetchList(true);
+        void loadRefs();
+      }}
       actions={
-        perm.canCreate ? (
-          <Button variant="primary" icon={Plus} onClick={() => setNewOpen(true)}>
-            <span className="hidden sm:inline">New case</span>
-            <span className="sm:hidden">New</span>
-          </Button>
-        ) : undefined
+        <>
+          {canExport && (
+            <Button variant="secondary" icon={Download} onClick={() => void exportCsv()} disabled={exporting || total === 0}>
+              <span className="hidden sm:inline">{exporting ? 'Exporting…' : 'Export CSV'}</span>
+              <span className="sm:hidden">{exporting ? '…' : 'CSV'}</span>
+            </Button>
+          )}
+          {perm.canCreate && (
+            <Button variant="primary" icon={Plus} onClick={() => setNewOpen(true)}>
+              <span className="hidden sm:inline">New case</span>
+              <span className="sm:hidden">New</span>
+            </Button>
+          )}
+        </>
       }
     >
       <div className="rounded-lg border border-zinc-200 bg-white">
@@ -290,38 +369,118 @@ export default function OrdersPage() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative w-full sm:w-72">
               <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
-              <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search case ID, doctor, patient or phone" aria-label="Search cases" className="pl-9" />
+              <Input type="search" value={qInput} onChange={(e) => setQInput(e.target.value)} placeholder="Search case ID, doctor, patient or phone" aria-label="Search cases" className="pl-9" />
             </div>
-            <div className="w-full sm:ml-auto sm:w-48">
-              <Select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
-                <option value="newest">Newest first</option>
-                <option value="due">Delivery date first</option>
+            <Button variant="secondary" icon={SlidersHorizontal} onClick={() => setShowFilters((v) => !v)} aria-expanded={showFilters}>
+              Filters{nActive ? ` · ${nActive}` : ''}
+            </Button>
+            {nActive > 0 && (
+              <Button variant="ghost" onClick={clearAll}>
+                Clear
+              </Button>
+            )}
+            <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
+              <div className="min-w-0 flex-1 sm:w-48 sm:flex-none md:hidden">
+              <Select
+                aria-label="Sort"
+                value={`${filters.sort}:${filters.dir}`}
+                onChange={(e) => {
+                  const [sort, dir] = e.target.value.split(':');
+                  patch({ sort: sort as SortKey, dir: dir as 'asc' | 'desc' });
+                }}
+              >
+                <option value="created:desc">Newest first</option>
+                <option value="created:asc">Oldest first</option>
+                <option value="due:asc">Delivery date first</option>
+                <option value="client:asc">Doctor A–Z</option>
+                {canMoney && <option value="amount:desc">Highest amount</option>}
               </Select>
+              </div>
+              {pageSizeSelect}
             </div>
           </div>
+
           <div role="radiogroup" aria-label="Filter by stage" className="no-scrollbar -mx-1 flex items-center gap-1 overflow-x-auto px-1">
             {chips.map((c) => (
-              <button key={c.key} type="button" role="radio" aria-checked={stageFilter === c.key} onClick={() => setStageFilter(c.key)} className={chip(stageFilter === c.key)}>
+              <button key={c.key} type="button" role="radio" aria-checked={filters.stage === c.key} onClick={() => patch({ stage: c.key })} className={chip(filters.stage === c.key)}>
                 {c.dot && <span aria-hidden="true" className={cx('h-1.5 w-1.5 rounded-full', c.dot)} />}
                 {c.label}
-                <span className={cx('tabular-nums', stageFilter === c.key ? 'text-zinc-300' : 'text-zinc-400')}>{counts[c.key] ?? 0}</span>
               </button>
             ))}
           </div>
+
+          {showFilters && (
+            <div className="grid gap-3 rounded-lg bg-zinc-50 p-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Field label="Received from" htmlFor="of-from">
+                <Input id="of-from" type="date" value={filters.from} max={filters.to || undefined} onChange={(e) => patch({ from: e.target.value })} />
+              </Field>
+              <Field label="Received to" htmlFor="of-to">
+                <Input id="of-to" type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => patch({ to: e.target.value })} />
+              </Field>
+              <Field label="Client" htmlFor="of-client">
+                <Select id="of-client" value={filters.client} onChange={(e) => patch({ client: e.target.value })}>
+                  <option value="">All clients</option>
+                  {sortedAccounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              {me.permissions.includes('cases.view') ? (
+                <Field label="Agent" htmlFor="of-agent">
+                  <Select id="of-agent" value={filters.agent} onChange={(e) => patch({ agent: e.target.value })}>
+                    <option value="">All agents</option>
+                    {agents.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              ) : null}
+              <Field label="Type of work" htmlFor="of-category" hint="Worked out from the work description">
+                <Select id="of-category" value={filters.category} onChange={(e) => patch({ category: e.target.value })}>
+                  <option value="">All work</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c.key} value={c.key}>
+                      {c.label}
+                    </option>
+                  ))}
+                  <option value="other">Other work</option>
+                </Select>
+              </Field>
+              {canMoney && (
+                <Field label="Billing" htmlFor="of-billing">
+                  <Select id="of-billing" value={filters.billing} onChange={(e) => patch({ billing: e.target.value as OrderFilters['billing'] })}>
+                    <option value="">Any</option>
+                    {BILLING_VALUES.map((b) => (
+                      <option key={b} value={b}>
+                        {BILLING_LABEL[b]}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
+              <Field label="How it arrived" htmlFor="of-source">
+                <Select id="of-source" value={filters.source} onChange={(e) => patch({ source: e.target.value })}>
+                  <option value="">Any source</option>
+                  {SOURCE_VALUES.map((s) => (
+                    <option key={s} value={s}>
+                      {ORDER_SOURCE_META[s]?.label ?? s}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+          )}
         </div>
 
-        {pageRows.length === 0 ? (
-          <EmptyState icon={Layers} title={orders.length ? 'No cases match' : 'No cases yet'}>
-            {orders.length && filtersOn ? (
-              <button
-                type="button"
-                className="font-medium text-brand-700 hover:underline"
-                onClick={() => {
-                  setQuery('');
-                  setStageFilter('all');
-                }}
-              >
-                Show all cases
+        {orders.length === 0 ? (
+          <EmptyState icon={Layers} title={loading ? 'Loading cases…' : nActive ? 'No cases match' : 'No cases yet'}>
+            {loading ? null : nActive ? (
+              <button type="button" className="font-medium text-brand-700 hover:underline" onClick={clearAll}>
+                Clear the filters
               </button>
             ) : (
               'Cases from the website and the New case form appear here.'
@@ -332,15 +491,16 @@ export default function OrdersPage() {
             <table className="hidden w-full table-fixed text-left md:table">
               <thead>
                 <tr className="border-b border-zinc-200 text-meta text-zinc-500">
-                  <th className="w-[150px] px-4 py-2.5 font-medium">Case</th>
-                  <th className="px-3 py-2.5 font-medium">Doctor · work</th>
-                  <th className="w-[110px] px-3 py-2.5 font-medium">Delivery</th>
-                  <th className="w-[160px] px-3 py-2.5 font-medium">Stage</th>
+                  {sortHead('created', 'Case', 'w-[150px] px-4')}
+                  {sortHead('client', 'Doctor · work', 'px-3')}
+                  {sortHead('due', 'Delivery', 'w-[110px] px-3')}
+                  {sortHead('stage', 'Stage', 'w-[160px] px-3')}
+                  {canMoney && sortHead('amount', 'Amount', 'hidden w-[110px] px-3 text-right lg:table-cell')}
                   <th className="w-10 py-2.5" aria-label="Open" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {pageRows.map((o) => (
+                {orders.map((o) => (
                   <tr key={o.id} onClick={() => setOpenId(o.id)} className="group cursor-pointer hover:bg-zinc-50">
                     <td className="px-4 py-2.5">
                       <button
@@ -366,6 +526,7 @@ export default function OrdersPage() {
                       {isLate(o) && <span className="block text-meta text-rose-700">Late</span>}
                     </td>
                     <td className="px-3 py-2.5">{stageCell(o)}</td>
+                    {canMoney && <td className="hidden px-3 py-2.5 text-right text-table lg:table-cell tabular-nums text-zinc-700">{o.billedAmount ? formatBDT(o.billedAmount) : <span className="text-zinc-400">—</span>}</td>}
                     <td className="py-2.5 pr-3 text-right">
                       <ChevronRight size={16} className="inline text-zinc-300 group-hover:text-zinc-500" aria-hidden="true" />
                     </td>
@@ -375,7 +536,7 @@ export default function OrdersPage() {
             </table>
 
             <ul className="divide-y divide-zinc-100 md:hidden">
-              {pageRows.map((o) => {
+              {orders.map((o) => {
                 const s = stageOf(o.status);
                 return (
                   <li key={o.id}>
@@ -391,6 +552,7 @@ export default function OrdersPage() {
                           {s.label}
                           {o.deliveryDate && <span className={isLate(o) ? 'text-rose-700' : 'text-zinc-400'}>· due {formatDay(o.deliveryDate)}</span>}
                           {isLate(o) && <Badge tone="danger">Late</Badge>}
+                          {canMoney && o.billedAmount ? <span className="text-zinc-500">· {formatBDT(o.billedAmount)}</span> : null}
                         </p>
                       </div>
                       <ChevronRight size={16} className="shrink-0 text-zinc-300" aria-hidden="true" />
@@ -402,7 +564,7 @@ export default function OrdersPage() {
           </>
         )}
         <div className="px-4 pb-4">
-          <Pager page={curPage} total={filtered.length} perPage={PER_PAGE} onPage={setPage} noun={filtered.length === 1 ? 'case' : 'cases'} />
+          <Pager page={filters.page} total={total} perPage={filters.size} onPage={(p) => setFilters((f) => ({ ...f, page: p }))} noun={total === 1 ? 'case' : 'cases'} />
         </div>
       </div>
 
@@ -431,9 +593,8 @@ export default function OrdersPage() {
           onAccountCreated={(a) => setAccounts((prev) => [a, ...prev])}
           onClose={() => setNewOpen(false)}
           onSaved={(caseId) => {
-            setStageFilter('open');
-            setQuery(caseId);
-            void fetchData(true);
+            setQInput(caseId);
+            setFilters({ ...DEFAULT_FILTERS, q: caseId, stage: 'all', size: filters.size });
           }}
         />
       )}
