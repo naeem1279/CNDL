@@ -33,11 +33,14 @@ export default function Tracking() {
   }, [off]);
 
   if (off || !GTM_ID) return null;
-  const host = process.env.NEXT_PUBLIC_GTM_SERVER_URL || 'https://www.googletagmanager.com';
+  const google = 'https://www.googletagmanager.com';
+  const host = process.env.NEXT_PUBLIC_GTM_SERVER_URL || 'https://sgtm.cndl-global.com';
 
+  // First-party sGTM first; if it cannot serve gtm.js (e.g. its Web Container client is
+  // not set up yet), fall back to Google so tracking never goes dark.
   return (
     <Script id="gtm-loader" strategy="afterInteractive">
-      {`window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=document.getElementsByTagName('script')[0],j=document.createElement('script');j.async=true;j.src='${host}/gtm.js?id=${GTM_ID}';f.parentNode.insertBefore(j,f);`}
+      {`window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});(function(){var f=document.getElementsByTagName('script')[0];function load(src,fb){var j=document.createElement('script');j.async=true;j.src=src+'/gtm.js?id=${GTM_ID}';if(fb){j.onerror=function(){load(fb)}}f.parentNode.insertBefore(j,f)}load('${host}','${host === google ? '' : google}')})();`}
     </Script>
   );
 }
