@@ -12,6 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { track } from '@/lib/track';
 
 const WHATSAPP_URL =
   'https://wa.me/8801743167963?text=Hello%20CNDL,%20I%20would%20like%20to%20discuss%20a%20dental%20case.';
@@ -87,6 +88,7 @@ function ContactPage() {
       });
 
       if (res.ok) {
+        track('generate_lead');
         setForm({ name: '', email: '', phone: '', message: '', subject: '' });
         setIsModalOpen(true);
       } else {
