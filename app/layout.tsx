@@ -6,6 +6,7 @@ import '../style/globals.css';
 import { Toaster } from 'sonner';
 import SiteChrome from '@/components/layout/SiteChrome';
 import { OG_IMAGE } from '@/lib/seo';
+import Tracking from '@/components/analytics/Tracking';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -164,6 +165,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>
         <Toaster position="bottom-right" richColors duration={5000} />
+        <Tracking />
       </body>
     </html>
   );

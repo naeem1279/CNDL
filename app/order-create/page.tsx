@@ -8,6 +8,7 @@ import { Button, buttonClass } from '@/components/ui/Button';
 import { Check, CheckCircle2, Loader2, Truck, UploadCloud } from 'lucide-react';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { track } from '@/lib/track';
 
 type FormState = {
   dentalName: string;
@@ -161,6 +162,7 @@ export default function OrderCreatePage() {
       const res = await fetch('/api/order', { method: 'POST', body: fd });
 
       if (res.ok) {
+        track('submit_case', { service: form.service || undefined });
         toast.success('Order submitted successfully!');
         setStep(1);
         setForm({
