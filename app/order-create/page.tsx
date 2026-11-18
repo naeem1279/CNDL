@@ -4,9 +4,10 @@ import type { ServiceApiRow } from '@/lib/service-types';
 import Input from '@/components/share/Input';
 import Select from '@/components/share/Select';
 import PageHeader from '@/components/ui/PageHeader';
-import { Button, buttonClass } from '@/components/ui/Button';
+import { Button, ButtonLink, buttonClass } from '@/components/ui/Button';
+import ThankYouModal from '@/components/ui/ThankYouModal';
 import { Check, CheckCircle2, Loader2, Truck, UploadCloud } from 'lucide-react';
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { track } from '@/lib/track';
 
@@ -59,6 +60,8 @@ const WHATSAPP_PATH =
 export default function OrderCreatePage() {
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState<{ caseId?: string } | null>(null);
+  const closeModal = useCallback(() => setSubmitted(null), []);
   const cardRef = useRef<HTMLDivElement>(null);
   const firstRender = useRef(true);
 
@@ -163,7 +166,8 @@ export default function OrderCreatePage() {
 
       if (res.ok) {
         track('submit_case', { service: form.service || undefined });
-        toast.success('Order submitted successfully!');
+        const data = await res.json().catch(() => null);
+        setSubmitted({ caseId: data?.order?.caseId });
         setStep(1);
         setForm({
           dentalName: '',
@@ -179,7 +183,8 @@ export default function OrderCreatePage() {
           agreed: false,
         });
       } else {
-        toast.error('Failed to submit order.');
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Failed to submit order.');
       }
     } catch {
       toast.error('An error occurred.');
@@ -422,6 +427,30 @@ export default function OrderCreatePage() {
           </div>
         </div>
       </div>
+
+      {submitted && (
+        <ThankYouModal
+          message="We have received your case and our team will review it shortly."
+          onClose={closeModal}
+        >
+          {submitted.caseId && (
+            <div className="w-full space-y-3">
+              <div className="rounded-xl bg-slate-50 px-4 py-3">
+                <p className="text-xs text-slate-500">Your Case ID</p>
+                <p className="mt-1 break-all font-mono text-lg font-semibold text-slate-900">{submitted.caseId}</p>
+              </div>
+              <ButtonLink
+                href={`/case-tracker?q=${encodeURIComponent(submitted.caseId)}`}
+                variant="secondary"
+                size="lg"
+                className="w-full"
+              >
+                Track This Case
+              </ButtonLink>
+            </div>
+          )}
+        </ThankYouModal>
+      )}
     </section>
   );
 }
