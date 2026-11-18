@@ -3,22 +3,24 @@
 import Script from 'next/script';
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { track } from '@/lib/track';
+import { track, trackPageView } from '@/lib/track';
 
 /** Public GTM web container (an identifier, not a secret). Override with NEXT_PUBLIC_GTM_ID. */
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-TCQ8XDL8';
 
 /**
- * Loads the GTM web container on public pages only (never the admin console or lab slip)
- * and reports WhatsApp / phone clicks. Meta Pixel and GA4 run as tags inside GTM, so they
- * are not loaded here as well (that would double-count every visit).
- * Set NEXT_PUBLIC_GTM_SERVER_URL (e.g. https://sgtm.cndl-global.com) once the server
- * container is live; the loader then comes from that first-party domain.
+ * Public pages only (never the admin console or lab slip): loads the Google tag from the
+ * first-party tagging server, routes GA4 hits through it, runs the Meta Pixel and reports
+ * WhatsApp / phone clicks.
  */
 export default function Tracking() {
   const pathname = usePathname() ?? '';
   const off =
     pathname.startsWith('/admin-cndl') || pathname.startsWith('/lab-slip');
+
+  useEffect(() => {
+    if (!off) trackPageView();
+  }, [off, pathname]);
 
   useEffect(() => {
     if (off) return;
@@ -40,7 +42,7 @@ export default function Tracking() {
   // not set up yet), fall back to Google so tracking never goes dark.
   return (
     <Script id="gtm-loader" strategy="afterInteractive">
-      {`window.dataLayer=window.dataLayer||[];window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});(function(){var f=document.getElementsByTagName('script')[0];function load(src,fb){var j=document.createElement('script');j.async=true;j.src=src+'/gtm.js?id=${GTM_ID}';if(fb){j.onerror=function(){load(fb)}}f.parentNode.insertBefore(j,f)}load('${host}','${host === google ? '' : google}')})();`}
+      {`window.dataLayer=window.dataLayer||[];window.gtag=function(){window.dataLayer.push(arguments)};window.gtag('set','server_container_url','${host}');window.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});(function(){var f=document.getElementsByTagName('script')[0];function load(src,fb){var j=document.createElement('script');j.async=true;j.src=src+'/gtm.js?id=${GTM_ID}';if(fb){j.onerror=function(){load(fb)}}f.parentNode.insertBefore(j,f)}load('${host}','${host === google ? '' : google}')})();`}
     </Script>
   );
 }
