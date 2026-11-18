@@ -5,14 +5,15 @@ import Select from '@/components/share/Select';
 import PageHeader from '@/components/ui/PageHeader';
 import { Button, buttonClass } from '@/components/ui/Button';
 import {
-  Facebook, Instagram, Mail, CheckCircle2, X, Phone, MapPin, Clock4,
+  Facebook, Instagram, Mail, Phone, MapPin, Clock4,
   Stethoscope, ScanLine, MessagesSquare, ArrowRight, Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { track } from '@/lib/track';
+import ThankYouModal from '@/components/ui/ThankYouModal';
 
 const WHATSAPP_URL =
   'https://wa.me/8801743167963?text=Hello%20CNDL,%20I%20would%20like%20to%20discuss%20a%20dental%20case.';
@@ -92,7 +93,8 @@ function ContactPage() {
         setForm({ name: '', email: '', phone: '', message: '', subject: '' });
         setIsModalOpen(true);
       } else {
-        toast.error('Failed to send message. Please try again.');
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || 'Failed to send message. Please try again.');
       }
     } catch {
       toast.error('An error occurred. Please try again later.');
@@ -101,15 +103,7 @@ function ContactPage() {
     }
   };
 
-  // Escape closes the confirmation window.
-  useEffect(() => {
-    if (!isModalOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsModalOpen(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isModalOpen]);
+  const closeModal = useCallback(() => setIsModalOpen(false), []);
 
   return (
     <section>
@@ -335,41 +329,11 @@ function ContactPage() {
         </div>
       </section>
 
-      {/* Confirmation Modal */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 px-4"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="sent-title"
-            className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl sm:p-8"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-              aria-label="Close modal"
-            >
-              <X size={20} />
-            </button>
-            <div className="flex flex-col items-center space-y-4 text-center">
-              <span className="flex size-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                <CheckCircle2 size={28} aria-hidden="true" />
-              </span>
-              <h3 id="sent-title" className="secondary text-2xl font-semibold text-slate-900">Message Sent!</h3>
-              <p className="text-slate-600">
-                Thank you for reaching out to us. We have received your message and our team will get back to you shortly.
-              </p>
-              <Button size="lg" onClick={() => setIsModalOpen(false)} className="mt-2 w-full">
-                Done
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ThankYouModal
+          message="We have received your message and our team will get back to you shortly."
+          onClose={closeModal}
+        />
       )}
     </section>
   );
