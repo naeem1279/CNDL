@@ -47,6 +47,9 @@ export const metadata: Metadata = {
     description: 'High-quality Zirconia, E-max, PFM restorations, and flexible dentures in Dhaka, Bangladesh.',
     images: [OG_IMAGE.url],
   },
+  verification: {
+    other: { 'facebook-domain-verification': '6c7lbmp28ehwkscmgnh9cjsajtt5j4' },
+  },
   robots: {
     index: true,
     follow: true,
