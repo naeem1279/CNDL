@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { ExpenseCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { readSession } from "@/lib/admin-auth";
 import { requirePermission } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
 
-const categoryEnum = z.enum(["RAW_MATERIAL", "LOGISTICS", "LAB_UTILITY", "MAINTENANCE", "OTHER"]);
+// Follows the Prisma enum, so a new category only needs adding to the schema.
+const categoryEnum = z.nativeEnum(ExpenseCategory);
 
 const expenseCreateSchema = z.object({
   category: categoryEnum,

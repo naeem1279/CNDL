@@ -24,12 +24,23 @@ export const PAYMENT_METHODS = ['Cash', 'bKash', 'Bank'];
 export { TOTAL_SHARES } from '@/lib/shares';
 
 
+/** Order = order in the expense form. Keys are stored in the database: never rename a key. */
 export const EXPENSE_CATEGORY_META: Record<string, { label: string; cls: string }> = {
-  RAW_MATERIAL: { label: 'Raw Material', cls: 'bg-teal-50 text-teal-700 border-teal-200' },
+  HOUSE_RENT: { label: 'House Rent', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  ELECTRICITY: { label: 'Electricity', cls: 'bg-yellow-50 text-yellow-800 border-yellow-200' },
+  WATER_BILL: { label: 'Water Bill', cls: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+  INTERNET_BILL: { label: 'Internet Bill', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  FOOD_BILL: { label: 'Food Bill', cls: 'bg-lime-50 text-lime-800 border-lime-200' },
+  RAW_MATERIAL: { label: 'Materials Cost', cls: 'bg-teal-50 text-teal-700 border-teal-200' },
+  SALARY: { label: 'Salary', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  GAS_BILL: { label: 'Gas Bill', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+  TRAVEL_ALLOWANCE: { label: 'Travel Allowance (TA)', cls: 'bg-violet-50 text-violet-700 border-violet-200' },
+  MOBILE_BILL: { label: 'Mobile Bill', cls: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200' },
+  DESIGN_COST: { label: 'Design Cost', cls: 'bg-pink-50 text-pink-700 border-pink-200' },
   LOGISTICS: { label: 'Logistics', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
   LAB_UTILITY: { label: 'Lab Utility', cls: 'bg-sky-50 text-sky-700 border-sky-200' },
   MAINTENANCE: { label: 'Maintenance', cls: 'bg-slate-100 text-slate-700 border-slate-200' },
-  OTHER: { label: 'Other', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+  OTHER: { label: 'Others Expense', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
 };
 
 
