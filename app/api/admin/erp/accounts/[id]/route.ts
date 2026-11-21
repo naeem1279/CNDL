@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/access";
 import { firstIssueMessage } from "@/lib/validation";
+import { CLIENT_TYPES, columnsForType, clientTypeOf, isChairmanChannel } from "@/lib/client-types";
 
 const institutionTypeEnum = z.enum(["CHAMBER", "HOSPITAL", "PARTNER_LAB", "FREELANCE"]);
 
@@ -18,6 +19,9 @@ const accountUpdateSchema = z.object({
   division: z.string().trim().min(2).max(30).optional(),
   district: z.preprocess(emptyToNull, z.string().trim().max(60).nullish()),
   assignedAgentId: z.preprocess(emptyToNull, z.string().trim().max(60).nullish()),
+  // The console's single "type" + Chairman-channel flag (they set accountType and institutionType together).
+  clientType: z.enum(CLIENT_TYPES).optional(),
+  chairmanChannel: z.boolean().optional(),
 });
 
 function firstZodMessage(err: unknown): string {
@@ -34,7 +38,13 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
     if (!parsed.success) {
       return NextResponse.json({ error: firstZodMessage(parsed.error) }, { status: 400 });
     }
-    const data = parsed.data;
+    const { clientType, chairmanChannel, ...rest } = parsed.data;
+    const existing = await prisma.clientAccount.findUnique({ where: { id }, select: { accountType: true, institutionType: true } });
+    if (!existing) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    const data =
+      clientType !== undefined || chairmanChannel !== undefined
+        ? { ...rest, ...columnsForType(clientType ?? clientTypeOf(existing), chairmanChannel ?? isChairmanChannel(existing)) }
+        : rest;
 
     // Agent re-assignment must point at a real AGENT user.
     if (data.assignedAgentId) {

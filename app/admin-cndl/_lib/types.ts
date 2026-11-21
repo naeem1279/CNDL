@@ -177,7 +177,7 @@ export type ErpShareholder = {
 export type TabKey =
   | 'overview'
   | 'orders' | 'products'
-  | 'dues' | 'expenses' | 'capex' | 'shareholders'
+  | 'clients' | 'dues' | 'expenses' | 'capex' | 'shareholders'
   | 'messages' | 'blogs' | 'reviews'
   | 'leads'
   | 'users' | 'access';

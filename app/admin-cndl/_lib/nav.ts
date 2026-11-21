@@ -1,5 +1,5 @@
 import {
-  Cpu, FileText, Landmark, Layers, LayoutDashboard, MapPin, MessageSquare, Package, Star,
+  Building2, Cpu, FileText, Landmark, Layers, LayoutDashboard, MapPin, MessageSquare, Package, Star,
   ShieldCheck, TrendingDown, Users, Wallet,
 } from 'lucide-react';
 import type { TabKey } from './types';
@@ -28,6 +28,7 @@ export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Finance & ERP',
     items: [
+      { key: 'clients', label: 'Clients', icon: Building2 },
       { key: 'dues', label: 'Client Dues', icon: Wallet },
       { key: 'expenses', label: 'Daily Expenses', icon: TrendingDown },
       { key: 'capex', label: 'Machinery & CapEx', icon: Cpu },

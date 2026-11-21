@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { MessageSquare, Pencil, Phone, Plus, Wallet } from 'lucide-react';
 import { SidePanel } from '../_components/SidePanel';
 import { Badge, Button, buttonClass } from '../_components/ui';
-import { DIVISION_LABEL, INSTITUTION_TYPE_META } from '../_lib/constants';
+import { DIVISION_LABEL } from '../_lib/constants';
+import { CLIENT_TYPE_LABEL, clientTypeOf } from '../_lib/clients';
 import type { ErpAccount, ErpLedgerEntry } from '../_lib/types';
 import { formatBDT, formatDay, formatDate, phoneLinks } from '../_lib/utils';
 
@@ -84,7 +85,7 @@ export function AccountPanel({
 }) {
   const [showAll, setShowAll] = useState(false);
   const links = phoneLinks(account.phone);
-  const inst = INSTITUTION_TYPE_META[account.institutionType]?.label || 'Chamber';
+  const inst = CLIENT_TYPE_LABEL[clientTypeOf(account)];
 
   // Balance after each row, newest first: start from today's balance and undo
   // each newer row in turn.
