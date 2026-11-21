@@ -59,8 +59,34 @@ async function seed() {
       // another request created it first
     }
   }
+  await applyAddedDefaults();
   // Existing people keep exactly the role they had: roleKey mirrors the legacy enum until someone changes it.
   await prisma.$executeRawUnsafe('UPDATE "AppUser" SET "roleKey" = "role" WHERE "roleKey" IS NULL');
+}
+
+/**
+ * Permissions added to a built-in role's defaults after that role was first saved. Each one is given
+ * to the role ONCE (an audit row records it); if a Super Admin later takes it away, it stays away.
+ */
+const ADDED_DEFAULTS: { key: string; roles: string[] }[] = [{ key: 'cases.submit', roles: ['AGENT'] }];
+
+async function applyAddedDefaults() {
+  for (const add of ADDED_DEFAULTS) {
+    for (const role of add.roles) {
+      const done = await prisma.accessAuditLog.findFirst({ where: { action: 'DEFAULT_ADDED', roleKey: role, after: { contains: `"${add.key}"` } }, select: { id: true } });
+      if (done) continue;
+      const row = await prisma.roleDefinition.findUnique({ where: { key: role } });
+      const before = row ? sanitizePermissions(parseList(row.permissions)) : null;
+      await prisma.$transaction([
+        ...(row && before && !before.includes(add.key)
+          ? [prisma.roleDefinition.update({ where: { key: role }, data: { permissions: JSON.stringify([...before, add.key].sort()) } })]
+          : []),
+        prisma.accessAuditLog.create({
+          data: { action: 'DEFAULT_ADDED', roleKey: role, before: before ? JSON.stringify({ permissions: before }) : null, after: JSON.stringify({ added: add.key }), performedBy: 'system', performedByName: 'System (new default)' },
+        }),
+      ]);
+    }
+  }
 }
 
 /** Creates the built-in roles once per process. Throws if the tables are missing (callers fall back to code defaults). */
@@ -188,7 +214,7 @@ export async function authorize(
 /* ------------------------------------------------------------------ audit */
 
 export type AccessLogEntry = {
-  action: 'ROLE_CREATE' | 'ROLE_UPDATE' | 'ROLE_DELETE' | 'USER_ROLE_CHANGE' | 'EXPORT_ORDERS';
+  action: 'ROLE_CREATE' | 'ROLE_UPDATE' | 'ROLE_DELETE' | 'USER_ROLE_CHANGE' | 'EXPORT_ORDERS' | 'DEFAULT_ADDED';
   roleKey?: string | null;
   targetUserId?: string | null;
   before?: unknown;

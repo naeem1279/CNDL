@@ -1,5 +1,5 @@
 import {
-  Building2, Cpu, FileText, Landmark, Layers, LayoutDashboard, MapPin, MessageSquare, Package, Star,
+  Building2, Cpu, FileText, HandCoins, Landmark, Layers, LayoutDashboard, MapPin, MessageSquare, Package, Star,
   ShieldCheck, TrendingDown, Users, Wallet,
 } from 'lucide-react';
 import type { TabKey } from './types';
@@ -16,7 +16,10 @@ export type NavItem = {
 export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Command Center',
-    items: [{ key: 'overview', label: 'Overview', icon: LayoutDashboard, live: true }],
+    items: [
+      { key: 'overview', label: 'Overview', icon: LayoutDashboard, live: true },
+      { key: 'myday', label: 'My day', icon: HandCoins },
+    ],
   },
   {
     title: 'Lab Operations',

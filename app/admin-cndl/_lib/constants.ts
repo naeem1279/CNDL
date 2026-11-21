@@ -84,7 +84,7 @@ export const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif
 
 /** Runtime list of every valid tab — used to validate restored persisted tabs. */
 export const ALL_TAB_KEYS: TabKey[] = [
-  'overview',
+  'overview', 'myday',
   'orders', 'products',
   'clients', 'dues', 'expenses', 'capex', 'shareholders',
   'messages', 'blogs', 'reviews',

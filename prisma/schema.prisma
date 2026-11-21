@@ -73,6 +73,26 @@ model DuesFollowUp {
   @@index([status, promiseDate])
 }
 
+/// A field agent handing collected cash to the office (added 2026-11-22). Additive.
+/// collectionIds = JSON list of FinancialLedger ids (PAYMENT rows the agent collected).
+model CashHandover {
+  id             String    @id @default(cuid())
+  agentId        String // soft ref to AppUser.id
+  agentName      String?
+  amount         Float
+  collectionIds  String
+  status         String    @default("SUBMITTED") // SUBMITTED | RECEIVED | DISPUTED
+  note           String?
+  receivedBy     String?
+  receivedByName String?
+  receivedNote   String?
+  createdAt      DateTime  @default(now())
+  receivedAt     DateTime?
+
+  @@index([agentId, status])
+  @@index([status, createdAt])
+}
+
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String

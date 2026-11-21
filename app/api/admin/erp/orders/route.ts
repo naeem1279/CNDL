@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authorize } from "@/lib/access";
-import { DONE_STATUSES, bdTodayStart, parseOrderFilters } from "@/lib/orders-filters";
+import { NOT_IN_LAB, bdTodayStart, parseOrderFilters } from "@/lib/orders-filters";
 import { buildOrderBy, buildOrderWhere } from "@/lib/orders-where";
 
 /**
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     const pages = Math.max(1, Math.ceil(total / f.size));
     const page = Math.min(f.page, pages);
 
-    const open = { AND: [where, { NOT: { status: { in: DONE_STATUSES } } }] };
+    const open = { AND: [where, { NOT: { status: { in: NOT_IN_LAB } } }] };
     const [rows, openCount, lateCount, money] = await Promise.all([
       prisma.order.findMany({ where, orderBy: buildOrderBy(f, canSeeMoney), skip: (page - 1) * f.size, take: f.size }),
       prisma.order.count({ where: open }),

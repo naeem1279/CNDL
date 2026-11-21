@@ -18,6 +18,7 @@ import { apiError, formatBDT, formatDay, parseClinical } from '../_lib/utils';
 import { CasePanel } from './CasePanel';
 import { LINE, STAGES, casePermissions, dispatchBills, isLate, stageOf } from './cases';
 import { NewCaseDialog } from './NewCaseDialog';
+import { Approvals } from './Approvals';
 
 const cx = (...p: (string | false | null | undefined)[]) => p.filter(Boolean).join(' ');
 type Summary = { count: number; open: number; late: number; billed: number | null; commission: number | null };
@@ -364,6 +365,14 @@ export default function OrdersPage() {
         </>
       }
     >
+      {perm.canCreate && (
+        <Approvals
+          onDecided={() => {
+            void fetchList(true);
+            void loadRefs();
+          }}
+        />
+      )}
       <div className="rounded-lg border border-zinc-200 bg-white">
         <div className="space-y-2 border-b border-zinc-100 p-3">
           <div className="flex flex-wrap items-center gap-2">
