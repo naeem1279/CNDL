@@ -98,13 +98,19 @@ export default function ExpensesPage() {
   const pageRows = filtered.slice((curPage - 1) * EXPENSES_PER_PAGE, curPage * EXPENSES_PER_PAGE);
 
   const sumWhere = (pred: (x: ErpExpense) => boolean) => expenses.filter(pred).reduce((s, x) => s + x.amount, 0);
-  const lastMonthKey = (() => {
-    const [y, m] = thisMonth.split('-').map(Number);
+  /** The month before `key` (yyyy-mm). */
+  const prevMonth = (key: string) => {
+    const [y, m] = key.split('-').map(Number);
     return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
-  })();
-  const inMonth = (x: ErpExpense) => monthOf(x) === thisMonth;
-  const monthTotal = sumWhere(inMonth);
-  const lastMonthTotal = sumWhere((x) => monthOf(x) === lastMonthKey);
+  };
+  /** The tiles follow the month filter, like the list and the category split ("All months" = every expense). */
+  const inScope = (x: ErpExpense) => month === 'ALL' || monthOf(x) === month;
+  const scopeLabel = month === 'ALL' ? 'All months' : month === thisMonth ? 'This month' : monthLabel(month);
+  const scopeTotal = sumWhere(inScope);
+  const compareSub =
+    month === 'ALL'
+      ? `${expenses.length} expense${expenses.length === 1 ? '' : 's'} recorded`
+      : `${formatBDT(sumWhere((x) => monthOf(x) === prevMonth(month)))} in ${monthLabel(prevMonth(month))}`;
 
   /** Category split for the month being viewed (or all time). */
   const breakdown = useMemo(() => {
@@ -119,14 +125,19 @@ export default function ExpensesPage() {
   }, [expenses, month]);
 
   const kpis: Kpi[] = [
-    { label: 'Spent this month', value: formatBDT(monthTotal), icon: Receipt, sub: `${formatBDT(lastMonthTotal)} last month` },
-    { label: 'Materials cost', value: formatBDT(sumWhere((x) => inMonth(x) && x.category === 'RAW_MATERIAL')), icon: Package, sub: 'This month' },
-    { label: 'Salary & rent', value: formatBDT(sumWhere((x) => inMonth(x) && (x.category === 'SALARY' || x.category === 'HOUSE_RENT'))), icon: Users, sub: 'This month' },
+    {
+      label: month === 'ALL' ? 'Spent in total' : month === thisMonth ? 'Spent this month' : `Spent in ${monthLabel(month)}`,
+      value: formatBDT(scopeTotal),
+      icon: Receipt,
+      sub: compareSub,
+    },
+    { label: 'Materials cost', value: formatBDT(sumWhere((x) => inScope(x) && x.category === 'RAW_MATERIAL')), icon: Package, sub: scopeLabel },
+    { label: 'Salary & rent', value: formatBDT(sumWhere((x) => inScope(x) && (x.category === 'SALARY' || x.category === 'HOUSE_RENT'))), icon: Users, sub: scopeLabel },
     {
       label: 'Bills & utilities',
-      value: formatBDT(sumWhere((x) => inMonth(x) && BILL_CATEGORIES.includes(x.category))),
+      value: formatBDT(sumWhere((x) => inScope(x) && BILL_CATEGORIES.includes(x.category))),
       icon: Wrench,
-      sub: 'This month',
+      sub: scopeLabel,
     },
   ];
 
