@@ -44,6 +44,7 @@ export const PERMISSIONS: PermissionDef[] = [
   { key: 'cases.view', group: 'Cases', label: 'See all cases', hint: 'The Lab Cases list with every case.' },
   { key: 'cases.view_own', group: 'Cases', label: 'See only their own cases', hint: 'Cases credited to this person (field agents).' },
   { key: 'cases.view_money', group: 'Cases', label: 'See billed amounts and commission', hint: 'Without this the money fields are removed from every case they receive.' },
+  { key: 'cases.submit', group: 'Cases', label: 'Submit cases for approval', hint: 'For field agents: the case waits until someone who can record cases approves it.' },
   { key: 'cases.create', group: 'Cases', label: 'Record new cases', hint: 'Cases that came in by rider, phone or WhatsApp.' },
   { key: 'cases.move_stage', group: 'Cases', label: 'Move cases between stages', hint: 'Dispatching a case also posts its invoice automatically.' },
   { key: 'cases.delete', group: 'Cases', label: 'Delete cases permanently', hint: 'Super Admin only.', locked: true },
@@ -147,7 +148,7 @@ export const BUILTIN_ROLES: BuiltInRole[] = [
     key: 'AGENT',
     name: 'Field agent',
     description: 'Their own clients’ dues and collections.',
-    permissions: ['cases.view_own', 'cases.view_money', 'clients.view_own', 'clients.create', 'ledger.view_own', 'ledger.collect_own', 'products.view', 'blogs.view', 'reviews.view'],
+    permissions: ['cases.view_own', 'cases.view_money', 'cases.submit', 'clients.view_own', 'clients.create', 'ledger.view_own', 'ledger.collect_own', 'products.view', 'blogs.view', 'reviews.view'],
   },
   { key: 'PARTNER_LAB', name: 'Partner lab', description: 'No console access until Super Admin grants some.', permissions: [] },
   { key: 'DOCTOR', name: 'Doctor', description: 'No console access until Super Admin grants some.', permissions: [] },
@@ -178,6 +179,8 @@ export const hasAnyPermission = (perms: readonly string[] | ReadonlySet<string>,
  */
 export const TAB_PERMISSIONS: { tab: string; any: string[] }[] = [
   { tab: 'overview', any: ['overview.view'] },
+  // A field agent's landing page (Overview comes first for everyone who has it).
+  { tab: 'myday', any: ['ledger.collect_own', 'cases.submit'] },
   { tab: 'orders', any: ['cases.view'] },
   { tab: 'products', any: ['products.manage'] },
   { tab: 'dues', any: ['ledger.view', 'ledger.view_own'] },

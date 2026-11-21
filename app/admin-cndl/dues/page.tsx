@@ -14,6 +14,7 @@ import { apiError, formatBDT, formatDay, readPref } from '../_lib/utils';
 import { AccountPanel, AgingBadge, agingDays, entryTime, reminderHref } from './AccountPanel';
 import { DuesInsights, RISK_BADGE, useAccountDues } from './DuesInsights';
 import type { FollowUp } from './FollowUps';
+import { Handovers } from './Handovers';
 import { AccountDialog, CollectionDialog, InvoiceDialog, duesPermissions } from './forms';
 
 type View = 'accounts' | 'collections';
@@ -634,6 +635,7 @@ export default function DuesPage() {
             ]}
           />
         </div>
+        {perm.canVerify && <Handovers onChanged={() => void fetchData(true)} />}
         {view === 'accounts' ? (
           <>
             {visible.some((a) => a.currentBalance > 0) && <DuesInsights dues={duesMap} promises={promises} lastContact={lastContact} now={now} onOpen={setOpenId} />}

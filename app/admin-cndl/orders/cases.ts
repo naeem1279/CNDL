@@ -4,6 +4,7 @@ import type { ErpLedgerEntry, Order } from '../_lib/types';
 
 /** Stages offered in the UI, in order. Values are what /api/admin/data PATCH stores. */
 export const STAGES: { value: string; label: string; dot: string; progress: number }[] = [
+  { value: 'Awaiting approval', label: 'Awaiting approval', dot: 'bg-amber-400', progress: 0 },
   { value: 'Received', label: 'Received', dot: 'bg-zinc-400', progress: 10 },
   { value: 'Designing', label: 'Designing', dot: 'bg-brand-300', progress: 35 },
   { value: 'Milling', label: 'Milling', dot: 'bg-brand-500', progress: 60 },
@@ -13,7 +14,7 @@ export const STAGES: { value: string; label: string; dot: string; progress: numb
   { value: 'Cancelled', label: 'Cancelled', dot: 'bg-rose-400', progress: 0 },
 ];
 /** The production line (what the panel's step bar shows). */
-export const LINE = STAGES.slice(0, 5);
+export const LINE = STAGES.slice(1, 6);
 /** Older rows may hold legacy values; map them onto the current stages for display. */
 const LEGACY: Record<string, string> = { PENDING: 'Received', Production: 'Milling', QC: 'Quality Control' };
 export const stageOf = (status: string | null | undefined) => {
@@ -21,7 +22,7 @@ export const stageOf = (status: string | null | undefined) => {
   return STAGES.find((s) => s.value === v) ?? { value: v, label: v, dot: 'bg-zinc-300', progress: 0 };
 };
 
-const DONE = new Set(['Dispatched', 'Delivered', 'Cancelled']);
+const DONE = new Set(['Dispatched', 'Delivered', 'Cancelled', 'Awaiting approval']);
 export const isOpen = (o: Order) => !DONE.has(stageOf(o.status).value);
 
 /** Start of today, local time. */

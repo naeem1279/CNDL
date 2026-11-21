@@ -66,6 +66,10 @@ export function AccessLog({ roles, version }: { roles: RoleRow[]; version: numbe
           ? { title: `${who} moved to ${to}`, detail: `Was ${roleName(e.before.roleKey)}` }
           : { title: `${who} given the role ${to}` };
       }
+      case 'DEFAULT_ADDED': {
+        const added = (e.after as { added?: string } | null)?.added;
+        return { title: `New default permission for “${role}”`, detail: added ? `Added: ${label(added)}.` : undefined };
+      }
       case 'EXPORT_ORDERS': {
         const a = e.after as { filters?: string; rows?: number } | null;
         return { title: `Exported ${a?.rows ?? '?'} lab cases to CSV`, detail: a?.filters && a.filters !== '(none)' ? `Filters: ${a.filters}` : 'No filters' };

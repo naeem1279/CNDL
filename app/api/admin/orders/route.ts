@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { randomBytes } from "crypto";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/access";
 import { firstIssueMessage } from "@/lib/validation";
+import { createOrderWithCaseId } from "@/lib/order-create";
 
 const SOURCE_ENUM = ["OFFLINE_RIDER", "PHONE", "WHATSAPP", "ONLINE"] as const;
 
@@ -52,35 +51,6 @@ function firstZodMessage(err: unknown): string {
   return firstIssueMessage(err);
 }
 
-/** CSPRNG 8-hex Case ID — mirrors the hardened public /api/order generator. */
-function newCaseId(): string {
-  return "CNDL-" + randomBytes(4).toString("hex").toUpperCase();
-}
-
-/**
- * Creates the order with collision-safe Case IDs: the CSPRNG space (16^8 ≈
- * 4.3 billion) makes clashes practically impossible, and a P2002 unique-constraint
- * hit simply regenerates and retries.
- */
-async function createOrderWithCaseId(data: Omit<Prisma.OrderUncheckedCreateInput, "caseId">) {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      return await prisma.order.create({ data: { ...data, caseId: newCaseId() } });
-    } catch (err) {
-      if (
-        typeof err === "object" &&
-        err !== null &&
-        "code" in err &&
-        (err as { code?: string }).code === "P2002" &&
-        attempt < 4
-      ) {
-        continue; // caseId collision — regenerate
-      }
-      throw err;
-    }
-  }
-  throw new Error("Failed to allocate a unique Case ID");
-}
 
 export async function POST(req: Request) {
   // Phase 1 (2026-11-06): offline intake needs the "Record new cases" permission — a field

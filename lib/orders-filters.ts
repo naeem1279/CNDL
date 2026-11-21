@@ -7,9 +7,13 @@ export const PAGE_SIZES = [20, 50, 100] as const;
 export const DEFAULT_SIZE = 20;
 export const MAX_EXPORT_ROWS = 20000;
 
-export const STAGE_VALUES = ['Received', 'Designing', 'Milling', 'Quality Control', 'Dispatched', 'Delivered', 'Cancelled'] as const;
+/** A case a field agent submitted; it is not in the lab until someone approves it. */
+export const AWAITING_APPROVAL = 'Awaiting approval';
+
+export const STAGE_VALUES = ['Awaiting approval', 'Received', 'Designing', 'Milling', 'Quality Control', 'Dispatched', 'Delivered', 'Cancelled'] as const;
 /** Stored status values that mean each stage (older rows hold legacy values). */
 export const STATUS_ALIASES: Record<string, string[]> = {
+  'Awaiting approval': ['Awaiting approval'],
   Received: ['Received', 'PENDING'],
   Designing: ['Designing'],
   Milling: ['Milling', 'Production'],
@@ -20,6 +24,8 @@ export const STATUS_ALIASES: Record<string, string[]> = {
 };
 /** Out of the lab: nothing more to do on the bench. */
 export const DONE_STATUSES = [...STATUS_ALIASES.Dispatched, ...STATUS_ALIASES.Delivered, ...STATUS_ALIASES.Cancelled];
+/** Not in the lab: finished, cancelled, or still waiting for approval. */
+export const NOT_IN_LAB = [...DONE_STATUSES, AWAITING_APPROVAL];
 
 export const SORT_KEYS = ['created', 'due', 'case', 'client', 'stage', 'amount'] as const;
 export type SortKey = (typeof SORT_KEYS)[number];

@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { CATEGORIES, DONE_STATUSES, STATUS_ALIASES, bdDayStart, bdTodayStart, type OrderFilters } from '@/lib/orders-filters';
+import { CATEGORIES, NOT_IN_LAB, STATUS_ALIASES, bdDayStart, bdTodayStart, type OrderFilters } from '@/lib/orders-filters';
 
 /** Case ids that already have an invoice in the ledger (the ledger links to a case by its case id). */
 async function invoicedCaseIds(): Promise<string[]> {
@@ -27,8 +27,8 @@ export async function buildOrderWhere(
   if (scope.agentId) and.push({ agentId: scope.agentId });
 
   const today = bdTodayStart();
-  if (f.stage === 'open') and.push({ NOT: { status: { in: DONE_STATUSES } } });
-  else if (f.stage === 'late') and.push({ NOT: { status: { in: DONE_STATUSES } } }, { deliveryDate: { lt: today } });
+  if (f.stage === 'open') and.push({ NOT: { status: { in: NOT_IN_LAB } } });
+  else if (f.stage === 'late') and.push({ NOT: { status: { in: NOT_IN_LAB } } }, { deliveryDate: { lt: today } });
   else if (f.stage !== 'all') and.push({ status: { in: STATUS_ALIASES[f.stage] ?? [f.stage] } });
 
   const from = bdDayStart(f.from);
