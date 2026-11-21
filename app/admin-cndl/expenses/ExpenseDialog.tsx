@@ -14,8 +14,14 @@ type Errors = Partial<Record<keyof Form, string>>;
 /** yyyy-mm-dd of a stored expense date, in Bangladesh time. */
 const bdDay = (iso: string) => new Date(new Date(iso).getTime() + 6 * 3600000).toISOString().slice(0, 10);
 
+/** "Wednesday, 1 April 2026" for a yyyy-mm-dd value, so day and month cannot be swapped by mistake. */
+const longDay = (ymd: string) =>
+  /^d{4}-d{2}-d{2}$/.test(ymd)
+    ? new Date(`${ymd}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+    : '';
+
 /** Add (ACCOUNTS / SUPERADMIN) or edit (SUPERADMIN, audited) one expense. */
-export function ExpenseDialog({ editing, onClose, onSaved }: { editing: ErpExpense | null; onClose: () => void; onSaved: () => void }) {
+export function ExpenseDialog({ editing, onClose, onSaved }: { editing: ErpExpense | null; onClose: () => void; onSaved: (expenseDate: string) => void }) {
   const { adminFetch, handleAuthLoss } = useAdmin();
   const [f, setF] = useState<Form>(() => ({
     expenseDate: editing ? bdDay(editing.expenseDate) : todayInput(),
@@ -60,9 +66,9 @@ export function ExpenseDialog({ editing, onClose, onSaved }: { editing: ErpExpen
       if (res.status === 401) return handleAuthLoss();
       const body = await res.json().catch(() => ({}));
       if (!res.ok) return void toast.error(apiError(body, 'Could not save the expense'));
-      toast.success(editing ? 'Expense updated · the previous version is in change history' : `${formatBDT(amount)} expense added`);
+      toast.success(editing ? 'Expense updated · the previous version is in change history' : `${formatBDT(amount)} expense added for ${longDay(f.expenseDate)}`);
       onClose();
-      onSaved();
+      onSaved(f.expenseDate);
     } catch {
       toast.error('Network error — nothing was saved');
     } finally {
@@ -82,6 +88,7 @@ export function ExpenseDialog({ editing, onClose, onSaved }: { editing: ErpExpen
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Date" htmlFor="exp-expenseDate" required error={errors.expenseDate}>
           <Input id="exp-expenseDate" type="date" max={todayInput()} value={f.expenseDate} onChange={set('expenseDate')} invalid={!!errors.expenseDate} />
+          {f.expenseDate && !errors.expenseDate && <p className="mt-1 text-meta text-zinc-500">{longDay(f.expenseDate)}</p>}
         </Field>
         <Field label="Category" htmlFor="exp-category">
           <Select id="exp-category" value={f.category} onChange={set('category')}>

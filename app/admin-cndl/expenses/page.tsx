@@ -362,8 +362,15 @@ export default function ExpensesPage() {
         <ExpenseDialog
           editing={dialog}
           onClose={() => setDialog(undefined)}
-          onSaved={() => {
+          onSaved={(expenseDate) => {
             setHistory(null);
+            // A back-dated expense belongs to another month: show that month, or the new row
+            // would be hidden by the month filter and look as if it was never saved.
+            const savedMonth = expenseDate.slice(0, 7);
+            if (month !== 'ALL' && savedMonth && savedMonth !== month) {
+              setMonth(savedMonth);
+              toast.info(`Showing ${monthLabel(savedMonth)}, the month of this expense`);
+            }
             void fetchData(true);
           }}
         />
