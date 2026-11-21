@@ -14,6 +14,7 @@ import { EXPENSE_CATEGORY_META } from '../_lib/constants';
 import { adminPath } from '../_lib/nav';
 import { loadResources } from '../_lib/resources';
 import { useAdmin } from '../_lib/session';
+import { DayBook } from './DayBook';
 import type { ErpAccount, ErpExpense, ErpLedgerEntry, Order, OverviewMetrics, TabKey } from '../_lib/types';
 import { formatBDT, formatDate } from '../_lib/utils';
 
@@ -274,6 +275,7 @@ export default function OverviewPage() {
       onRefresh={() => fetchData(true)}
       actions={<MenuButton label="New" icon={Plus} items={newItems} />}
     >
+      <DayBook />
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-5 xl:gap-6">
         {/* Needs attention first on phones; right column on desktop */}
         <Panel

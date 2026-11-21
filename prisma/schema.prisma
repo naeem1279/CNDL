@@ -39,6 +39,22 @@ model Order {
   @@index([status, clientAccountId])
 }
 
+/// One row per stage change of a case (added 2026-11-21). Powers the day book's
+/// "dispatched / delivered today" counts. Additive: older cases simply have no history.
+model OrderStatusEvent {
+  id            String   @id @default(cuid())
+  orderId       String // soft ref to Order.id
+  caseId        String
+  fromStatus    String?
+  toStatus      String
+  changedBy     String? // AppUser id, or 'master'
+  changedByName String?
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([orderId])
+}
+
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String
