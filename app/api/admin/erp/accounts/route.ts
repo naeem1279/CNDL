@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authorize } from "@/lib/access";
 import { friendlyIssue } from "@/lib/validation";
+import { CLIENT_TYPES, columnsForType } from "@/lib/client-types";
 
 const accountTypeEnum = z.enum(["CHAMBER", "PARTNER_LAB", "CHAIRMAN_PERSONAL"]);
 const institutionTypeEnum = z.enum(["CHAMBER", "HOSPITAL", "PARTNER_LAB", "FREELANCE"]);
@@ -25,6 +26,9 @@ const accountCreateSchema = z.object({
   assignedAgentId: z.preprocess(emptyToNull, z.string().trim().max(60).nullish()),
   openingDue: z.coerce.number().min(0).default(0),
   allowDuplicate: z.boolean().optional(),
+  // The console's single "type" + Chairman-channel flag; when given they decide accountType and institutionType.
+  clientType: z.enum(CLIENT_TYPES).optional(),
+  chairmanChannel: z.boolean().optional(),
 });
 
 export async function GET(req: Request) {
@@ -81,7 +85,8 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    const { allowDuplicate, openingDue, ...accountData } = parsed.data;
+    const { allowDuplicate, openingDue, clientType, chairmanChannel, ...fields } = parsed.data;
+    const accountData = clientType ? { ...fields, ...columnsForType(clientType, !!chairmanChannel) } : fields;
 
     // Week 1 fix (2026-11-11): an opening due is an INVOICE, so it needs the invoice
     // permission (same rule as /erp/ledger). Others may still onboard an account, but

@@ -86,7 +86,7 @@ export const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif
 export const ALL_TAB_KEYS: TabKey[] = [
   'overview',
   'orders', 'products',
-  'dues', 'expenses', 'capex', 'shareholders',
+  'clients', 'dues', 'expenses', 'capex', 'shareholders',
   'messages', 'blogs', 'reviews',
   'leads',
   'users', 'access',

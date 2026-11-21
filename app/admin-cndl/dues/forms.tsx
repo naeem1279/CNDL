@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { FormDialog } from '../_components/FormDialog';
 import { Button, Field, Input, Select } from '../_components/ui';
 import { DIVISIONS, PAYMENT_METHODS } from '../_lib/constants';
+import { CLIENT_TYPES, CLIENT_TYPE_LABEL, clientTypeOf, isChairmanChannel, type ClientType } from '../_lib/clients';
 import { useAdmin } from '../_lib/session';
 import type { ErpAccount, ErpAgent } from '../_lib/types';
 import { apiError, formatBDT, todayInput } from '../_lib/utils';
@@ -257,8 +258,7 @@ export function CollectionDialog({
 /* ------------------------------------------------------------- account */
 
 type AccountForm = {
-  accountType: string;
-  institutionType: string;
+  clientType: ClientType;
   name: string;
   ownerName: string;
   phone: string;
@@ -268,6 +268,7 @@ type AccountForm = {
   address: string;
   assignedAgentId: string;
   openingDue: string;
+  chairmanChannel: boolean;
 };
 
 export function AccountDialog({
@@ -286,8 +287,8 @@ export function AccountDialog({
   const { me, adminFetch, handleAuthLoss } = useAdmin();
   const perm = duesPermissions(me.permissions);
   const [f, setF] = useState<AccountForm>(() => ({
-    accountType: editing?.accountType || 'CHAMBER',
-    institutionType: editing?.institutionType || 'CHAMBER',
+    clientType: editing ? clientTypeOf(editing) : 'CLINIC',
+    chairmanChannel: editing ? isChairmanChannel(editing) : false,
     name: editing?.name || '',
     ownerName: editing?.ownerName || '',
     phone: editing?.phone || '',
@@ -302,7 +303,7 @@ export function AccountDialog({
   const [errors, setErrors] = useState<Partial<Record<keyof AccountForm, string>>>({});
   const [duplicateOf, setDuplicateOf] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const set = (k: keyof AccountForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const set = (k: Exclude<keyof AccountForm, 'chairmanChannel'>) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setF((x) => ({ ...x, [k]: e.target.value }));
     setErrors((x) => ({ ...x, [k]: undefined }));
     if (k === 'phone') setDuplicateOf(null);
@@ -320,8 +321,8 @@ export function AccountDialog({
     setSaving(true);
     try {
       const base = {
-        accountType: f.accountType,
-        institutionType: f.institutionType,
+        clientType: f.clientType,
+        chairmanChannel: f.chairmanChannel,
         name: f.name.trim(),
         ownerName: f.ownerName.trim(),
         phone: f.phone.trim(),
@@ -390,21 +391,26 @@ export function AccountDialog({
         </Field>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Account type" htmlFor="acc-accountType">
-          <Select id="acc-accountType" value={f.accountType} onChange={set('accountType')}>
-            <option value="CHAMBER">Chamber</option>
-            <option value="PARTNER_LAB">Partner lab</option>
-            <option value="CHAIRMAN_PERSONAL">Chairman channel</option>
+        <Field label="Type" htmlFor="acc-clientType">
+          <Select id="acc-clientType" value={f.clientType} onChange={set('clientType')}>
+            {CLIENT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {CLIENT_TYPE_LABEL[t]}
+              </option>
+            ))}
           </Select>
         </Field>
-        <Field label="Institution" htmlFor="acc-institutionType">
-          <Select id="acc-institutionType" value={f.institutionType} onChange={set('institutionType')}>
-            <option value="CHAMBER">Chamber</option>
-            <option value="HOSPITAL">Hospital</option>
-            <option value="PARTNER_LAB">Lab</option>
-            <option value="FREELANCE">Personal (freelance)</option>
-          </Select>
-        </Field>
+        <div className="flex items-end pb-1">
+          <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-table text-zinc-700">
+            <input
+              type="checkbox"
+              checked={f.chairmanChannel}
+              onChange={(e) => setF((x) => ({ ...x, chairmanChannel: e.target.checked }))}
+              className="h-4 w-4 rounded border-zinc-300 text-brand-600 focus:ring-brand-500"
+            />
+            Comes through the Chairman
+          </label>
+        </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Division" htmlFor="acc-division">

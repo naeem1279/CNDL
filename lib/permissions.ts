@@ -181,6 +181,8 @@ export const TAB_PERMISSIONS: { tab: string; any: string[] }[] = [
   { tab: 'orders', any: ['cases.view'] },
   { tab: 'products', any: ['products.manage'] },
   { tab: 'dues', any: ['ledger.view', 'ledger.view_own'] },
+  // After Dues so a field agent still lands on Dues (the first permitted tab is the landing tab).
+  { tab: 'clients', any: ['clients.view', 'clients.view_own'] },
   { tab: 'expenses', any: ['expenses.view'] },
   { tab: 'capex', any: ['capex.view'] },
   { tab: 'shareholders', any: ['shareholders.view'] },
