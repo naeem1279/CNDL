@@ -588,6 +588,7 @@ export default function OrdersPage() {
       {newOpen && (
         <NewCaseDialog
           accounts={accounts}
+          ledger={ledger}
           agents={agents}
           services={services}
           onAccountCreated={(a) => setAccounts((prev) => [a, ...prev])}

@@ -55,6 +55,24 @@ model OrderStatusEvent {
   @@index([orderId])
 }
 
+/// Notes and promises-to-pay recorded while chasing a client's dues (added 2026-11-21). Additive.
+model DuesFollowUp {
+  id              String    @id @default(cuid())
+  clientAccountId String // soft ref to ClientAccount.id
+  kind            String // NOTE | PROMISE
+  note            String
+  promiseAmount   Float?
+  promiseDate     DateTime?
+  status          String    @default("OPEN") // OPEN | KEPT | BROKEN | DONE
+  createdBy       String
+  createdByName   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([clientAccountId])
+  @@index([status, promiseDate])
+}
+
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String

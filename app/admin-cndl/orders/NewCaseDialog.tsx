@@ -6,7 +6,8 @@ import { FormDialog } from '../_components/FormDialog';
 import { Button, Field, Input, Segmented, Select } from '../_components/ui';
 import { DIVISIONS, ORDER_SOURCE_META, VITA_SHADES } from '../_lib/constants';
 import { useAdmin } from '../_lib/session';
-import type { ErpAccount, ErpAgent, ServiceRow } from '../_lib/types';
+import type { ErpAccount, ErpAgent, ServiceRow, ErpLedgerEntry } from '../_lib/types';
+import { RISK_RULES, ageing, openInvoices, riskOf } from '@/lib/dues';
 import { apiError, formatBDT, todayInput } from '../_lib/utils';
 
 type Form = {
@@ -42,6 +43,7 @@ export function NewCaseDialog({
   onAccountCreated,
   onClose,
   onSaved,
+  ledger = [],
 }: {
   accounts: ErpAccount[];
   agents: ErpAgent[];
@@ -49,6 +51,8 @@ export function NewCaseDialog({
   onAccountCreated: (a: ErpAccount) => void;
   onClose: () => void;
   onSaved: (caseId: string) => void;
+  /** The ledger the page already has; used only for the soft dues warning. */
+  ledger?: ErpLedgerEntry[];
 }) {
   const { adminFetch, handleAuthLoss } = useAdmin();
   const [f, setF] = useState<Form>({
@@ -244,6 +248,7 @@ export function NewCaseDialog({
             </Field>
           </div>
         </div>
+        {account && <DuesWarning account={account} ledger={ledger} />}
         {!quick && !account && (
           <Button size="sm" variant="ghost" className="-mt-2" onClick={() => setQuick({ name: '', ownerName: '', phone: '', division: 'DHAKA' })}>
             + New client account
@@ -380,5 +385,25 @@ export function NewCaseDialog({
         </label>
       </div>
     </FormDialog>
+  );
+}
+
+/** Soft warning (never a block) when the chosen client owes a lot or has owed for a long time. */
+function DuesWarning({ account, ledger }: { account: ErpAccount; ledger: ErpLedgerEntry[] }) {
+  if (account.currentBalance <= 0) return null;
+  const ag = ageing(openInvoices(ledger.filter((e) => e.clientAccountId === account.id), account.currentBalance, account.createdAt));
+  const risk = riskOf(account.currentBalance, ag.oldestDays);
+  if (risk === 'none') return null;
+  const reasons = [
+    account.currentBalance >= RISK_RULES.watchAmount ? `owes ${formatBDT(account.currentBalance)}` : null,
+    (ag.oldestDays ?? 0) >= RISK_RULES.watchDays ? `the oldest unpaid bill is ${ag.oldestDays} days old` : null,
+  ].filter(Boolean);
+  return (
+    <div role="status" className={`-mt-1 rounded-lg border p-3 text-table ${risk === 'high' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-amber-200 bg-amber-50 text-amber-900'}`}>
+      <p className="font-medium">{risk === 'high' ? 'High dues — check before taking more work' : 'Dues to watch'}</p>
+      <p className="mt-0.5 text-meta">
+        {account.name} {reasons.join(' and ')}. You can still record this case.
+      </p>
+    </div>
   );
 }

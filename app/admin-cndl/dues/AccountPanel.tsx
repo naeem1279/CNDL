@@ -1,12 +1,15 @@
 'use client';
 import { useState } from 'react';
-import { MessageSquare, Pencil, Phone, Plus, Wallet } from 'lucide-react';
+import { FileText, MessageSquare, Pencil, Phone, Plus, Wallet } from 'lucide-react';
 import { SidePanel } from '../_components/SidePanel';
 import { Badge, Button, buttonClass } from '../_components/ui';
 import { DIVISION_LABEL } from '../_lib/constants';
 import { CLIENT_TYPE_LABEL, clientTypeOf } from '../_lib/clients';
 import type { ErpAccount, ErpLedgerEntry } from '../_lib/types';
 import { formatBDT, formatDay, formatDate, phoneLinks } from '../_lib/utils';
+import { AgeingBar, RISK_BADGE, type AccountDues } from './DuesInsights';
+import { FollowUps } from './FollowUps';
+import { StatementDialog } from './StatementDialog';
 
 const STATEMENT_LIMIT = 25;
 
@@ -70,6 +73,8 @@ export function AccountPanel({
   onInvoice,
   onEdit,
   onClose,
+  dues,
+  onFollowUp,
 }: {
   account: ErpAccount;
   /** This account's ledger rows, newest first. */
@@ -82,8 +87,14 @@ export function AccountPanel({
   onInvoice: () => void;
   onEdit: () => void;
   onClose: () => void;
+  /** Ageing (oldest invoices settled first) and the soft risk flag. */
+  dues?: AccountDues;
+  /** Called after a note or promise is added or updated. */
+  onFollowUp?: () => void;
 }) {
   const [showAll, setShowAll] = useState(false);
+  const [showStatement, setShowStatement] = useState(false);
+  const risk = dues ? RISK_BADGE[dues.risk] : null;
   const links = phoneLinks(account.phone);
   const inst = CLIENT_TYPE_LABEL[clientTypeOf(account)];
 
@@ -105,10 +116,16 @@ export function AccountPanel({
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <span className="text-kpi font-semibold tracking-tight text-zinc-900 tabular-nums">{formatBDT(Math.abs(account.currentBalance))}</span>
           <AgingBadge days={days} balance={account.currentBalance} />
+          {risk && <Badge tone={risk.tone}>{risk.label}</Badge>}
         </div>
         <p className="mt-1 text-meta text-zinc-500 tabular-nums">
           Invoiced {formatBDT(invoiced)} · collected {formatBDT(collected)}
         </p>
+        {dues && dues.ageing.total > 0 && (
+          <div className="mt-3">
+            <AgeingBar ag={dues.ageing} />
+          </div>
+        )}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Button variant="primary" size="sm" icon={Wallet} onClick={onCollect}>
             Record collection
@@ -139,12 +156,20 @@ export function AccountPanel({
               <MessageSquare size={14} /> Send reminder
             </a>
           )}
+          <Button size="sm" variant="secondary" icon={FileText} onClick={() => setShowStatement(true)}>
+            Monthly statement
+          </Button>
           {canEdit && (
             <Button size="sm" variant="ghost" icon={Pencil} onClick={onEdit}>
               Edit
             </Button>
           )}
         </div>
+      </section>
+
+      <section className="border-b border-zinc-100 py-4">
+        <h3 className="mb-2 text-meta font-medium text-zinc-500">Follow-ups</h3>
+        <FollowUps accountId={account.id} onChange={onFollowUp} />
       </section>
 
       <section className="pt-4">
@@ -189,6 +214,7 @@ export function AccountPanel({
           </Button>
         )}
       </section>
+      {showStatement && <StatementDialog account={account} rows={rows} onClose={() => setShowStatement(false)} />}
     </SidePanel>
   );
 }

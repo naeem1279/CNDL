@@ -12,6 +12,8 @@ import { useAdmin } from '../_lib/session';
 import type { ErpAccount, ErpAgent, ErpLedgerEntry, ErpUser } from '../_lib/types';
 import { apiError, formatBDT, formatDay, readPref } from '../_lib/utils';
 import { AccountPanel, AgingBadge, agingDays, entryTime, reminderHref } from './AccountPanel';
+import { DuesInsights, RISK_BADGE, useAccountDues } from './DuesInsights';
+import type { FollowUp } from './FollowUps';
 import { AccountDialog, CollectionDialog, InvoiceDialog, duesPermissions } from './forms';
 
 type View = 'accounts' | 'collections';
@@ -33,6 +35,10 @@ export default function DuesPage() {
   const [agents, setAgents] = useState<ErpAgent[]>([]);
   const [users, setUsers] = useState<ErpUser[]>([]);
   const [ledger, setLedger] = useState<ErpLedgerEntry[]>([]);
+  const [promises, setPromises] = useState<FollowUp[]>([]);
+  // Ageing is measured against when the page loaded (refreshing the data moves it on).
+  const [now, setNow] = useState(() => Date.now());
+  const [lastContact, setLastContact] = useState<Record<string, string | null>>({});
 
   const [view, setView] = useState<View>(() => (readPref('cndl-admin-dues-view') === 'collections' ? 'collections' : 'accounts'));
   const [query, setQuery] = useState('');
@@ -51,6 +57,19 @@ export default function DuesPage() {
   const [collPage, setCollPage] = useState(1);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
+  /** Open promises to pay and the last follow-up per client (for Call today). */
+  const loadPromises = async () => {
+    try {
+      const res = await adminFetch('/api/admin/erp/dues/followups?open=1');
+      if (!res.ok) return;
+      const body = await res.json().catch(() => ({}));
+      setPromises(body.promises ?? []);
+      setLastContact(body.lastContact ?? {});
+    } catch {
+      /* the list just stays as it was */
+    }
+  };
+
   const fetchData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
@@ -61,6 +80,8 @@ export default function DuesPage() {
       if (r.agents) setAgents(r.agents);
       if (r.ledger) setLedger(r.ledger);
       if (r.users) setUsers(r.users);
+      void loadPromises();
+      setNow(Date.now());
       setLastSyncedAt(Date.now());
     } catch {
       toast.error('Failed to load client dues');
@@ -123,6 +144,11 @@ export default function DuesPage() {
     return m;
   }, [ledger]);
   const rowsFor = (id: string) => rowsByAccount.get(id) ?? [];
+  const duesMap = useAccountDues(visible, rowsByAccount, now);
+  const riskBadge = (id: string) => {
+    const b = RISK_BADGE[duesMap.get(id)?.risk ?? 'none'];
+    return b ? <Badge tone={b.tone}>{b.label}</Badge> : null;
+  };
 
   const daysById = useMemo(() => {
     const m = new Map<string, number>();
@@ -372,6 +398,7 @@ export default function DuesPage() {
                       {a.currentBalance < 0 ? `${formatBDT(-a.currentBalance)} adv.` : formatBDT(a.currentBalance)}
                     </p>
                     <AgingBadge days={daysOf(a)} balance={a.currentBalance} />
+                    {riskBadge(a.id)}
                   </td>
                   <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
@@ -411,6 +438,7 @@ export default function DuesPage() {
                       {a.currentBalance < 0 ? `${formatBDT(-a.currentBalance)} adv.` : formatBDT(a.currentBalance)}
                     </p>
                     <AgingBadge days={daysOf(a)} balance={a.currentBalance} />
+                    {riskBadge(a.id)}
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-zinc-300" aria-hidden="true" />
                 </button>
@@ -606,7 +634,14 @@ export default function DuesPage() {
             ]}
           />
         </div>
-        {view === 'accounts' ? accountsView : collectionsView}
+        {view === 'accounts' ? (
+          <>
+            {visible.some((a) => a.currentBalance > 0) && <DuesInsights dues={duesMap} promises={promises} lastContact={lastContact} now={now} onOpen={setOpenId} />}
+            {accountsView}
+          </>
+        ) : (
+          collectionsView
+        )}
       </div>
 
       {openAccount && (
@@ -615,6 +650,8 @@ export default function DuesPage() {
           account={openAccount}
           rows={rowsFor(openAccount.id)}
           days={agingDays(openAccount, rowsFor(openAccount.id))}
+          dues={duesMap.get(openAccount.id)}
+          onFollowUp={() => void loadPromises()}
           collectorName={collectorName}
           canInvoice={perm.canInvoice}
           canEdit={perm.canEditAccount}
