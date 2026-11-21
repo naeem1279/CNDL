@@ -64,8 +64,9 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const denied = await requirePermission(req, "cases.move_stage");
-  if (denied) return denied;
+  const auth = await authorize(req, "cases.move_stage");
+  if (auth.denied) return auth.denied;
+  const { access } = auth;
   try {
     const json = await req.json().catch(() => null);
     const parsed = patchSchema.safeParse(json);
@@ -93,10 +94,29 @@ export async function PATCH(req: Request) {
     const explicitProgress = progress !== statusMeta.progress;
     const nextProgress = explicitProgress ? progress : statusMeta.progress;
 
+    const before = await prisma.order.findUnique({ where: { id }, select: { status: true } });
+    if (!before) return NextResponse.json({ error: "Case not found" }, { status: 404 });
+
     const updated = await prisma.order.update({
       where: { id },
       data: { status: statusMeta.status, progress: nextProgress },
     });
+
+    // Stage history for the day book. Never blocks the stage change itself.
+    if (before.status !== updated.status) {
+      await prisma.orderStatusEvent
+        .create({
+          data: {
+            orderId: updated.id,
+            caseId: updated.caseId,
+            fromStatus: before.status,
+            toStatus: updated.status,
+            changedBy: access.uid || access.phone || "master",
+            changedByName: access.name,
+          },
+        })
+        .catch(() => undefined);
+    }
 
     // Automated Lifecycle Invoicing on Order Dispatch:
     // When an order is moved to Dispatched, check if it has a linked client account and billed amount.
