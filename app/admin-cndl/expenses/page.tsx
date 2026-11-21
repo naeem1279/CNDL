@@ -1,7 +1,7 @@
 'use client';
 import { hasPermission } from '@/lib/permissions';
 import { useEffect, useMemo, useState } from 'react';
-import { History, MoreHorizontal, Package, Pencil, Plus, Receipt, Search, Trash2, Truck, Wrench } from 'lucide-react';
+import { History, MoreHorizontal, Package, Pencil, Plus, Receipt, Search, Trash2, Users, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Pager } from '../_components/Pager';
 import { SectionFrame } from '../_components/SectionFrame';
@@ -17,6 +17,8 @@ import { ExpenseDialog } from './ExpenseDialog';
 
 type AuditEntry = { id: string; expenseId: string; action: string; originalData: string; performedBy: string; createdAt: string };
 const catLabel = (k: string) => EXPENSE_CATEGORY_META[k]?.label ?? k;
+/** Monthly bills and upkeep, counted together in the "Bills & utilities" tile. */
+const BILL_CATEGORIES = ['ELECTRICITY', 'WATER_BILL', 'GAS_BILL', 'INTERNET_BILL', 'MOBILE_BILL', 'LAB_UTILITY', 'MAINTENANCE'];
 
 export default function ExpensesPage() {
   const { me, adminFetch, askConfirm, handleAuthLoss } = useAdmin();
@@ -118,11 +120,11 @@ export default function ExpensesPage() {
 
   const kpis: Kpi[] = [
     { label: 'Spent this month', value: formatBDT(monthTotal), icon: Receipt, sub: `${formatBDT(lastMonthTotal)} last month` },
-    { label: 'Raw material', value: formatBDT(sumWhere((x) => inMonth(x) && x.category === 'RAW_MATERIAL')), icon: Package, sub: 'This month' },
-    { label: 'Logistics', value: formatBDT(sumWhere((x) => inMonth(x) && x.category === 'LOGISTICS')), icon: Truck, sub: 'This month' },
+    { label: 'Materials cost', value: formatBDT(sumWhere((x) => inMonth(x) && x.category === 'RAW_MATERIAL')), icon: Package, sub: 'This month' },
+    { label: 'Salary & rent', value: formatBDT(sumWhere((x) => inMonth(x) && (x.category === 'SALARY' || x.category === 'HOUSE_RENT'))), icon: Users, sub: 'This month' },
     {
-      label: 'Utility & upkeep',
-      value: formatBDT(sumWhere((x) => inMonth(x) && (x.category === 'LAB_UTILITY' || x.category === 'MAINTENANCE'))),
+      label: 'Bills & utilities',
+      value: formatBDT(sumWhere((x) => inMonth(x) && BILL_CATEGORIES.includes(x.category))),
       icon: Wrench,
       sub: 'This month',
     },
